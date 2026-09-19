@@ -59,6 +59,7 @@ struct SettingsView: View {
                     )
                 }
                 Button("Make Reflex Default Browser") { state.makeDefaultBrowser() }
+                    .disabled(state.defaultBrowserStatus.isComplete)
                 if let message = state.setupMessage {
                     Text(message).font(.caption).foregroundStyle(.secondary)
                 }
