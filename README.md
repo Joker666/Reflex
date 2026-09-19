@@ -49,4 +49,3 @@ The URL fragment is removed. The browser launcher always receives the original U
 ## Future work
 
 - Add a production signing and distribution workflow.
-- Add a custom application icon.
