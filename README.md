@@ -45,18 +45,19 @@ Reflex scans the applications that Launch Services reports for representative HT
 
 ## Profiles
 
-A scan reads the local profile list of Chrome, Edge, Comet, Dia, Helium, and Phi. Reflex reads only the profile directory and the profile name from each browser's `Local State` file. It does not read account details, history, cookies, or page data.
+A scan reads the local profile list of Chrome, Edge, Comet, Dia, Helium, and Phi. Reflex reads the profile directory and profile metadata from each browser's `Local State` file. It does not read history, cookies, or page data.
 
 - A browser with more than one profile becomes one target for each profile, for example **Google Chrome (Personal)** and **Google Chrome (Slumber)**.
 - A browser with a single profile stays one target, named after the browser.
-- The name comes from the label you gave the profile. Edge often keeps `Profile 2` there, so Reflex uses the account name of that profile instead.
+- The name normally comes from the label you gave the profile. Edge often keeps a placeholder such as `Profile 2`. In that case, Reflex can use the Edge account first and last name, Google account display name, or user name from the same profile record. The user name can be an email address.
+- The resolved profile name becomes part of the target name. When the target is enabled and an OpenRouter API key is configured, Reflex sends that target name to OpenRouter for the Jev decision. Thus, an Edge account name or user name can leave the Mac.
 - A rescan adds a new profile and keeps your names, purposes, order, and switches. It replaces only a name Reflex built from a placeholder.
 - Safari, Firefox, and Zen have no profile support, because they do not accept the Chromium profile argument.
 
 macOS keeps browser data behind Full Disk Access. Chrome and Edge are the usual ones it blocks. The **Profile access** section in Settings shows the state:
 
 - It names the browsers macOS blocks.
-- It says what Reflex reads: the profile list only, no history, no cookies, no account data.
+- It says what Reflex reads: the profile list and, for an Edge placeholder, the account-name fields described above. Reflex reads no history, cookies, or page data.
 - **Open Full Disk Access** opens the list in System Settings. Add Reflex, switch it on, start Reflex again, and select **Rescan Browsers**.
 
 macOS gives no way for an application to ask for this access in a dialog, so Reflex can only open that list for you.
@@ -126,7 +127,7 @@ For Jev selection, Reflex sends only:
 - The URL scheme, host, and path
 - Query parameter names without their values
 - The source application bundle identifier when macOS provides it, and the application name it resolves to
-- Enabled and available target names and user-written purposes
+- Enabled and available target names and user-written purposes. A target name can contain an Edge account name or user name found during profile discovery.
 
 The URL fragment is removed. The browser launcher always receives the original URL. Reflex sends the reduced state to the OpenRouter decisions endpoint with the `~typesafe/jev-latest` model. If the request fails or does not return a valid answer in 1.5 seconds, Reflex shows the chooser.
 

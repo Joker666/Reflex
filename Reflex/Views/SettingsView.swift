@@ -75,25 +75,36 @@ struct SettingsView: View {
             }
 
             Section("Profile access") {
-                if state.unreadableProfileBrowsers.isEmpty {
+                if state.profileAccessDeniedBrowsers.isEmpty,
+                   state.missingProfileDataBrowsers.isEmpty {
                     Label(
-                        "Reflex can read the profiles of every installed browser.",
+                        "No profile access problem was found.",
                         systemImage: "checkmark.circle.fill"
                     )
                     .foregroundStyle(.secondary)
-                } else {
+                }
+                if !state.profileAccessDeniedBrowsers.isEmpty {
                     Label(
-                        "macOS blocks the profiles of \(state.unreadableProfileBrowsers.joined(separator: ", ")).",
+                        "macOS blocks the profiles of \(state.profileAccessDeniedBrowsers.joined(separator: ", ")).",
                         systemImage: "lock.circle"
                     )
-                    Text("Reflex reads only the profile list of a browser, so it can offer one target for each profile. macOS keeps that data behind Full Disk Access. Reflex reads no history, no cookies, and no account data.")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
                     Button("Open Full Disk Access") { state.openFullDiskAccessSettings() }
                     Text("Add Reflex to the list and switch it on. Then start Reflex again and select Rescan Browsers. Reflex works without this access, but it shows one target for each of these browsers.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
+                if !state.missingProfileDataBrowsers.isEmpty {
+                    Label(
+                        "No profile data was found for \(state.missingProfileDataBrowsers.joined(separator: ", ")).",
+                        systemImage: "questionmark.circle"
+                    )
+                    Text("Start each browser once, then select Rescan Browsers. Invalid profile data also appears in this state.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                Text("Reflex reads profile directories and profile names. When Edge stores a placeholder profile name, Reflex can read account-name fields from that profile record. The value can become a target name and can be sent to OpenRouter when automatic selection is active. Reflex reads no history, cookies, or page data.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
 
             Section("Browser targets") {

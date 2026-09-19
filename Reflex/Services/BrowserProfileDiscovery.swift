@@ -11,19 +11,23 @@ struct DiscoveredBrowserProfile: Identifiable, Equatable {
 
 struct BrowserProfileDiscoveryResult: Equatable {
     var profiles: [DiscoveredBrowserProfile]
-    var unreadableBrowserNames: [String]
+    var accessDeniedBrowserNames: [String]
+    var missingProfileDataBrowserNames: [String]
     var readableBundleIdentifiers: Set<String> = []
 }
 
 struct BrowserProfileDiscovery {
     var applicationSupportURL: URL
     var fileManager: FileManager
+    var dataLoader: (URL) throws -> Data
 
     init(
         applicationSupportURL: URL? = nil,
-        fileManager: FileManager = .default
+        fileManager: FileManager = .default,
+        dataLoader: @escaping (URL) throws -> Data = { try Data(contentsOf: $0) }
     ) {
         self.fileManager = fileManager
+        self.dataLoader = dataLoader
         self.applicationSupportURL = applicationSupportURL
             ?? fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
     }
@@ -48,12 +52,16 @@ struct BrowserProfileDiscovery {
             }
             return browserOrder == .orderedAscending
         }
-        let unreadableBrowserNames = results.compactMap(\.unreadableBrowserName).sorted {
+        let accessDeniedBrowserNames = results.compactMap(\.accessDeniedBrowserName).sorted {
+            $0.localizedCaseInsensitiveCompare($1) == .orderedAscending
+        }
+        let missingProfileDataBrowserNames = results.compactMap(\.missingProfileDataBrowserName).sorted {
             $0.localizedCaseInsensitiveCompare($1) == .orderedAscending
         }
         return BrowserProfileDiscoveryResult(
             profiles: profiles,
-            unreadableBrowserNames: unreadableBrowserNames,
+            accessDeniedBrowserNames: accessDeniedBrowserNames,
+            missingProfileDataBrowserNames: missingProfileDataBrowserNames,
             readableBundleIdentifiers: Set(results.compactMap(\.readableBundleIdentifier))
         )
     }
@@ -72,20 +80,30 @@ struct BrowserProfileDiscovery {
         bundleIdentifier: String
     ) -> (
         profiles: [DiscoveredBrowserProfile],
-        unreadableBrowserName: String?,
+        accessDeniedBrowserName: String?,
+        missingProfileDataBrowserName: String?,
         readableBundleIdentifier: String?
     ) {
         guard let relativeDirectory = Self.relativeDataDirectory(for: bundleIdentifier) else {
-            return ([], nil, nil)
+            return ([], nil, nil, nil)
         }
         let dataDirectory = applicationSupportURL.appending(path: relativeDirectory, directoryHint: .isDirectory)
         let localStateURL = dataDirectory.appending(path: "Local State")
-        guard fileManager.fileExists(atPath: localStateURL.path) else { return ([], nil, nil) }
-        guard let data = try? Data(contentsOf: localStateURL),
-              let root = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+        let data: Data
+        do {
+            data = try dataLoader(localStateURL)
+        } catch {
+            let cocoaError = error as NSError
+            if cocoaError.domain == NSCocoaErrorDomain,
+               cocoaError.code == CocoaError.Code.fileReadNoPermission.rawValue {
+                return ([], browserName, nil, nil)
+            }
+            return ([], nil, browserName, nil)
+        }
+        guard let root = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
               let profile = root["profile"] as? [String: Any],
               let infoCache = profile["info_cache"] as? [String: Any] else {
-            return ([], browserName, nil)
+            return ([], nil, browserName, nil)
         }
 
         let profiles: [DiscoveredBrowserProfile] = infoCache.compactMap { directory, value in
@@ -102,7 +120,7 @@ struct BrowserProfileDiscovery {
                 profileName: profileName
             )
         }
-        return (profiles, nil, bundleIdentifier)
+        return (profiles, nil, nil, bundleIdentifier)
     }
 
     /// Edge leaves `name` at "Profile 2" and keeps the person's name in the account fields.

@@ -13,7 +13,8 @@ final class AppState: ObservableObject {
     @Published private(set) var isRouting = false
     @Published private(set) var isJevUnavailable = false
     @Published private(set) var skipsAutomaticSelection = false
-    @Published private(set) var unreadableProfileBrowsers: [String] = []
+    @Published private(set) var profileAccessDeniedBrowsers: [String] = []
+    @Published private(set) var missingProfileDataBrowsers: [String] = []
     @Published var launchError: String?
     @Published var setupMessage: String?
     /// Not @Published: MenuBarExtra writes this binding on every update, and a publish
@@ -151,7 +152,8 @@ final class AppState: ObservableObject {
         let result = BrowserProfileDiscovery().discover(for: merged)
         knownProfileKeys = Set(result.profiles.map(\.id))
         browsersWithReadProfiles = result.readableBundleIdentifiers
-        unreadableProfileBrowsers = result.unreadableBrowserNames
+        profileAccessDeniedBrowsers = result.accessDeniedBrowserNames
+        missingProfileDataBrowsers = result.missingProfileDataBrowserNames
 
         targets = merged
             .expandingProfiles(Dictionary(grouping: result.profiles, by: \.bundleIdentifier))

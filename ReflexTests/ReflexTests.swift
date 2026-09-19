@@ -64,8 +64,28 @@ struct ReflexTests {
                 profileName: "Another private name"
             ),
         ])
-        #expect(result.unreadableBrowserNames == ["Edge"])
+        #expect(result.accessDeniedBrowserNames.isEmpty)
+        #expect(result.missingProfileDataBrowserNames == ["Edge"])
         #expect(result.readableBundleIdentifiers == ["com.google.Chrome"])
+    }
+
+    @Test("Profile discovery distinguishes denied access from missing data")
+    func profileAccessStates() {
+        let target = makeTarget(name: "Chrome", bundleIdentifier: "com.google.Chrome")
+
+        let denied = BrowserProfileDiscovery(
+            dataLoader: { _ in throw CocoaError(.fileReadNoPermission) }
+        ).discover(for: [target])
+        let missing = BrowserProfileDiscovery(
+            dataLoader: { _ in throw CocoaError(.fileReadNoSuchFile) }
+        ).discover(for: [target])
+
+        #expect(denied.accessDeniedBrowserNames == ["Chrome"])
+        #expect(denied.missingProfileDataBrowserNames.isEmpty)
+        #expect(denied.readableBundleIdentifiers.isEmpty)
+        #expect(missing.accessDeniedBrowserNames.isEmpty)
+        #expect(missing.missingProfileDataBrowserNames == ["Chrome"])
+        #expect(missing.readableBundleIdentifiers.isEmpty)
     }
 
     @Test("A profile name falls back to the account fields")
@@ -174,7 +194,12 @@ struct ReflexTests {
             "com.google.Chrome": [makeProfile(directory: "Default", name: "Personal")],
         ])
 
-        #expect(result == [chrome])
+        #expect(result.count == 1)
+        #expect(result[0].id == chrome.id)
+        #expect(result[0].name == chrome.name)
+        #expect(result[0].purpose == chrome.purpose)
+        #expect(result[0].isEnabled == chrome.isEnabled)
+        #expect(result[0].chromiumProfileDirectory == "Default")
     }
 
     @Test("A rescan keeps profile targets and adds new profiles")

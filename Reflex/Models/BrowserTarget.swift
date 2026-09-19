@@ -50,7 +50,16 @@ extension Array where Element == BrowserTarget {
             emittedBundleIdentifiers.insert(bundleIdentifier)
 
             var group = filter { $0.bundleIdentifier == bundleIdentifier }
-            guard let profiles = profilesByBundleIdentifier[bundleIdentifier], profiles.count > 1 else {
+            guard let profiles = profilesByBundleIdentifier[bundleIdentifier], !profiles.isEmpty else {
+                result.append(contentsOf: group)
+                continue
+            }
+
+            if profiles.count == 1,
+               let plainIndex = group.firstIndex(where: { $0.chromiumProfileDirectory == nil }),
+               !group.compactMap(\.chromiumProfileDirectory).contains(profiles[0].profileDirectory) {
+                // Keep the plain browser name and the user's settings, but launch its one profile explicitly.
+                group[plainIndex].chromiumProfileDirectory = profiles[0].profileDirectory
                 result.append(contentsOf: group)
                 continue
             }
