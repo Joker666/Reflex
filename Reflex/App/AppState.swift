@@ -16,6 +16,7 @@ final class AppState: ObservableObject {
     @Published private(set) var profileDiscoveryMessage: String?
     @Published var launchError: String?
     @Published var setupMessage: String?
+    weak var chooserPresenter: (any ChooserPresenting)?
 
     private var queue = PendingURLQueue()
     private let launcher = BrowserLauncher()
@@ -23,6 +24,7 @@ final class AppState: ObservableObject {
     private let jevClient = JevClient()
     private let defaults = UserDefaults.standard
     private let targetsKey = "browserTargets"
+    private var iconCache: [String: NSImage] = [:]
 
     init(keychain: any APIKeyStoring = KeychainStore()) {
         self.keychain = keychain
@@ -45,12 +47,6 @@ final class AppState: ObservableObject {
             queue.enqueue(url, sourceApplicationBundleIdentifier: sourceApplicationBundleIdentifier)
         }
         pendingURL = queue.current?.url
-        if pendingURL != nil {
-            NSApplication.shared.activate(ignoringOtherApps: true)
-            NSApplication.shared.windows
-                .first(where: { $0.title == "Reflex" })?
-                .makeKeyAndOrderFront(nil)
-        }
         if needsRouting, pendingURL != nil {
             routePending()
         }
@@ -62,22 +58,35 @@ final class AppState: ObservableObject {
         Task {
             do {
                 try await launcher.open(url, in: target)
-                pendingURL = queue.advance()?.url
-                suggestedTargetID = nil
-                isJevUnavailable = false
-                routePending()
+                advancePending()
             } catch {
                 launchError = (error as? LocalizedError)?.errorDescription ?? "Reflex could not open the link."
+                chooserPresenter?.presentChooser()
             }
         }
     }
 
     func cancelPending() {
-        pendingURL = queue.advance()?.url
         launchError = nil
+        advancePending()
+    }
+
+    func icon(for target: BrowserTarget) -> NSImage? {
+        if let cached = iconCache[target.bundleIdentifier] { return cached }
+        guard let icon = launcher.icon(for: target) else { return nil }
+        iconCache[target.bundleIdentifier] = icon
+        return icon
+    }
+
+    private func advancePending() {
+        pendingURL = queue.advance()?.url
         suggestedTargetID = nil
         isJevUnavailable = false
-        routePending()
+        if pendingURL == nil {
+            chooserPresenter?.dismissChooser()
+        } else {
+            routePending()
+        }
     }
 
     func rescanBrowsers() {
@@ -184,6 +193,7 @@ final class AppState: ObservableObject {
         let localAction = RoutingPolicy.action(availableTargets: targets, decision: nil)
         switch localAction {
         case .setup:
+            chooserPresenter?.presentChooser()
             return
         case let .open(targetID):
             if let target = targets.first(where: { $0.id == targetID }) {
@@ -193,6 +203,8 @@ final class AppState: ObservableObject {
         case .choose:
             break
         }
+
+        chooserPresenter?.presentChooser()
 
         guard let apiKey = try? keychain.readAPIKey(),
               let context = URLSanitizer.sanitize(

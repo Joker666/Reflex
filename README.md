@@ -53,6 +53,17 @@ To use automatic selection, paste an OpenRouter API key into Settings and select
 
 External applications normally send links to the default browser. Navigation inside an existing browser, embedded web views, and non-HTTP(S) deep links can bypass Reflex. Reflex does not block Settings or manual tests when another default browser is active.
 
+## The chooser
+
+When Reflex needs your decision, it opens a small panel at the pointer, next to the link you clicked. Each row shows the browser name, a number key badge, and the application icon. The suggested target is selected and has a sparkle mark.
+
+- Press a number key to open that target.
+- Use the arrow keys and Return to open the selected target.
+- Move the pointer across the list to select a row, the same as the arrow keys. Click to open it.
+- Press Escape, or click outside the panel, to cancel the link.
+
+The panel does not show the link or its host.
+
 ## Privacy
 
 Original URLs stay only in memory while they wait for routing. Reflex does not save link history or URL data. It does not log incoming URLs, API keys, authorization headers, or API response bodies.

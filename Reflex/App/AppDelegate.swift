@@ -2,22 +2,17 @@ import AppKit
 
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
-    var state: AppState? {
-        didSet {
-            guard let state else { return }
-            for delivery in pendingDeliveries {
-                state.receive(
-                    delivery.urls,
-                    sourceApplicationBundleIdentifier: delivery.sourceApplicationBundleIdentifier
-                )
-            }
-            pendingDeliveries.removeAll()
-        }
+    let state: AppState
+    private let chooserController: ChooserPanelController
+
+    override init() {
+        let isTesting = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
+        let state = isTesting ? AppState(keychain: DisabledKeychainStore()) : AppState()
+        self.state = state
+        chooserController = ChooserPanelController(state: state)
+        super.init()
+        state.chooserPresenter = chooserController
     }
-    private var pendingDeliveries: [(
-        urls: [URL],
-        sourceApplicationBundleIdentifier: String?
-    )] = []
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         guard let iconURL = Bundle.main.url(forResource: "AppIcon", withExtension: "icns"),
@@ -32,17 +27,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             .currentAppleEvent?
             .attributeDescriptor(forKeyword: keyOriginalAddressAttr)?
             .stringValue
-        if let state {
-            state.receive(
-                urls,
-                sourceApplicationBundleIdentifier: sourceApplicationBundleIdentifier
-            )
-        } else {
-            pendingDeliveries.append((urls, sourceApplicationBundleIdentifier))
-        }
+        state.receive(
+            urls,
+            sourceApplicationBundleIdentifier: sourceApplicationBundleIdentifier
+        )
     }
 
     func applicationDidBecomeActive(_ notification: Notification) {
-        state?.refreshDefaultBrowserStatus()
+        state.refreshDefaultBrowserStatus()
     }
 }

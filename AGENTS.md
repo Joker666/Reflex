@@ -225,10 +225,12 @@ Keep the threshold in preferences, but a settings UI for changing it is optional
 Use a menu bar app with two small windows/panels:
 
 1. **Chooser**
-   - Displays enabled, installed targets
-   - Shows the pending link's host
+   - Opens as a compact borderless panel at the pointer, next to the clicked link
+   - Displays enabled, installed targets with the application icon and a number key badge
    - Highlights Jev's suggestion when present
+   - Does not show the pending link or host
    - Supports arrow keys, Return to open, number shortcuts, and Escape to cancel
+   - The pointer selects the row below it, the same as the arrow keys
    - Shows a small offline/error indicator when Jev was unavailable, without exposing raw API errors
 
 2. **Settings**
