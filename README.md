@@ -76,6 +76,8 @@ The chooser uses the target order from Settings. Drag a target by the handle at 
 - Press Escape, or click outside the panel, to cancel the link.
 - Select the gear at the bottom right to open Settings. This cancels the link, the same as Escape.
 
+The footer line shows the state of automatic selection: **active** while an API key is configured and Jev answers, **unavailable** after a failure or without a key.
+
 The panel does not show the link or its host.
 
 ## Settings and quitting

@@ -235,6 +235,7 @@ Use a menu bar app with two small windows/panels. Reflex runs as an accessory ap
    - Supports arrow keys, Return to open, number shortcuts, and Escape to cancel
    - The pointer selects the row below it, the same as the arrow keys
    - Shows a small offline/error indicator when Jev was unavailable, without exposing raw API errors
+   - Shows that automatic selection is active while an API key is configured and Jev has not failed
    - Shows no scroll indicator
    - Has a settings button, because the menu bar item is optional. It cancels the pending link, closes the chooser, and opens Settings
 

@@ -182,6 +182,12 @@ struct ChooserView: View {
                     systemImage: "bolt.slash",
                     tint: .secondary
                 )
+            } else if state.hasAPIKey {
+                statusLine(
+                    "Automatic selection is active",
+                    systemImage: "bolt",
+                    tint: .secondary
+                )
             }
             Spacer(minLength: 0)
             Button {
@@ -197,7 +203,7 @@ struct ChooserView: View {
             .accessibilityLabel("Open Settings")
         }
         .padding(.leading, 8)
-        .padding(.trailing, 1)
+        .padding(.trailing, 4)
         .padding(.bottom, 2)
     }
 
