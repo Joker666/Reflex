@@ -74,6 +74,7 @@ Reflex has no Dock icon while it routes a link. A link shows the panel and nothi
 
 The chooser uses the target order from Settings. Drag a target by the handle at the left of its row to change the order. The number badge shows the key that opens that target. A disabled or unavailable target has no number.
 - Press Escape, or click outside the panel, to cancel the link.
+- Select the gear at the bottom right to open Settings. The panel returns when you close Settings, and the link is still there.
 
 The panel does not show the link or its host.
 

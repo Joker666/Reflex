@@ -27,6 +27,7 @@ final class AppState: ObservableObject {
         }
     }
     weak var chooserPresenter: (any ChooserPresenting)?
+    var settingsAction: (() -> Void)?
 
     private var queue = PendingURLQueue()
     private let launcher = BrowserLauncher()
@@ -164,6 +165,15 @@ final class AppState: ObservableObject {
                 isEnabled: true
             )
         )
+    }
+
+    func openSettings() {
+        chooserPresenter?.dismissChooser()
+        settingsAction?()
+    }
+
+    func presentChooser() {
+        chooserPresenter?.presentChooser()
     }
 
     func openPrivacySettings() {

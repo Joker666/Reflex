@@ -44,7 +44,12 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
     /// macOS starts Reflex again for the next link, so it does not stay in the Dock.
     func windowWillClose(_ notification: Notification) {
         DispatchQueue.main.async {
-            guard self.state.pendingURL == nil else { return }
+            guard self.state.pendingURL == nil else {
+                // A link waited while Settings was open. Reflex shows it again.
+                NSApplication.shared.setActivationPolicy(.accessory)
+                self.state.presentChooser()
+                return
+            }
             NSApplication.shared.terminate(nil)
         }
     }

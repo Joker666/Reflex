@@ -15,6 +15,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         settingsController = SettingsWindowController(state: state)
         super.init()
         state.chooserPresenter = chooserController
+        state.settingsAction = { [weak settingsController] in settingsController?.show() }
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {

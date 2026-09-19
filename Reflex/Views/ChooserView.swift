@@ -28,15 +28,7 @@ struct ChooserView: View {
                 targetList
             }
 
-            if let error = state.launchError {
-                statusLine(error, systemImage: "exclamationmark.triangle", tint: .orange)
-            } else if state.isJevUnavailable {
-                statusLine(
-                    "Automatic selection is unavailable",
-                    systemImage: "bolt.slash",
-                    tint: .secondary
-                )
-            }
+            footer
         }
         .padding(6)
         .frame(width: panelWidth)
@@ -180,14 +172,39 @@ struct ChooserView: View {
         .padding(12)
     }
 
+    private var footer: some View {
+        HStack(spacing: 6) {
+            if let error = state.launchError {
+                statusLine(error, systemImage: "exclamationmark.triangle", tint: .orange)
+            } else if state.isJevUnavailable {
+                statusLine(
+                    "Automatic selection is unavailable",
+                    systemImage: "bolt.slash",
+                    tint: .secondary
+                )
+            }
+            Spacer(minLength: 0)
+            Button {
+                state.openSettings()
+            } label: {
+                Image(systemName: "gearshape")
+                    .font(.system(size: 12))
+                    .frame(width: 22, height: 22)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .foregroundStyle(.secondary)
+            .accessibilityLabel("Open Settings")
+        }
+        .padding(.horizontal, 8)
+        .padding(.bottom, 2)
+    }
+
     private func statusLine(_ text: String, systemImage: String, tint: Color) -> some View {
         Label(text, systemImage: systemImage)
             .font(.caption)
             .foregroundStyle(tint)
-            .lineLimit(2)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.horizontal, 8)
-            .padding(.bottom, 2)
+            .lineLimit(1)
     }
 
     private func resetSelection() {
