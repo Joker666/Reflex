@@ -20,6 +20,13 @@ extension BrowserTarget {
     static func profileName(_ profileName: String, of browserName: String) -> String {
         "\(browserName) (\(profileName))"
     }
+
+    /// The text inside the trailing parentheses, which is the profile part of a name.
+    static func profilePart(of name: String) -> String? {
+        guard name.hasSuffix(")"), let open = name.lastIndex(of: "(") else { return nil }
+        let part = name[name.index(after: open)..<name.index(before: name.endIndex)]
+        return part.isEmpty ? nil : String(part)
+    }
 }
 
 struct DiscoveredBrowser: Equatable {
@@ -61,6 +68,23 @@ extension Array where Element == BrowserTarget {
                         of: browserName
                     )
                 }
+            }
+
+            // A name Reflex made from the directory is not a user's name, so a later
+            // scan that finds the real profile name replaces it.
+            for index in group.indices {
+                guard let directory = group[index].chromiumProfileDirectory,
+                      let profile = profiles.first(where: { $0.profileDirectory == directory }),
+                      let part = BrowserTarget.profilePart(of: group[index].name),
+                      part != profile.profileName,
+                      part == directory || BrowserProfileDiscovery.isPlaceholder(part) else { continue }
+                let fallbackName = BrowserTarget.profileName(part, of: browserName)
+                guard group[index].name == fallbackName else { continue }
+                let name = BrowserTarget.profileName(profile.profileName, of: browserName)
+                if group[index].purpose == "General browsing in \(fallbackName)" {
+                    group[index].purpose = "General browsing in \(name)"
+                }
+                group[index].name = name
             }
 
             let configured = Set(group.compactMap(\.chromiumProfileDirectory))

@@ -93,10 +93,8 @@ struct BrowserProfileDiscovery {
                   fileManager.fileExists(atPath: dataDirectory.appending(path: directory).path) else {
                 return nil
             }
-            let metadata = value as? [String: Any]
-            let storedName = (metadata?["name"] as? String)?
-                .trimmingCharacters(in: .whitespacesAndNewlines)
-            let profileName = storedName.flatMap { $0.isEmpty ? nil : $0 } ?? directory
+            let metadata = value as? [String: Any] ?? [:]
+            let profileName = Self.profileName(from: metadata, directory: directory)
             return DiscoveredBrowserProfile(
                 browserName: browserName,
                 bundleIdentifier: bundleIdentifier,
@@ -105,6 +103,39 @@ struct BrowserProfileDiscovery {
             )
         }
         return (profiles, nil, bundleIdentifier)
+    }
+
+    /// Edge leaves `name` at "Profile 2" and keeps the person's name in the account fields.
+    static func profileName(from metadata: [String: Any], directory: String) -> String {
+        let accountName = [
+            text(metadata["edge_account_first_name"]),
+            text(metadata["edge_account_last_name"]),
+        ]
+        .compactMap { $0 }
+        .joined(separator: " ")
+
+        let candidates = [
+            text(metadata["name"]).flatMap { isPlaceholder($0) ? nil : $0 },
+            // The account name is shorter than the full account label, which can carry an id.
+            accountName.isEmpty ? nil : accountName,
+            text(metadata["gaia_name"]),
+            text(metadata["user_name"]),
+        ]
+        return candidates.compactMap { $0 }.first ?? directory
+    }
+
+    private static func text(_ value: Any?) -> String? {
+        guard let string = value as? String else { return nil }
+        let trimmed = string.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? nil : trimmed
+    }
+
+    /// "Profile 2" and "Person 1" are the names a browser gives a profile without a name.
+    static func isPlaceholder(_ name: String) -> Bool {
+        let parts = name.split(separator: " ")
+        guard parts.count == 2, Int(parts[1]) != nil else { return false }
+        let first = parts[0].lowercased()
+        return first == "profile" || first == "person"
     }
 
     private static func relativeDataDirectory(for bundleIdentifier: String) -> String? {

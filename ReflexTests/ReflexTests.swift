@@ -68,6 +68,74 @@ struct ReflexTests {
         #expect(result.readableBundleIdentifiers == ["com.google.Chrome"])
     }
 
+    @Test("A profile name falls back to the account fields")
+    func profileNameResolution() {
+        #expect(BrowserProfileDiscovery.profileName(
+            from: ["name": "Personal"],
+            directory: "Default"
+        ) == "Personal")
+        #expect(BrowserProfileDiscovery.profileName(
+            from: ["name": "Profile 2", "gaia_name": "Ayaz"],
+            directory: "Profile 2"
+        ) == "Ayaz")
+        #expect(BrowserProfileDiscovery.profileName(
+            from: [
+                "name": "Person 1",
+                "edge_account_first_name": "MD",
+                "edge_account_last_name": "Ahad",
+                "gaia_name": "MD Ahad (12345)",
+            ],
+            directory: "Profile 1"
+        ) == "MD Ahad")
+        #expect(BrowserProfileDiscovery.profileName(
+            from: ["name": "  ", "user_name": "person@example.com"],
+            directory: "Profile 3"
+        ) == "person@example.com")
+        #expect(BrowserProfileDiscovery.profileName(from: [:], directory: "Profile 4") == "Profile 4")
+    }
+
+    @Test("A scan replaces a name Reflex made from the directory")
+    func profileExpansionReplacesFallbackName() {
+        let target = BrowserTarget(
+            id: UUID(),
+            name: "Microsoft Edge (Profile 1)",
+            bundleIdentifier: "com.microsoft.edgemac",
+            purpose: "General browsing in Microsoft Edge (Profile 1)",
+            chromiumProfileDirectory: "Profile 2",
+            isEnabled: true
+        )
+        let named = BrowserTarget(
+            id: UUID(),
+            name: "Edge for invoices",
+            bundleIdentifier: "com.microsoft.edgemac",
+            purpose: "Invoices",
+            chromiumProfileDirectory: "Default",
+            isEnabled: true
+        )
+        let profiles = [
+            DiscoveredBrowserProfile(
+                browserName: "Microsoft Edge",
+                bundleIdentifier: "com.microsoft.edgemac",
+                profileDirectory: "Default",
+                profileName: "Personal"
+            ),
+            DiscoveredBrowserProfile(
+                browserName: "Microsoft Edge",
+                bundleIdentifier: "com.microsoft.edgemac",
+                profileDirectory: "Profile 2",
+                profileName: "Ayaz"
+            ),
+        ]
+
+        let result = [target, named].expandingProfiles(["com.microsoft.edgemac": profiles])
+
+        #expect(result.count == 2)
+        #expect(result[0].name == "Microsoft Edge (Ayaz)")
+        #expect(result[0].purpose == "General browsing in Microsoft Edge (Ayaz)")
+        #expect(result[1].name == "Edge for invoices")
+        #expect(result[1].purpose == "Invoices")
+    }
+
     @Test("Two profiles replace the plain target and keep its purpose")
     func profileExpansionReplacesPlainTarget() {
         let chrome = BrowserTarget(

@@ -49,7 +49,8 @@ A scan reads the local profile list of Chrome, Edge, Comet, Dia, Helium, and Phi
 
 - A browser with more than one profile becomes one target for each profile, for example **Google Chrome (Personal)** and **Google Chrome (Slumber)**.
 - A browser with a single profile stays one target, named after the browser.
-- A rescan adds a new profile and keeps your names, purposes, order, and switches.
+- The name comes from the label you gave the profile. Edge often keeps `Profile 2` there, so Reflex uses the account name of that profile instead.
+- A rescan adds a new profile and keeps your names, purposes, order, and switches. It replaces only a name Reflex built from a placeholder.
 - Safari, Firefox, and Zen have no profile support, because they do not accept the Chromium profile argument.
 
 macOS keeps browser data behind Full Disk Access. Chrome and Edge are the usual ones it blocks. The **Profile access** section in Settings shows the state:
