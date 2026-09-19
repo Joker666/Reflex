@@ -1,4 +1,5 @@
 import AppKit
+import Combine
 import Foundation
 import OSLog
 
@@ -17,16 +18,10 @@ final class AppState: ObservableObject {
         }
     }
     @Published private(set) var availableTargets: [BrowserTarget] = []
-    @Published private(set) var pendingURL: URL?
     @Published private(set) var defaultBrowserStatus = DefaultBrowserStatus(ownsHTTP: false, ownsHTTPS: false)
-    @Published private(set) var suggestedTargetID: UUID?
     @Published private(set) var hasAPIKey = false
-    @Published private(set) var isRouting = false
-    @Published private(set) var isJevUnavailable = false
-    @Published private(set) var skipsAutomaticSelection = false
     @Published private(set) var profileAccessDeniedBrowsers: [String] = []
     @Published private(set) var missingProfileDataBrowsers: [String] = []
-    @Published var launchError: String?
     @Published var setupMessage: String?
     @Published var chooserModifier = ChooserModifier.option {
         didSet { defaults.set(chooserModifier.rawValue, forKey: chooserModifierKey) }
@@ -42,10 +37,12 @@ final class AppState: ObservableObject {
             defaults.set(newValue, forKey: menuBarItemKey)
         }
     }
-    weak var chooserPresenter: (any ChooserPresenting)?
+    var chooserPresenter: (any ChooserPresenting)? {
+        get { linkRouter.chooserPresenter }
+        set { linkRouter.chooserPresenter = newValue }
+    }
     var settingsAction: (() -> Void)?
 
-    private var queue = PendingURLQueue()
     private let launcher: any BrowserLaunching
     private let keychain: any APIKeyStoring
     private let jevClient: any JevDeciding
@@ -62,10 +59,21 @@ final class AppState: ObservableObject {
     private var browsersWithReadProfiles: Set<String> = []
     private var browserScanTask: Task<Void, Never>?
     private var browserScanGeneration = 0
-    private var routingTask: Task<Void, Never>?
-    private var routingLinkID: UUID?
-    private var launchTask: Task<Void, Never>?
-    private var launchingLinkID: UUID?
+    private var routingChangeSubscription: AnyCancellable?
+    private lazy var linkRouter = LinkRouter(
+        launcher: launcher,
+        keychain: keychain,
+        jevClient: jevClient,
+        availableTargets: { [weak self] in self?.availableTargets ?? [] },
+        sourceApplicationName: { [weak self] in self?.applicationName(for: $0) }
+    )
+
+    var pendingURL: URL? { linkRouter.pendingURL }
+    var suggestedTargetID: UUID? { linkRouter.suggestedTargetID }
+    var isRouting: Bool { linkRouter.isRouting }
+    var isJevUnavailable: Bool { linkRouter.isJevUnavailable }
+    var skipsAutomaticSelection: Bool { linkRouter.skipsAutomaticSelection }
+    var launchError: String? { linkRouter.launchError }
 
     init(
         keychain: any APIKeyStoring = KeychainStore(),
@@ -90,6 +98,9 @@ final class AppState: ObservableObject {
         refreshDefaultBrowserStatus()
         hasAPIKey = (try? keychain.readAPIKey()) != nil
         updateAvailableTargets()
+        routingChangeSubscription = linkRouter.objectWillChange.sink { [weak self] _ in
+            self?.objectWillChange.send()
+        }
     }
 
     /// Launch Services lookups are slow, and SwiftUI asks for these on every pass.
@@ -122,52 +133,19 @@ final class AppState: ObservableObject {
         sourceApplicationBundleIdentifier: String? = nil,
         asksForChooser: Bool = false
     ) {
-        let needsRouting = queue.current == nil
-        for url in urls where url.isHTTPOrHTTPS {
-            ReflexLog.routing.info("Enqueued link with scheme: \(url.scheme ?? "", privacy: .public), host: \(url.host() ?? "", privacy: .private)")
-            queue.enqueue(
-                url,
-                sourceApplicationBundleIdentifier: sourceApplicationBundleIdentifier,
-                asksForChooser: asksForChooser
-            )
-        }
-        pendingURL = queue.current?.url
-        if needsRouting, pendingURL != nil {
-            routePending()
-        }
+        linkRouter.receive(
+            urls,
+            sourceApplicationBundleIdentifier: sourceApplicationBundleIdentifier,
+            asksForChooser: asksForChooser
+        )
     }
 
     func openPending(in target: BrowserTarget) {
-        guard let link = queue.current, launchTask == nil else { return }
-        let linkID = link.id
-        launchError = nil
-        ReflexLog.launch.info("Opening link in target: \(target.name, privacy: .private) (\(target.bundleIdentifier, privacy: .public))")
-        launchingLinkID = linkID
-        launchTask = Task { [weak self] in
-            guard let self else { return }
-            defer {
-                if self.launchingLinkID == linkID {
-                    self.launchTask = nil
-                    self.launchingLinkID = nil
-                }
-            }
-            do {
-                try await self.launcher.open(link.url, in: target)
-                guard !Task.isCancelled, self.queue.current?.id == linkID else { return }
-                self.advancePending(expectedLinkID: linkID)
-            } catch {
-                guard !Task.isCancelled, self.queue.current?.id == linkID else { return }
-                ReflexLog.launch.error("Failed to open target \(target.name, privacy: .private): \(error.localizedDescription, privacy: .private)")
-                self.launchError = (error as? LocalizedError)?.errorDescription ?? "Reflex could not open the link."
-                self.chooserPresenter?.presentChooser()
-            }
-        }
+        linkRouter.openPending(in: target)
     }
 
     func cancelPending() {
-        guard let linkID = queue.current?.id else { return }
-        launchError = nil
-        advancePending(expectedLinkID: linkID)
+        linkRouter.cancelPending()
     }
 
     func icon(for target: BrowserTarget) -> NSImage? {
@@ -184,30 +162,6 @@ final class AppState: ObservableObject {
             return nil
         }
         return bundle.displayName(fallbackURL: url)
-    }
-
-    private func advancePending(expectedLinkID: UUID) {
-        guard queue.current?.id == expectedLinkID else { return }
-        cancelPendingTasks()
-        pendingURL = queue.advance()?.url
-        suggestedTargetID = nil
-        isJevUnavailable = false
-        skipsAutomaticSelection = false
-        if pendingURL == nil {
-            chooserPresenter?.dismissChooser()
-        } else {
-            routePending()
-        }
-    }
-
-    private func cancelPendingTasks() {
-        routingTask?.cancel()
-        routingTask = nil
-        routingLinkID = nil
-        launchTask?.cancel()
-        launchTask = nil
-        launchingLinkID = nil
-        isRouting = false
     }
 
     func rescanBrowsers() {
@@ -249,7 +203,7 @@ final class AppState: ObservableObject {
         if !result.accessDeniedBrowserNames.isEmpty {
             ReflexLog.discovery.warning("Profile access denied for: \(result.accessDeniedBrowserNames.joined(separator: ", "), privacy: .private)")
         }
-        if pendingURL != nil { routePending() }
+        linkRouter.retryPending()
     }
 
     func addTarget(applicationURL: URL) {
@@ -320,106 +274,12 @@ final class AppState: ObservableObject {
         guard !trimmedKey.isEmpty else { return }
         try keychain.saveAPIKey(trimmedKey)
         hasAPIKey = true
-        if pendingURL != nil { routePending() }
+        linkRouter.retryPending()
     }
 
     func removeAPIKey() throws {
         try keychain.removeAPIKey()
         hasAPIKey = false
-    }
-
-    private func routePending() {
-        guard let link = queue.current, !isRouting else { return }
-        let linkID = link.id
-        let url = link.url
-        let targets = availableTargets
-        skipsAutomaticSelection = link.asksForChooser
-        // The configured modifier was held, so the user wants the full list.
-        if skipsAutomaticSelection, !targets.isEmpty {
-            ReflexLog.routing.info("Chooser modifier held; skipping automatic selection")
-            suggestedTargetID = nil
-            isJevUnavailable = false
-            chooserPresenter?.presentChooser()
-            return
-        }
-        let localAction = RoutingPolicy.action(availableTargets: targets, decision: nil)
-        switch localAction {
-        case .setup:
-            ReflexLog.routing.info("No targets available; showing setup")
-            chooserPresenter?.presentChooser()
-            return
-        case let .open(targetID):
-            ReflexLog.routing.info("Single enabled target bypasses Jev decision")
-            if let target = targets.first(where: { $0.id == targetID }) {
-                openPending(in: target)
-            }
-            return
-        case .choose:
-            break
-        }
-
-        chooserPresenter?.presentChooser()
-
-        let sourceBundleIdentifier = link.sourceApplicationBundleIdentifier
-        guard let apiKey = try? keychain.readAPIKey(),
-              let context = URLSanitizer.sanitize(
-                url,
-                sourceApplicationBundleIdentifier: sourceBundleIdentifier,
-                sourceApplicationName: applicationName(for: sourceBundleIdentifier)
-              ) else {
-            ReflexLog.routing.info("No API key configured or sanitization failed; showing chooser fallback")
-            suggestedTargetID = nil
-            isJevUnavailable = true
-            return
-        }
-
-        isRouting = true
-        isJevUnavailable = false
-        routingLinkID = linkID
-        ReflexLog.jev.info("Requesting Jev decision for host: \(context.host, privacy: .private) with \(targets.count, privacy: .public) targets")
-        routingTask = Task { [weak self] in
-            guard let self else { return }
-            defer {
-                if self.routingLinkID == linkID {
-                    self.routingTask = nil
-                    self.routingLinkID = nil
-                    self.isRouting = false
-                }
-            }
-            do {
-                let decision = try await self.jevClient.decide(
-                    context: context,
-                    targets: targets,
-                    apiKey: apiKey
-                )
-                guard !Task.isCancelled, self.queue.current?.id == linkID else { return }
-                ReflexLog.jev.info("Jev decision returned with confidence: \(decision.confidence, privacy: .public)")
-                self.apply(
-                    RoutingPolicy.action(availableTargets: targets, decision: decision),
-                    targets: targets,
-                    linkID: linkID
-                )
-            } catch {
-                guard !Task.isCancelled, self.queue.current?.id == linkID else { return }
-                ReflexLog.jev.error("Jev decision failed or timed out: \(error.localizedDescription, privacy: .private)")
-                self.isJevUnavailable = true
-                self.suggestedTargetID = nil
-            }
-        }
-    }
-
-    private func apply(_ action: RoutingAction, targets: [BrowserTarget], linkID: UUID) {
-        guard queue.current?.id == linkID else { return }
-        switch action {
-        case .setup:
-            suggestedTargetID = nil
-        case let .open(targetID):
-            if let target = targets.first(where: { $0.id == targetID }) {
-                openPending(in: target)
-            }
-        case let .choose(targetID):
-            suggestedTargetID = targetID
-        }
     }
 
     private func persistTargets() {
