@@ -81,6 +81,8 @@ struct SettingsView: View {
                                     .accessibilityHidden(true)
                             }
                             TextField("Name", text: $target.name)
+                                .labelsHidden()
+                                .accessibilityLabel("Target name")
                             if !BrowserLauncher().isAvailable(target) {
                                 Text("Unavailable").foregroundStyle(.secondary)
                             }
