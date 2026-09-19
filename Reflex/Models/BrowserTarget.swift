@@ -29,11 +29,7 @@ extension BrowserTarget {
     }
 }
 
-struct DiscoveredBrowser: Equatable {
-    var name: String
-    var bundleIdentifier: String
-    var applicationURL: URL
-}
+// MARK: - Discovery & Profile Expansion
 
 extension Array where Element == BrowserTarget {
     /// A browser with more than one profile becomes one target per profile. A browser with a

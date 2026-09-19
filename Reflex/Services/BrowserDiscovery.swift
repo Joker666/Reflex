@@ -94,6 +94,12 @@ enum SupportedBrowser: CaseIterable {
     }
 }
 
+struct DiscoveredBrowser: Equatable {
+    var name: String
+    var bundleIdentifier: String
+    var applicationURL: URL
+}
+
 struct BrowserDiscovery {
     private static let discoveryURLs = [
         URL(string: "http://example.com")!,

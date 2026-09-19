@@ -2,53 +2,6 @@ import AppKit
 import Foundation
 import OSLog
 
-enum ChooserModifier: String, CaseIterable, Identifiable {
-    case option
-    case control
-    case shift
-    case command
-    case function = "fn"
-
-    var id: String { rawValue }
-
-    var name: String {
-        switch self {
-        case .option: "Option"
-        case .control: "Control"
-        case .shift: "Shift"
-        case .command: "Command"
-        case .function: "Fn"
-        }
-    }
-
-    var symbolName: String {
-        switch self {
-        case .option: "option"
-        case .control: "control"
-        case .shift: "shift"
-        case .command: "command"
-        case .function: "fn"
-        }
-    }
-
-    var eventFlag: NSEvent.ModifierFlags {
-        switch self {
-        case .option: .option
-        case .control: .control
-        case .shift: .shift
-        case .command: .command
-        case .function: .function
-        }
-    }
-
-    func isPressed(in flags: NSEvent.ModifierFlags) -> Bool {
-        flags.contains(eventFlag)
-    }
-
-    static func fromStoredValue(_ value: String?) -> ChooserModifier {
-        value.flatMap(ChooserModifier.init(rawValue:)) ?? .option
-    }
-}
 
 private struct TargetProfileKey: Hashable {
     let bundleIdentifier: String
