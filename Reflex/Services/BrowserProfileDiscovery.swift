@@ -107,10 +107,6 @@ struct BrowserProfileDiscovery {
         return (profiles, nil, bundleIdentifier)
     }
 
-    static func supportsProfiles(bundleIdentifier: String) -> Bool {
-        relativeDataDirectory(for: bundleIdentifier) != nil
-    }
-
     private static func relativeDataDirectory(for bundleIdentifier: String) -> String? {
         switch bundleIdentifier {
         case "com.google.Chrome": "Google/Chrome"

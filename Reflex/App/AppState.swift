@@ -132,7 +132,7 @@ final class AppState: ObservableObject {
         if result.unreadableBrowserNames.isEmpty {
             profileDiscoveryMessage = nil
         } else {
-            profileDiscoveryMessage = "macOS did not allow profile access for \(result.unreadableBrowserNames.joined(separator: ", ")). Give Reflex Full Disk Access to read profile names, or select Add Profile and enter the profile directory yourself."
+            profileDiscoveryMessage = "macOS did not allow profile access for \(result.unreadableBrowserNames.joined(separator: ", ")). Give Reflex Full Disk Access to read profile names, then select Rescan Browsers."
         }
 
         targets = merged.expandingProfiles(
@@ -164,39 +164,6 @@ final class AppState: ObservableObject {
                 isEnabled: true
             )
         )
-    }
-
-    /// macOS can deny profile access, so the user can still add a profile by hand.
-    func addProfileTarget(bundleIdentifier: String) {
-        let group = targets.filter { $0.bundleIdentifier == bundleIdentifier }
-        guard let first = group.first else { return }
-        let browserName = group.first(where: { $0.chromiumProfileDirectory == nil })?.name
-            ?? BrowserTarget.baseName(of: first.name)
-
-        var used = Set(group.compactMap(\.chromiumProfileDirectory))
-        if let plainIndex = targets.firstIndex(where: {
-            $0.bundleIdentifier == bundleIdentifier && $0.chromiumProfileDirectory == nil
-        }), !used.contains("Default") {
-            targets[plainIndex].chromiumProfileDirectory = "Default"
-            targets[plainIndex].name = BrowserTarget.profileName("Default", of: browserName)
-            used.insert("Default")
-        }
-
-        var suffix = 1
-        while used.contains("Profile \(suffix)") { suffix += 1 }
-        let directory = "Profile \(suffix)"
-        let name = BrowserTarget.profileName(directory, of: browserName)
-        let target = BrowserTarget(
-            id: UUID(),
-            name: name,
-            bundleIdentifier: bundleIdentifier,
-            purpose: "General browsing in \(name)",
-            chromiumProfileDirectory: directory,
-            isEnabled: true
-        )
-        let lastIndex = targets.lastIndex { $0.bundleIdentifier == bundleIdentifier }
-        targets.insert(target, at: lastIndex.map { $0 + 1 } ?? targets.count)
-        availabilityCache.removeAll()
     }
 
     func openPrivacySettings() {

@@ -99,7 +99,7 @@ Reflex should configure the initial target list automatically instead of requiri
 - Browser purpose is user intent, not something Reflex can infer reliably. Do not label a browser as work or personal without the user's input.
 - Discover Chromium profile names and directory identifiers for Chrome, Edge, Comet, Dia, Helium, and Phi. Read only `profile.info_cache` keys and each entry's `name` from the browser's `Local State` file. Do not read account details, history, cookies, or page data.
 - A browser with more than one profile becomes one target for each profile, named `Browser (Profile)`. A browser with a single profile stays one target named `Browser`. A scan gives the plain target the first profile and keeps its purpose.
-- macOS can deny access to a browser's data directory. Report the affected browser, offer the privacy settings, and let the user add a profile target and type its directory.
+- macOS can deny access to a browser's data directory. Report the affected browser and offer the privacy settings. Profile targets come from a scan only.
 - Add a **Rescan Browsers** action in Settings. A rescan merges new discoveries into the existing target list without overwriting user-authored names, purposes, enabled states, or profile settings.
 - If a previously configured application is no longer installed, retain its configuration but mark it unavailable and exclude it from Jev choices until it becomes available again.
 - Do not continuously watch the filesystem for browser changes in the MVP. Scan on first launch, when Settings opens, and when the user explicitly requests a rescan.
@@ -242,7 +242,7 @@ Use a menu bar app with two small windows/panels:
    - API key field with Save and Remove actions
    - Target list with name, application, purpose, optional Chromium profile directory, and enabled state
    - Drag a target by its handle to set the order. The chooser shows the targets and numbers the keys in this order
-   - Targets of one browser appear in one group, with an Add Profile action
+   - Targets of one browser appear in one group
    - Detected-browser availability and a Rescan Browsers action
    - Current HTTP/HTTPS default-handler status and a Make Reflex Default Browser action
    - A short privacy note describing exactly what is sent to TypeSafe

@@ -97,7 +97,7 @@ struct SettingsView: View {
                     Button("Add Browser…") { addBrowser() }
                     Button("Rescan Browsers") { state.rescanBrowsers() }
                 }
-                Text("A browser with more than one profile becomes one target for each profile. A browser with a single profile stays one target. Select Add Profile to enter a profile directory yourself.")
+                Text("A browser with more than one profile becomes one target for each profile. A browser with a single profile stays one target.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                 if let message = state.profileDiscoveryMessage {
@@ -143,13 +143,6 @@ struct SettingsView: View {
                 .font(.caption2)
                 .foregroundStyle(.secondary)
             Spacer()
-            if BrowserProfileDiscovery.supportsProfiles(bundleIdentifier: target.bundleIdentifier) {
-                Button("Add Profile") {
-                    state.addProfileTarget(bundleIdentifier: target.bundleIdentifier)
-                }
-                .controlSize(.small)
-                .accessibilityLabel("Add a profile to \(BrowserTarget.baseName(of: target.name))")
-            }
         }
     }
 
