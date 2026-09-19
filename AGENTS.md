@@ -236,7 +236,7 @@ Use a menu bar app with two small windows/panels. Reflex runs as an accessory ap
    - The pointer selects the row below it, the same as the arrow keys
    - Shows a small offline/error indicator when Jev was unavailable, without exposing raw API errors
    - Shows no scroll indicator
-   - Has a settings button, because the menu bar item is optional. It hides the chooser, opens Settings, and shows the chooser again when Settings closes with a link still waiting
+   - Has a settings button, because the menu bar item is optional. It cancels the pending link, closes the chooser, and opens Settings
 
 2. **Settings**
    - Opens when the user starts Reflex without a link, and from the menu bar item

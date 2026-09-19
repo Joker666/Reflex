@@ -168,12 +168,9 @@ final class AppState: ObservableObject {
     }
 
     func openSettings() {
+        cancelPending()
         chooserPresenter?.dismissChooser()
         settingsAction?()
-    }
-
-    func presentChooser() {
-        chooserPresenter?.presentChooser()
     }
 
     func openPrivacySettings() {

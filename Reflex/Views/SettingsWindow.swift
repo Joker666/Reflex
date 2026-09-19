@@ -45,9 +45,8 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
     func windowWillClose(_ notification: Notification) {
         DispatchQueue.main.async {
             guard self.state.pendingURL == nil else {
-                // A link waited while Settings was open. Reflex shows it again.
+                // A link arrived while Settings was open, and the chooser already shows it.
                 NSApplication.shared.setActivationPolicy(.accessory)
-                self.state.presentChooser()
                 return
             }
             NSApplication.shared.terminate(nil)

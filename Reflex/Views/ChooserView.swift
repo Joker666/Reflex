@@ -196,7 +196,8 @@ struct ChooserView: View {
             .foregroundStyle(.secondary)
             .accessibilityLabel("Open Settings")
         }
-        .padding(.horizontal, 8)
+        .padding(.leading, 8)
+        .padding(.trailing, 1)
         .padding(.bottom, 2)
     }
 
