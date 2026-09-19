@@ -60,6 +60,8 @@ When Reflex needs your decision, it opens a small panel at the pointer, next to 
 - Press a number key to open that target.
 - Use the arrow keys and Return to open the selected target.
 - Move the pointer across the list to select a row, the same as the arrow keys. Click to open it.
+
+The chooser uses the target order from Settings. Drag a target by the handle at the left of its row to change the order. The number badge shows the key that opens that target. A disabled or unavailable target has no number.
 - Press Escape, or click outside the panel, to cancel the link.
 
 The panel does not show the link or its host.

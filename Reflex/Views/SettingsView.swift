@@ -5,6 +5,7 @@ struct SettingsView: View {
     @ObservedObject var state: AppState
     @State private var apiKey = ""
     @State private var keyMessage: String?
+    @State private var draggingTargetID: UUID?
 
     var body: some View {
         Form {
@@ -70,9 +71,15 @@ struct SettingsView: View {
                 if state.targets.isEmpty {
                     Text("No registered web browser was found.")
                 }
+                if state.targets.count > 1 {
+                    Text("Drag a row by its handle to set the chooser order. The number is the key that opens that target.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
                 ForEach($state.targets) { $target in
                     VStack(alignment: .leading, spacing: 6) {
                         HStack {
+                            dragHandle(for: target)
                             Toggle("Enabled", isOn: $target.isEnabled).labelsHidden()
                             if let icon = BrowserLauncher().icon(for: target) {
                                 Image(nsImage: icon)
@@ -85,6 +92,16 @@ struct SettingsView: View {
                                 .accessibilityLabel("Target name")
                             if !BrowserLauncher().isAvailable(target) {
                                 Text("Unavailable").foregroundStyle(.secondary)
+                            }
+                            if let number = shortcutNumber(for: target) {
+                                Text("\(number)")
+                                    .font(.system(size: 11, weight: .semibold, design: .rounded))
+                                    .frame(width: 20, height: 20)
+                                    .background(
+                                        Color.primary.opacity(0.10),
+                                        in: RoundedRectangle(cornerRadius: 5, style: .continuous)
+                                    )
+                                    .accessibilityLabel("Key \(number)")
                             }
                             Button(role: .destructive) {
                                 state.removeTarget(id: target.id)
@@ -108,6 +125,15 @@ struct SettingsView: View {
                         .font(.caption)
                     }
                     .padding(.vertical, 4)
+                    .opacity(draggingTargetID == target.id ? 0.4 : 1)
+                    .onDrop(
+                        of: [.text],
+                        delegate: TargetDropDelegate(
+                            target: target,
+                            targets: $state.targets,
+                            draggingTargetID: $draggingTargetID
+                        )
+                    )
                 }
                 HStack {
                     Button("Add Browser…") { addBrowser() }
@@ -144,6 +170,27 @@ struct SettingsView: View {
         .onAppear { state.discoverProfiles() }
     }
 
+    private func dragHandle(for target: BrowserTarget) -> some View {
+        Image(systemName: "line.3.horizontal")
+            .foregroundStyle(.secondary)
+            .frame(width: 16, height: 20)
+            .contentShape(Rectangle())
+            .accessibilityLabel("Reorder \(target.name)")
+            .onDrag {
+                draggingTargetID = target.id
+                return NSItemProvider(object: target.id.uuidString as NSString)
+            }
+    }
+
+    /// The chooser numbers the targets it can show, so a disabled or missing browser has no key.
+    private func shortcutNumber(for target: BrowserTarget) -> Int? {
+        guard let index = state.availableTargets.firstIndex(where: { $0.id == target.id }),
+              index < 9 else {
+            return nil
+        }
+        return index + 1
+    }
+
     private func addBrowser() {
         let panel = NSOpenPanel()
         panel.allowedContentTypes = [.application]
@@ -152,5 +199,33 @@ struct SettingsView: View {
         panel.message = "Select a browser application."
         guard panel.runModal() == .OK, let applicationURL = panel.url else { return }
         state.addTarget(applicationURL: applicationURL)
+    }
+}
+
+private struct TargetDropDelegate: DropDelegate {
+    let target: BrowserTarget
+    @Binding var targets: [BrowserTarget]
+    @Binding var draggingTargetID: UUID?
+
+    func dropEntered(info: DropInfo) {
+        guard let draggingTargetID,
+              draggingTargetID != target.id,
+              let from = targets.firstIndex(where: { $0.id == draggingTargetID }),
+              let to = targets.firstIndex(where: { $0.id == target.id }) else {
+            return
+        }
+        withAnimation {
+            targets.move(fromOffsets: IndexSet(integer: from), toOffset: to > from ? to + 1 : to)
+        }
+    }
+
+    func dropUpdated(info: DropInfo) -> DropProposal? {
+        DropProposal(operation: draggingTargetID == nil ? .cancel : .move)
+    }
+
+    func performDrop(info: DropInfo) -> Bool {
+        let wasDragging = draggingTargetID != nil
+        draggingTargetID = nil
+        return wasDragging
     }
 }

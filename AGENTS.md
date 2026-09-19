@@ -236,6 +236,7 @@ Use a menu bar app with two small windows/panels:
 2. **Settings**
    - API key field with Save and Remove actions
    - Target list with name, application, purpose, optional Chromium profile directory, and enabled state
+   - Drag a target by its handle to set the order. The chooser shows the targets and numbers the keys in this order
    - Detected-browser availability and a Rescan Browsers action
    - Current HTTP/HTTPS default-handler status and a Make Reflex Default Browser action
    - A short privacy note describing exactly what is sent to TypeSafe
