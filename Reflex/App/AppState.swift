@@ -12,6 +12,8 @@ final class AppState: ObservableObject {
     @Published private(set) var hasAPIKey = false
     @Published private(set) var isRouting = false
     @Published private(set) var isJevUnavailable = false
+    @Published private(set) var discoveredProfiles: [DiscoveredBrowserProfile] = []
+    @Published private(set) var profileDiscoveryMessage: String?
     @Published var launchError: String?
     @Published var setupMessage: String?
 
@@ -81,6 +83,36 @@ final class AppState: ObservableObject {
         targets = targets
             .filter(BrowserDiscovery.isSupportedTarget)
             .mergingDiscoveries(BrowserDiscovery().discover())
+        discoverProfiles()
+    }
+
+    func discoverProfiles() {
+        let result = BrowserProfileDiscovery().discover(for: targets)
+        discoveredProfiles = result.profiles
+        if result.unreadableBrowserNames.isEmpty {
+            profileDiscoveryMessage = nil
+        } else {
+            profileDiscoveryMessage = "macOS did not allow profile access for \(result.unreadableBrowserNames.joined(separator: ", ")). You can enter a profile directory manually."
+        }
+    }
+
+    func addDiscoveredProfile(_ profile: DiscoveredBrowserProfile) {
+        guard !targets.contains(where: {
+            $0.bundleIdentifier == profile.bundleIdentifier
+                && $0.chromiumProfileDirectory == profile.profileDirectory
+        }) else { return }
+
+        targets.append(
+            BrowserTarget(
+                id: UUID(),
+                name: "\(profile.browserName) — \(profile.profileDirectory)",
+                bundleIdentifier: profile.bundleIdentifier,
+                purpose: "Browsing with \(profile.browserName) profile \(profile.profileDirectory)",
+                chromiumProfileDirectory: profile.profileDirectory,
+                isEnabled: true
+            )
+        )
+        discoverProfiles()
     }
 
     func addTarget(applicationURL: URL) {

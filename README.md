@@ -18,7 +18,11 @@ xcodebuild -project Reflex.xcodeproj -scheme Reflex -destination 'platform=macOS
 
 ## First setup
 
-Reflex scans the applications that Launch Services reports for representative HTTP and HTTPS URLs. It keeps Safari, Chrome, Dia, Comet, Helium, Edge, Phi, Zen, and Firefox. It removes other handlers from the target list. It enables new supported browsers and gives each one a neutral purpose. Open Settings to disable unwanted targets, edit names and purposes, add an optional Chromium profile directory, or select **Rescan Browsers**.
+Reflex scans the applications that Launch Services reports for representative HTTP and HTTPS URLs. It keeps Safari, Chrome, Dia, Comet, Helium, Edge, Phi, Zen, and Firefox. It removes other handlers from the target list. It enables new supported browsers and gives each one a neutral purpose. Open Settings to disable unwanted targets, edit names and purposes, or select **Rescan Browsers**.
+
+Select **Rescan Profiles** to find local Chromium profile directory identifiers for Chrome, Edge, Comet, Dia, Helium, and Phi. Reflex reads only the directory identifiers from each browser's `Local State` file. It does not read profile display names, account details, history, cookies, or page data. Select **Add** to create a separate editable target for a profile. Safari, Firefox, and Zen profile discovery is not supported because they do not use the same Chromium launch argument.
+
+macOS can deny access to some browser data directories. Reflex reports the affected browser and keeps the manual profile directory field available. Reflex does not ask for Full Disk Access.
 
 Select **Make Reflex Default Browser**. Setup is complete only when Reflex is the handler for both HTTP and HTTPS. If macOS does not allow the direct change, Reflex opens System Settings. In **Desktop & Dock**, set **Default web browser** to Reflex.
 
@@ -41,7 +45,7 @@ The URL fragment is removed. The browser launcher always receives the original U
 
 ## Current limits
 
-- Browser profile discovery is manual. Reflex does not inspect browser profile storage.
+- Profile discovery supports installed Chromium-based targets with a recognized local data directory.
 - Reflex supports one chooser selection at a time. More incoming links wait in memory in FIFO order.
 - A Chromium profile value is treated as a profile identifier. Control characters are not allowed.
 - The target name and purpose are editable. The browser application is identified by its discovered bundle identifier.

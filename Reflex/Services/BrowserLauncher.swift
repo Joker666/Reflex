@@ -17,9 +17,14 @@ enum BrowserLaunchError: LocalizedError, Equatable {
 
 struct BrowserLauncher {
     static func isValidProfileDirectory(_ value: String) -> Bool {
-        !value.isEmpty && value.unicodeScalars.allSatisfy {
-            !CharacterSet.controlCharacters.contains($0)
-        }
+        !value.isEmpty
+            && value != "."
+            && value != ".."
+            && !value.contains("/")
+            && !value.contains("\\")
+            && value.unicodeScalars.allSatisfy {
+                !CharacterSet.controlCharacters.contains($0)
+            }
     }
 
     func isAvailable(_ target: BrowserTarget) -> Bool {

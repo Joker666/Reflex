@@ -110,11 +110,36 @@ struct SettingsView: View {
                 HStack {
                     Button("Add Browser…") { addBrowser() }
                     Button("Rescan Browsers") { state.rescanBrowsers() }
+                    Button("Rescan Profiles") { state.discoverProfiles() }
+                }
+                if !state.discoveredProfiles.isEmpty {
+                    Divider()
+                    Text("Discovered profiles")
+                        .font(.headline)
+                    ForEach(state.discoveredProfiles) { profile in
+                        HStack {
+                            VStack(alignment: .leading) {
+                                Text(profile.browserName)
+                                Text(profile.profileDirectory)
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                            Spacer()
+                            Button("Add") { state.addDiscoveredProfile(profile) }
+                                .accessibilityLabel("Add \(profile.browserName) profile \(profile.profileDirectory)")
+                        }
+                    }
+                }
+                if let message = state.profileDiscoveryMessage {
+                    Text(message)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
                 }
             }
         }
         .formStyle(.grouped)
         .padding()
+        .onAppear { state.discoverProfiles() }
     }
 
     private func addBrowser() {

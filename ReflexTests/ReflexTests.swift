@@ -9,8 +9,63 @@ struct ReflexTests {
         #expect(BrowserLauncher.isValidProfileDirectory("Profile 1"))
         #expect(BrowserLauncher.isValidProfileDirectory("Default"))
         #expect(!BrowserLauncher.isValidProfileDirectory(""))
+        #expect(!BrowserLauncher.isValidProfileDirectory(".."))
+        #expect(!BrowserLauncher.isValidProfileDirectory("Profile/1"))
+        #expect(!BrowserLauncher.isValidProfileDirectory("Profile\\1"))
         #expect(!BrowserLauncher.isValidProfileDirectory("Profile\n1"))
         #expect(!BrowserLauncher.isValidProfileDirectory("Profile\u{0000}1"))
+    }
+
+    @Test("Profile discovery reads directory identifiers and excludes configured profiles")
+    func profileDiscovery() throws {
+        let root = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let chromeDirectory = root.appending(path: "Google/Chrome", directoryHint: .isDirectory)
+        try FileManager.default.createDirectory(
+            at: chromeDirectory.appending(path: "Default", directoryHint: .isDirectory),
+            withIntermediateDirectories: true
+        )
+        try FileManager.default.createDirectory(
+            at: chromeDirectory.appending(path: "Profile 1", directoryHint: .isDirectory),
+            withIntermediateDirectories: true
+        )
+        let localState: [String: Any] = [
+            "profile": [
+                "info_cache": [
+                    "Default": ["name": "Private account name"],
+                    "Profile 1": ["name": "Another private name"],
+                    "Missing": ["name": "Stale profile"],
+                ],
+            ],
+        ]
+        try JSONSerialization.data(withJSONObject: localState)
+            .write(to: chromeDirectory.appending(path: "Local State"))
+        let edgeDirectory = root.appending(path: "Microsoft Edge", directoryHint: .isDirectory)
+        try FileManager.default.createDirectory(at: edgeDirectory, withIntermediateDirectories: true)
+        try Data("not JSON".utf8).write(to: edgeDirectory.appending(path: "Local State"))
+        let targets = [
+            makeTarget(name: "Chrome", bundleIdentifier: "com.google.Chrome"),
+            BrowserTarget(
+                id: UUID(),
+                name: "Chrome Default",
+                bundleIdentifier: "com.google.Chrome",
+                purpose: "Default Chrome profile",
+                chromiumProfileDirectory: "Default",
+                isEnabled: true
+            ),
+            makeTarget(name: "Edge", bundleIdentifier: "com.microsoft.edgemac"),
+        ]
+
+        let result = BrowserProfileDiscovery(applicationSupportURL: root).discover(for: targets)
+
+        #expect(result.profiles == [
+            DiscoveredBrowserProfile(
+                browserName: "Chrome",
+                bundleIdentifier: "com.google.Chrome",
+                profileDirectory: "Profile 1"
+            ),
+        ])
+        #expect(result.unreadableBrowserNames == ["Edge"])
     }
 
     @Test("URL queue advances in FIFO order")
