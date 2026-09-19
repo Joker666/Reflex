@@ -692,6 +692,39 @@ struct ReflexTests {
         #expect(state.pendingURL == nil)
     }
 
+    @Test("AppleEventSender extracts sender bundle identifier from PID or address descriptor")
+    func appleEventSenderResolution() throws {
+        #expect(AppleEventSender.bundleIdentifier(from: nil) == nil)
+
+        let target = NSAppleEventDescriptor.null()
+        let event = try #require(
+            NSAppleEventDescriptor.appleEvent(
+                withEventClass: AEEventClass(kInternetEventClass),
+                eventID: AEEventID(kAEGetURL),
+                targetDescriptor: target,
+                returnID: AEReturnID(kAutoGenerateReturnID),
+                transactionID: AETransactionID(kAnyTransactionID)
+            )
+        )
+
+        var pid: pid_t = 4242
+        let pidDesc = try #require(
+            NSAppleEventDescriptor(
+                descriptorType: DescType(typeKernelProcessID),
+                data: Data(bytes: &pid, count: MemoryLayout<pid_t>.size)
+            )
+        )
+        event.setAttribute(pidDesc, forKeyword: keyAddressAttr)
+
+        let resolved = AppleEventSender.bundleIdentifier(from: event) { queryPID in
+            queryPID == 4242 ? "com.tinyspeck.slackmacgap" : nil
+        }
+        #expect(resolved == "com.tinyspeck.slackmacgap")
+
+        let unknown = AppleEventSender.bundleIdentifier(from: event) { _ in nil }
+        #expect(unknown == nil)
+    }
+
     @Test("URL helper accurately identifies HTTP and HTTPS schemes")
     func urlHTTPValidation() {
         #expect(URL(string: "http://example.com")!.isHTTPOrHTTPS)

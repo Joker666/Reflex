@@ -32,10 +32,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func application(_ application: NSApplication, open urls: [URL]) {
         didReceiveURL = true
-        let sourceApplicationBundleIdentifier = NSAppleEventManager.shared()
-            .currentAppleEvent?
-            .attributeDescriptor(forKeyword: keyOriginalAddressAttr)?
-            .stringValue
+        let sourceApplicationBundleIdentifier = AppleEventSender.bundleIdentifier(
+            from: NSAppleEventManager.shared().currentAppleEvent
+        )
         state.receive(
             urls,
             sourceApplicationBundleIdentifier: sourceApplicationBundleIdentifier,
