@@ -1,4 +1,5 @@
 import SwiftUI
+import UniformTypeIdentifiers
 
 struct SettingsView: View {
     @ObservedObject var state: AppState
@@ -73,11 +74,27 @@ struct SettingsView: View {
                     VStack(alignment: .leading, spacing: 6) {
                         HStack {
                             Toggle("Enabled", isOn: $target.isEnabled).labelsHidden()
+                            if let icon = BrowserLauncher().icon(for: target) {
+                                Image(nsImage: icon)
+                                    .resizable()
+                                    .frame(width: 24, height: 24)
+                                    .accessibilityHidden(true)
+                            }
                             TextField("Name", text: $target.name)
                             if !BrowserLauncher().isAvailable(target) {
                                 Text("Unavailable").foregroundStyle(.secondary)
                             }
+                            Button(role: .destructive) {
+                                state.removeTarget(id: target.id)
+                            } label: {
+                                Image(systemName: "trash")
+                            }
+                            .buttonStyle(.borderless)
+                            .accessibilityLabel("Remove \(target.name)")
                         }
+                        Text(target.bundleIdentifier)
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
                         TextField("Purpose", text: $target.purpose)
                         TextField(
                             "Chromium profile directory (optional)",
@@ -90,10 +107,23 @@ struct SettingsView: View {
                     }
                     .padding(.vertical, 4)
                 }
-                Button("Rescan Browsers") { state.rescanBrowsers() }
+                HStack {
+                    Button("Add Browser…") { addBrowser() }
+                    Button("Rescan Browsers") { state.rescanBrowsers() }
+                }
             }
         }
         .formStyle(.grouped)
         .padding()
+    }
+
+    private func addBrowser() {
+        let panel = NSOpenPanel()
+        panel.allowedContentTypes = [.application]
+        panel.allowsMultipleSelection = false
+        panel.canChooseDirectories = false
+        panel.message = "Select a browser application."
+        guard panel.runModal() == .OK, let applicationURL = panel.url else { return }
+        state.addTarget(applicationURL: applicationURL)
     }
 }

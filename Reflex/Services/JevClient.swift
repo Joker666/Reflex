@@ -10,6 +10,18 @@ struct JevChoiceMapping: Equatable {
     var keyToTargetID: [String: UUID]
 }
 
+protocol JevTransport: Sendable {
+    func data(for request: URLRequest) async throws -> (Data, URLResponse)
+}
+
+struct URLSessionJevTransport: JevTransport {
+    var session: URLSession
+
+    func data(for request: URLRequest) async throws -> (Data, URLResponse) {
+        try await session.data(for: request)
+    }
+}
+
 private struct JevRequest: Encodable {
     struct State: Encodable {
         struct Link: Encodable {
@@ -57,17 +69,17 @@ struct JevClient {
     static let model = "~typesafe/jev-latest"
 
     var endpoint = Self.openRouterEndpoint
-    var session: URLSession
+    var transport: any JevTransport
 
-    init(endpoint: URL = Self.openRouterEndpoint, session: URLSession? = nil) {
+    init(endpoint: URL = Self.openRouterEndpoint, transport: (any JevTransport)? = nil) {
         self.endpoint = endpoint
-        if let session {
-            self.session = session
+        if let transport {
+            self.transport = transport
         } else {
             let configuration = URLSessionConfiguration.ephemeral
             configuration.timeoutIntervalForRequest = 1.5
             configuration.timeoutIntervalForResource = 1.5
-            self.session = URLSession(configuration: configuration)
+            self.transport = URLSessionJevTransport(session: URLSession(configuration: configuration))
         }
     }
 
@@ -120,7 +132,7 @@ struct JevClient {
         apiKey: String
     ) async throws -> RouteDecision {
         let (request, mapping) = try makeRequest(context: context, targets: targets, apiKey: apiKey)
-        let (data, response) = try await session.data(for: request)
+        let (data, response) = try await transport.data(for: request)
         guard let httpResponse = response as? HTTPURLResponse else {
             throw JevClientError.invalidResponse
         }

@@ -20,13 +20,15 @@ struct ReflexTests {
         let third = URL(string: "https://example.com/three")!
         var queue = PendingURLQueue()
 
-        queue.enqueue(first)
-        queue.enqueue(second)
+        queue.enqueue(first, sourceApplicationBundleIdentifier: "com.example.first")
+        queue.enqueue(second, sourceApplicationBundleIdentifier: "com.example.second")
         queue.enqueue(third)
 
-        #expect(queue.current == first)
-        #expect(queue.advance() == second)
-        #expect(queue.advance() == third)
+        #expect(queue.current?.url == first)
+        #expect(queue.current?.sourceApplicationBundleIdentifier == "com.example.first")
+        #expect(queue.advance()?.url == second)
+        #expect(queue.current?.sourceApplicationBundleIdentifier == "com.example.second")
+        #expect(queue.advance()?.url == third)
         #expect(queue.advance() == nil)
     }
 
@@ -183,14 +185,30 @@ struct ReflexTests {
         #expect(throws: JevClientError.invalidResponse) { try client.decodeDecision(badConfidence, mapping: mapping) }
     }
 
-    @Test("Timeout and network errors use the chooser fallback")
-    func failureFallback() {
+    @Test("Timeout and network errors use the chooser fallback", arguments: [
+        URLError.Code.timedOut,
+        URLError.Code.notConnectedToInternet,
+    ])
+    func failureFallback(errorCode: URLError.Code) async throws {
         let targets = [makeTarget(), makeTarget()]
-        let timeoutDecision: RouteDecision? = nil
-        let networkFailureDecision: RouteDecision? = nil
+        let context = RoutingContext(
+            scheme: "https",
+            host: "example.com",
+            path: "/",
+            queryParameterNames: [],
+            sourceApplicationBundleIdentifier: nil
+        )
+        let client = JevClient(transport: FailingJevTransport(errorCode: errorCode))
+        var decision: RouteDecision?
 
-        #expect(RoutingPolicy.action(availableTargets: targets, decision: timeoutDecision) == .choose(suggestedTargetID: nil))
-        #expect(RoutingPolicy.action(availableTargets: targets, decision: networkFailureDecision) == .choose(suggestedTargetID: nil))
+        do {
+            decision = try await client.decide(context: context, targets: targets, apiKey: "test-key")
+            Issue.record("The transport error did not propagate.")
+        } catch let error as URLError {
+            #expect(error.code == errorCode)
+        }
+
+        #expect(RoutingPolicy.action(availableTargets: targets, decision: decision) == .choose(suggestedTargetID: nil))
     }
 
     private func makeApplication(at root: URL, name: String, identifier: String) throws -> URL {
@@ -225,5 +243,13 @@ private struct FakeBrowserQuery: BrowserApplicationQuerying {
 
     func applicationURLs(toOpen url: URL) -> [URL] {
         url.scheme == "http" ? http : https
+    }
+}
+
+private struct FailingJevTransport: JevTransport {
+    var errorCode: URLError.Code
+
+    func data(for request: URLRequest) async throws -> (Data, URLResponse) {
+        throw URLError(errorCode)
     }
 }

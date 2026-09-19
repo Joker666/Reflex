@@ -1,19 +1,28 @@
 import Foundation
 
-struct PendingURLQueue: Equatable {
-    private(set) var current: URL?
-    private(set) var waiting: [URL] = []
+struct PendingLink: Equatable {
+    var url: URL
+    var sourceApplicationBundleIdentifier: String?
+}
 
-    mutating func enqueue(_ url: URL) {
+struct PendingURLQueue: Equatable {
+    private(set) var current: PendingLink?
+    private(set) var waiting: [PendingLink] = []
+
+    mutating func enqueue(_ url: URL, sourceApplicationBundleIdentifier: String? = nil) {
+        let link = PendingLink(
+            url: url,
+            sourceApplicationBundleIdentifier: sourceApplicationBundleIdentifier
+        )
         guard current != nil else {
-            current = url
+            current = link
             return
         }
-        waiting.append(url)
+        waiting.append(link)
     }
 
     @discardableResult
-    mutating func advance() -> URL? {
+    mutating func advance() -> PendingLink? {
         current = waiting.isEmpty ? nil : waiting.removeFirst()
         return current
     }

@@ -13,7 +13,7 @@ struct ReflexApp: App {
     var body: some Scene {
         WindowGroup("Reflex") {
             ChooserView(state: state)
-                .frame(minWidth: 420, minHeight: 240)
+                .frame(minWidth: 420, minHeight: 380)
                 .onAppear { appDelegate.state = state }
         }
         .windowResizability(.contentSize)

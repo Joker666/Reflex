@@ -48,4 +48,5 @@ The URL fragment is removed. The browser launcher always receives the original U
 
 ## Future work
 
-- Add the remaining Phase 3 target-management and keyboard refinements.
+- Add a production signing and distribution workflow.
+- Add a custom application icon.

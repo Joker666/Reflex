@@ -26,6 +26,10 @@ struct BrowserLauncher {
         applicationURL(for: target) != nil
     }
 
+    func icon(for target: BrowserTarget) -> NSImage? {
+        applicationURL(for: target).map { NSWorkspace.shared.icon(forFile: $0.path) }
+    }
+
     func open(_ originalURL: URL, in target: BrowserTarget) async throws {
         guard let applicationURL = applicationURL(for: target) else {
             throw BrowserLaunchError.applicationUnavailable
@@ -40,10 +44,18 @@ struct BrowserLauncher {
             process.arguments = [
                 "-na", applicationURL.path, "--args", "--profile-directory=\(profile)", originalURL.absoluteString,
             ]
-            do {
-                try process.run()
-            } catch {
-                throw BrowserLaunchError.launchFailed(error.localizedDescription)
+            let terminationStatus: Int32 = try await withCheckedThrowingContinuation { continuation in
+                process.terminationHandler = { completedProcess in
+                    continuation.resume(returning: completedProcess.terminationStatus)
+                }
+                do {
+                    try process.run()
+                } catch {
+                    continuation.resume(throwing: error)
+                }
+            }
+            guard terminationStatus == 0 else {
+                throw BrowserLaunchError.launchFailed("open exited with status \(terminationStatus)")
             }
             return
         }
@@ -60,7 +72,7 @@ struct BrowserLauncher {
         }
     }
 
-    private func applicationURL(for target: BrowserTarget) -> URL? {
+    func applicationURL(for target: BrowserTarget) -> URL? {
         if target.bundleIdentifier.hasPrefix("/") {
             let url = URL(fileURLWithPath: target.bundleIdentifier).standardizedFileURL
             return FileManager.default.fileExists(atPath: url.path) ? url : nil

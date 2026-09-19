@@ -4,18 +4,33 @@ import AppKit
 final class AppDelegate: NSObject, NSApplicationDelegate {
     var state: AppState? {
         didSet {
-            guard !pendingURLs.isEmpty else { return }
-            state?.receive(pendingURLs)
-            pendingURLs.removeAll()
+            guard let state else { return }
+            for delivery in pendingDeliveries {
+                state.receive(
+                    delivery.urls,
+                    sourceApplicationBundleIdentifier: delivery.sourceApplicationBundleIdentifier
+                )
+            }
+            pendingDeliveries.removeAll()
         }
     }
-    private var pendingURLs: [URL] = []
+    private var pendingDeliveries: [(
+        urls: [URL],
+        sourceApplicationBundleIdentifier: String?
+    )] = []
 
     func application(_ application: NSApplication, open urls: [URL]) {
+        let sourceApplicationBundleIdentifier = NSAppleEventManager.shared()
+            .currentAppleEvent?
+            .attributeDescriptor(forKeyword: keyOriginalAddressAttr)?
+            .stringValue
         if let state {
-            state.receive(urls)
+            state.receive(
+                urls,
+                sourceApplicationBundleIdentifier: sourceApplicationBundleIdentifier
+            )
         } else {
-            pendingURLs.append(contentsOf: urls)
+            pendingDeliveries.append((urls, sourceApplicationBundleIdentifier))
         }
     }
 

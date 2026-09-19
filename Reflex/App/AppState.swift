@@ -36,12 +36,12 @@ final class AppState: ObservableObject {
         targets.filter { $0.isEnabled && launcher.isAvailable($0) }
     }
 
-    func receive(_ urls: [URL]) {
+    func receive(_ urls: [URL], sourceApplicationBundleIdentifier: String? = nil) {
         let needsRouting = queue.current == nil
         for url in urls where ["http", "https"].contains(url.scheme?.lowercased()) {
-            queue.enqueue(url)
+            queue.enqueue(url, sourceApplicationBundleIdentifier: sourceApplicationBundleIdentifier)
         }
-        pendingURL = queue.current
+        pendingURL = queue.current?.url
         if pendingURL != nil {
             NSApplication.shared.activate(ignoringOtherApps: true)
             NSApplication.shared.windows
@@ -59,7 +59,7 @@ final class AppState: ObservableObject {
         Task {
             do {
                 try await launcher.open(url, in: target)
-                pendingURL = queue.advance()
+                pendingURL = queue.advance()?.url
                 suggestedTargetID = nil
                 isJevUnavailable = false
                 routePending()
@@ -70,7 +70,7 @@ final class AppState: ObservableObject {
     }
 
     func cancelPending() {
-        pendingURL = queue.advance()
+        pendingURL = queue.advance()?.url
         launchError = nil
         suggestedTargetID = nil
         isJevUnavailable = false
@@ -79,6 +79,32 @@ final class AppState: ObservableObject {
 
     func rescanBrowsers() {
         targets = targets.mergingDiscoveries(BrowserDiscovery().discover())
+    }
+
+    func addTarget(applicationURL: URL) {
+        guard let bundle = Bundle(url: applicationURL),
+              let bundleIdentifier = bundle.bundleIdentifier,
+              bundleIdentifier != Bundle.main.bundleIdentifier,
+              !targets.contains(where: { $0.bundleIdentifier == bundleIdentifier }) else {
+            return
+        }
+        let name = (bundle.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String)
+            ?? (bundle.object(forInfoDictionaryKey: "CFBundleName") as? String)
+            ?? applicationURL.deletingPathExtension().lastPathComponent
+        targets.append(
+            BrowserTarget(
+                id: UUID(),
+                name: name,
+                bundleIdentifier: bundleIdentifier,
+                purpose: "General browsing in \(name)",
+                chromiumProfileDirectory: nil,
+                isEnabled: true
+            )
+        )
+    }
+
+    func removeTarget(id: UUID) {
+        targets.removeAll { $0.id == id }
     }
 
     func refreshDefaultBrowserStatus() {
@@ -130,7 +156,10 @@ final class AppState: ObservableObject {
         }
 
         guard let apiKey = try? keychain.readAPIKey(),
-              let context = URLSanitizer.sanitize(url) else {
+              let context = URLSanitizer.sanitize(
+                url,
+                sourceApplicationBundleIdentifier: queue.current?.sourceApplicationBundleIdentifier
+              ) else {
             suggestedTargetID = nil
             isJevUnavailable = true
             return
