@@ -119,8 +119,9 @@ extension Array where Element == BrowserTarget {
     }
 
     func mergingDiscoveries(_ discoveries: [DiscoveredBrowser]) -> [BrowserTarget] {
-        var result = self
-        let configured = Set(map(\.bundleIdentifier))
+        let discoveredIdentifiers = Set(discoveries.map(\.bundleIdentifier))
+        var result = filter { discoveredIdentifiers.contains($0.bundleIdentifier) }
+        let configured = Set(result.map(\.bundleIdentifier))
 
         for browser in discoveries where !configured.contains(browser.bundleIdentifier) {
             result.append(

@@ -201,7 +201,7 @@ final class AppState: ObservableObject {
         }
         let name = bundle.displayName(fallbackURL: applicationURL)
         guard BrowserDiscovery.isSupportedBrowser(name: name, bundleIdentifier: bundleIdentifier) else {
-            setupMessage = "Select Safari, Chrome, Dia, Comet, Helium, Edge, Phi, Zen, or Firefox."
+            setupMessage = SupportedBrowser.selectionInstruction
             return
         }
         targets.append(

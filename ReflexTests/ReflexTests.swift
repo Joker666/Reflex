@@ -342,6 +342,23 @@ struct ReflexTests {
         #expect(result[1].isEnabled)
     }
 
+    @Test("Discovery merge removes browsers that are no longer installed")
+    func discoveryMergeRemovesUnavailableBrowsers() {
+        let installed = makeTarget(name: "Chrome", bundleIdentifier: "com.google.Chrome")
+        let unavailable = makeTarget(name: "Firefox", bundleIdentifier: "org.mozilla.firefox")
+        let discoveries = [
+            DiscoveredBrowser(
+                name: "Chrome",
+                bundleIdentifier: "com.google.Chrome",
+                applicationURL: URL(fileURLWithPath: "/Applications/Google Chrome.app")
+            ),
+        ]
+
+        let result = [installed, unavailable].mergingDiscoveries(discoveries)
+
+        #expect(result == [installed])
+    }
+
     @Test("Default status requires both schemes")
     func defaultStatusRequiresBothSchemes() {
         let identifier = "com.example.Reflex"
@@ -396,9 +413,20 @@ struct ReflexTests {
         let targets = [
             makeTarget(name: "Chrome", bundleIdentifier: "com.google.Chrome"),
             makeTarget(name: "ChatGPT", bundleIdentifier: "com.openai.chat"),
+            makeTarget(
+                name: "My renamed browser",
+                bundleIdentifier: "/Applications/Zen Browser.app"
+            ),
+            makeTarget(
+                name: "Unsupported path app",
+                bundleIdentifier: "/Applications/ChatGPT.app"
+            ),
         ]
 
-        #expect(targets.filter(BrowserDiscovery.isSupportedTarget).map(\.name) == ["Chrome"])
+        #expect(
+            targets.filter(BrowserDiscovery.isSupportedTarget).map(\.name)
+                == ["Chrome", "My renamed browser"]
+        )
     }
 
     @Test("URL sanitization removes fragment and query values")
@@ -559,6 +587,10 @@ struct ReflexTests {
         #expect(SupportedBrowser.chromiumProfileDataDirectory(for: "com.apple.Safari") == nil)
         #expect(SupportedBrowser.matching(name: "Zen Browser", bundleIdentifier: "unknown") == .zen)
         #expect(SupportedBrowser.matching(name: "Random Browser", bundleIdentifier: "com.unknown.browser") == nil)
+        #expect(
+            SupportedBrowser.selectionInstruction
+                == "Select Safari, Chrome, Dia, Comet, Helium, Edge, Phi, Zen, or Firefox."
+        )
     }
 
     private func makeApplication(at root: URL, name: String, identifier: String) throws -> URL {

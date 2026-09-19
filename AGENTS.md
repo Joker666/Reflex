@@ -102,7 +102,7 @@ Reflex should configure the initial target list automatically instead of requiri
 - A browser with more than one profile becomes one target for each profile, named `Browser (Profile)`. Take the profile name from the user's label. A browser that keeps a placeholder there, such as Edge with `Profile 2`, gives the account name instead. A later scan replaces a name Reflex built from a placeholder, and never a name the user wrote. A browser with a single profile stays one target named `Browser`. A scan gives the plain target the first profile and keeps its purpose.
 - macOS can deny access to a browser's data directory. Settings has a **Profile access** section that reports the state, names the affected browsers, says what Reflex reads, and opens the Full Disk Access list. macOS has no API to ask for this access, so an application can only open that list. Profile targets come from a scan only.
 - Add a **Rescan Browsers** action in Settings. A rescan merges new discoveries into the existing target list without overwriting user-authored names, purposes, enabled states, or profile settings.
-- If a previously configured application is no longer installed, retain its configuration but mark it unavailable and exclude it from Jev choices until it becomes available again.
+- If a previously configured application is no longer installed, remove its target configuration during the next browser scan.
 - Do not continuously watch the filesystem for browser changes in the MVP. Scan on first launch, when Settings opens, and when the user explicitly requests a rescan.
 
 ## Default-browser setup
@@ -340,7 +340,7 @@ Acceptance criteria:
 
 - The user can add, edit, enable, disable, and remove targets
 - Rescanning adds newly installed browsers without overwriting existing target customization
-- Removed browsers remain configured but unavailable and are excluded from Jev choices
+- Rescanning removes target configurations for browsers that are no longer installed
 - The user can save and remove the API key
 - The chooser is fully usable by keyboard and VoiceOver labels exist for interactive controls
 - Multiple incoming URLs are processed in FIFO order without persistence

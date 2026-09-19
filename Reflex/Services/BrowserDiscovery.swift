@@ -33,6 +33,26 @@ enum SupportedBrowser: CaseIterable {
     case zen
     case firefox
 
+    var displayName: String {
+        switch self {
+        case .safari: "Safari"
+        case .chrome: "Chrome"
+        case .dia: "Dia"
+        case .comet: "Comet"
+        case .helium: "Helium"
+        case .edge: "Edge"
+        case .phi: "Phi"
+        case .zen: "Zen"
+        case .firefox: "Firefox"
+        }
+    }
+
+    static var selectionInstruction: String {
+        let names = allCases.map(\.displayName)
+        guard let last = names.last else { return "Select a supported browser." }
+        return "Select \(names.dropLast().joined(separator: ", ")), or \(last)."
+    }
+
     var bundleIdentifierPrefixes: [String] {
         switch self {
         case .safari: ["com.apple.Safari"]
@@ -146,6 +166,18 @@ struct BrowserDiscovery {
     }
 
     static func isSupportedTarget(_ target: BrowserTarget) -> Bool {
-        SupportedBrowser.matching(bundleIdentifier: target.bundleIdentifier) != nil
+        if SupportedBrowser.matching(bundleIdentifier: target.bundleIdentifier) != nil {
+            return true
+        }
+
+        // Discovery stores the standardized application path when an app has no
+        // bundle identifier. Keep that stable identity after the user renames the target.
+        guard target.bundleIdentifier.hasPrefix("/") else { return false }
+        let applicationURL = URL(fileURLWithPath: target.bundleIdentifier)
+        guard applicationURL.pathExtension.lowercased() == "app" else { return false }
+
+        let appName = Bundle(url: applicationURL).flatMap(\.displayName)
+            ?? applicationURL.deletingPathExtension().lastPathComponent
+        return SupportedBrowser.matching(name: appName, bundleIdentifier: target.bundleIdentifier) != nil
     }
 }
