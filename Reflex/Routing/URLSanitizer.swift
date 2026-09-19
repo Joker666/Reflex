@@ -1,14 +1,21 @@
 import Foundation
 
+extension URL {
+    var isHTTPOrHTTPS: Bool {
+        guard let scheme = scheme?.lowercased() else { return false }
+        return scheme == "http" || scheme == "https"
+    }
+}
+
 enum URLSanitizer {
     static func sanitize(
         _ url: URL,
         sourceApplicationBundleIdentifier: String? = nil,
         sourceApplicationName: String? = nil
     ) -> RoutingContext? {
-        guard let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
+        guard url.isHTTPOrHTTPS,
+              let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
               let scheme = components.scheme?.lowercased(),
-              ["http", "https"].contains(scheme),
               let host = components.host else {
             return nil
         }

@@ -20,11 +20,14 @@ struct DefaultBrowserService {
         )
     }
 
+    private static let sampleHTTPURL = URL(string: "http://example.com")!
+    private static let sampleHTTPSURL = URL(string: "https://example.com")!
+
     func currentStatus() -> DefaultBrowserStatus {
         let workspace = NSWorkspace.shared
-        let httpIdentifier = workspace.urlForApplication(toOpen: URL(string: "http://example.com")!)
+        let httpIdentifier = workspace.urlForApplication(toOpen: Self.sampleHTTPURL)
             .flatMap { Bundle(url: $0)?.bundleIdentifier }
-        let httpsIdentifier = workspace.urlForApplication(toOpen: URL(string: "https://example.com")!)
+        let httpsIdentifier = workspace.urlForApplication(toOpen: Self.sampleHTTPSURL)
             .flatMap { Bundle(url: $0)?.bundleIdentifier }
         return Self.status(
             defaultHTTPBundleIdentifier: httpIdentifier,

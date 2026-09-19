@@ -1,6 +1,17 @@
 import AppKit
 import Foundation
 
+extension Bundle {
+    var displayName: String? {
+        (object(forInfoDictionaryKey: "CFBundleDisplayName") as? String)
+            ?? (object(forInfoDictionaryKey: "CFBundleName") as? String)
+    }
+
+    func displayName(fallbackURL: URL) -> String {
+        displayName ?? fallbackURL.deletingPathExtension().lastPathComponent
+    }
+}
+
 protocol BrowserApplicationQuerying {
     func applicationURLs(toOpen url: URL) -> [URL]
 }
@@ -12,6 +23,11 @@ struct WorkspaceBrowserApplicationQuery: BrowserApplicationQuerying {
 }
 
 struct BrowserDiscovery {
+    private static let discoveryURLs = [
+        URL(string: "http://example.com")!,
+        URL(string: "https://example.com")!,
+    ]
+
     private static let supportedBundleIdentifierPrefixes = [
         "com.apple.Safari",
         "com.google.Chrome",
@@ -42,8 +58,7 @@ struct BrowserDiscovery {
     }
 
     func discover() -> [DiscoveredBrowser] {
-        let representativeURLs = [URL(string: "http://example.com")!, URL(string: "https://example.com")!]
-        let candidates = representativeURLs.flatMap(query.applicationURLs(toOpen:))
+        let candidates = Self.discoveryURLs.flatMap(query.applicationURLs(toOpen:))
         var seenBundleIdentifiers = Set<String>()
         var seenApplicationURLs = Set<URL>()
         var result: [DiscoveredBrowser] = []
@@ -57,9 +72,7 @@ struct BrowserDiscovery {
                 ?? seenApplicationURLs.insert(standardizedURL).inserted
             guard isNew else { continue }
 
-            let name = (bundle.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String)
-                ?? (bundle.object(forInfoDictionaryKey: "CFBundleName") as? String)
-                ?? standardizedURL.deletingPathExtension().lastPathComponent
+            let name = bundle.displayName(fallbackURL: standardizedURL)
             guard Self.isSupportedBrowser(name: name, bundleIdentifier: identifier) else { continue }
             result.append(
                 DiscoveredBrowser(name: name, bundleIdentifier: identifier, applicationURL: standardizedURL)

@@ -532,6 +532,24 @@ struct ReflexTests {
         #expect(RoutingPolicy.action(availableTargets: targets, decision: decision) == .choose(suggestedTargetID: nil))
     }
 
+    @Test("URL helper accurately identifies HTTP and HTTPS schemes")
+    func urlHTTPValidation() {
+        #expect(URL(string: "http://example.com")!.isHTTPOrHTTPS)
+        #expect(URL(string: "https://example.com/test")!.isHTTPOrHTTPS)
+        #expect(URL(string: "HTTP://EXAMPLE.COM")!.isHTTPOrHTTPS)
+        #expect(!URL(string: "ftp://example.com")!.isHTTPOrHTTPS)
+        #expect(!URL(string: "file:///path/to/file")!.isHTTPOrHTTPS)
+    }
+
+    @Test("Bundle display name helper resolves display name or falls back to URL name")
+    func bundleDisplayNameHelper() throws {
+        let root = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let app = try makeApplication(at: root, name: "CustomBrowser", identifier: "com.example.custom")
+        let bundle = try #require(Bundle(url: app))
+        #expect(bundle.displayName(fallbackURL: app) == "CustomBrowser")
+    }
+
     private func makeApplication(at root: URL, name: String, identifier: String) throws -> URL {
         let applicationURL = root.appending(path: "\(name).app")
         let contentsURL = applicationURL.appending(path: "Contents")

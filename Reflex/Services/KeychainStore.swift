@@ -15,13 +15,17 @@ struct KeychainStore: APIKeyStoring {
     private let service = "com.rafi.Reflex.openrouter"
     private let account = "api-key"
 
-    func saveAPIKey(_ key: String) throws {
-        let data = Data(key.utf8)
-        let query: [String: Any] = [
+    private var baseQuery: [String: Any] {
+        [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
             kSecAttrAccount as String: account,
         ]
+    }
+
+    func saveAPIKey(_ key: String) throws {
+        let data = Data(key.utf8)
+        let query = baseQuery
         let attributes: [String: Any] = [kSecValueData as String: data]
         let updateStatus = SecItemUpdate(query as CFDictionary, attributes as CFDictionary)
         if updateStatus == errSecItemNotFound {
@@ -35,13 +39,10 @@ struct KeychainStore: APIKeyStoring {
     }
 
     func readAPIKey() throws -> String? {
-        let query: [String: Any] = [
-            kSecClass as String: kSecClassGenericPassword,
-            kSecAttrService as String: service,
-            kSecAttrAccount as String: account,
-            kSecReturnData as String: true,
-            kSecMatchLimit as String: kSecMatchLimitOne,
-        ]
+        var query = baseQuery
+        query[kSecReturnData as String] = true
+        query[kSecMatchLimit as String] = kSecMatchLimitOne
+
         var result: CFTypeRef?
         let status = SecItemCopyMatching(query as CFDictionary, &result)
         if status == errSecItemNotFound { return nil }
@@ -54,11 +55,7 @@ struct KeychainStore: APIKeyStoring {
     }
 
     func removeAPIKey() throws {
-        let query: [String: Any] = [
-            kSecClass as String: kSecClassGenericPassword,
-            kSecAttrService as String: service,
-            kSecAttrAccount as String: account,
-        ]
+        let query = baseQuery
         let status = SecItemDelete(query as CFDictionary)
         guard status == errSecSuccess || status == errSecItemNotFound else {
             throw KeychainStoreError.unexpectedStatus(status)

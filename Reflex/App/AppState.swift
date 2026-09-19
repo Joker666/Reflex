@@ -49,11 +49,20 @@ enum ChooserModifier: String, CaseIterable, Identifiable {
     }
 }
 
+private struct TargetProfileKey: Hashable {
+    let bundleIdentifier: String
+    let profileDirectory: String?
+}
+
 @MainActor
 final class AppState: ObservableObject {
     @Published var targets: [BrowserTarget] = [] {
-        didSet { persistTargets() }
+        didSet {
+            updateAvailableTargets()
+            persistTargets()
+        }
     }
+    @Published private(set) var availableTargets: [BrowserTarget] = []
     @Published private(set) var pendingURL: URL?
     @Published private(set) var defaultBrowserStatus = DefaultBrowserStatus(ownsHTTP: false, ownsHTTPS: false)
     @Published private(set) var suggestedTargetID: UUID?
@@ -91,9 +100,9 @@ final class AppState: ObservableObject {
     private let menuBarItemKey = "showsMenuBarItem"
     private let chooserModifierKey = "chooserModifier"
     private var iconCache: [String: NSImage] = [:]
-    private var availabilityCache: [String: Bool] = [:]
+    private var availabilityCache: [TargetProfileKey: Bool] = [:]
     private var storedShowsMenuBarItem = true
-    private var knownProfileKeys: Set<String> = []
+    private var knownProfileKeys: Set<TargetProfileKey> = []
     private var browsersWithReadProfiles: Set<String> = []
 
     init(keychain: any APIKeyStoring = KeychainStore()) {
@@ -107,24 +116,32 @@ final class AppState: ObservableObject {
         rescanBrowsers()
         refreshDefaultBrowserStatus()
         hasAPIKey = (try? keychain.readAPIKey()) != nil
-    }
-
-    var availableTargets: [BrowserTarget] {
-        targets.filter { $0.isEnabled && isAvailable($0) }
+        updateAvailableTargets()
     }
 
     /// Launch Services lookups are slow, and SwiftUI asks for these on every pass.
     func isAvailable(_ target: BrowserTarget) -> Bool {
-        let key = "\(target.bundleIdentifier)|\(target.chromiumProfileDirectory ?? "")"
+        let key = TargetProfileKey(
+            bundleIdentifier: target.bundleIdentifier,
+            profileDirectory: target.chromiumProfileDirectory
+        )
         if let cached = availabilityCache[key] { return cached }
         var available = launcher.isAvailable(target)
         if available,
            let directory = target.chromiumProfileDirectory,
            browsersWithReadProfiles.contains(target.bundleIdentifier) {
-            available = knownProfileKeys.contains("\(target.bundleIdentifier)|\(directory)")
+            let profileKey = TargetProfileKey(
+                bundleIdentifier: target.bundleIdentifier,
+                profileDirectory: directory
+            )
+            available = knownProfileKeys.contains(profileKey)
         }
         availabilityCache[key] = available
         return available
+    }
+
+    private func updateAvailableTargets() {
+        availableTargets = targets.filter { $0.isEnabled && isAvailable($0) }
     }
 
     func receive(
@@ -133,7 +150,7 @@ final class AppState: ObservableObject {
         asksForChooser: Bool = false
     ) {
         let needsRouting = queue.current == nil
-        for url in urls where ["http", "https"].contains(url.scheme?.lowercased()) {
+        for url in urls where url.isHTTPOrHTTPS {
             queue.enqueue(
                 url,
                 sourceApplicationBundleIdentifier: sourceApplicationBundleIdentifier,
@@ -178,9 +195,7 @@ final class AppState: ObservableObject {
               let bundle = Bundle(url: url) else {
             return nil
         }
-        return (bundle.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String)
-            ?? (bundle.object(forInfoDictionaryKey: "CFBundleName") as? String)
-            ?? url.deletingPathExtension().lastPathComponent
+        return bundle.displayName(fallbackURL: url)
     }
 
     private func advancePending() {
@@ -203,7 +218,9 @@ final class AppState: ObservableObject {
             .mergingDiscoveries(BrowserDiscovery().discover())
 
         let result = BrowserProfileDiscovery().discover(for: merged)
-        knownProfileKeys = Set(result.profiles.map(\.id))
+        knownProfileKeys = Set(result.profiles.map {
+            TargetProfileKey(bundleIdentifier: $0.bundleIdentifier, profileDirectory: $0.profileDirectory)
+        })
         browsersWithReadProfiles = result.readableBundleIdentifiers
         profileAccessDeniedBrowsers = result.accessDeniedBrowserNames
         missingProfileDataBrowsers = result.missingProfileDataBrowserNames
@@ -220,9 +237,7 @@ final class AppState: ObservableObject {
               !targets.contains(where: { $0.bundleIdentifier == bundleIdentifier }) else {
             return
         }
-        let name = (bundle.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String)
-            ?? (bundle.object(forInfoDictionaryKey: "CFBundleName") as? String)
-            ?? applicationURL.deletingPathExtension().lastPathComponent
+        let name = bundle.displayName(fallbackURL: applicationURL)
         guard BrowserDiscovery.isSupportedBrowser(name: name, bundleIdentifier: bundleIdentifier) else {
             setupMessage = "Select Safari, Chrome, Dia, Comet, Helium, Edge, Phi, Zen, or Firefox."
             return
