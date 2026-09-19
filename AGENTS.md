@@ -247,7 +247,7 @@ Use a menu bar app with two small windows/panels. Reflex runs as an accessory ap
 
 2. **Settings**
    - Opens when the user starts Reflex without a link, and from the menu bar item
-   - Reflex quits when the settings window closes, because macOS starts it again for the next link
+   - Closing Settings removes the Dock icon. If the menu bar item is on, Reflex remains active in the menu bar. If it is off, Reflex quits unless a link is pending
    - A switch for the menu bar item, stored in `UserDefaults`
    - API key field with Save and Remove actions
    - Target list with name, application, purpose, optional Chromium profile directory, and enabled state

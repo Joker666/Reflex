@@ -348,6 +348,22 @@ struct ReflexTests {
         ).isComplete)
     }
 
+    @Test("Settings close keeps the menu bar process running")
+    func settingsClosePolicy() {
+        #expect(!SettingsWindowController.shouldTerminateOnClose(
+            showsMenuBarItem: true,
+            hasPendingURL: false
+        ))
+        #expect(!SettingsWindowController.shouldTerminateOnClose(
+            showsMenuBarItem: false,
+            hasPendingURL: true
+        ))
+        #expect(SettingsWindowController.shouldTerminateOnClose(
+            showsMenuBarItem: false,
+            hasPendingURL: false
+        ))
+    }
+
     @Test("Discovery uses the HTTP and HTTPS union and keeps only supported browsers")
     func discoveryUnionDeduplicationAndSelfExclusion() throws {
         let root = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString)

@@ -1,7 +1,7 @@
 import AppKit
 import SwiftUI
 
-/// Reflex owns the settings window so it can open it at launch and quit when it closes.
+/// Reflex owns the settings window so it can manage its Dock and menu bar presence.
 @MainActor
 final class SettingsWindowController: NSObject, NSWindowDelegate {
     private let state: AppState
@@ -41,11 +41,21 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
         return window
     }
 
-    /// macOS starts Reflex again for the next link, so it does not stay in the Dock.
+    nonisolated static func shouldTerminateOnClose(
+        showsMenuBarItem: Bool,
+        hasPendingURL: Bool
+    ) -> Bool {
+        !showsMenuBarItem && !hasPendingURL
+    }
+
+    /// Closing Settings always removes the Dock icon. The menu bar item can keep Reflex running.
     func windowWillClose(_ notification: Notification) {
         DispatchQueue.main.async {
-            guard self.state.pendingURL == nil else {
-                // A link arrived while Settings was open, and the chooser already shows it.
+            let shouldTerminate = Self.shouldTerminateOnClose(
+                showsMenuBarItem: self.state.showsMenuBarItem,
+                hasPendingURL: self.state.pendingURL != nil
+            )
+            guard shouldTerminate else {
                 NSApplication.shared.setActivationPolicy(.accessory)
                 return
             }
