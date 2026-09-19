@@ -93,6 +93,28 @@ Start Reflex without a link, from the Applications folder or the Dock, and Setti
 
 The menu bar item is a switch in Settings. Turn it off to keep the menu bar clean. Reflex still receives links, and you still reach Settings by starting Reflex again.
 
+## Purposes, which decide the routing
+
+Jev reads the purpose text of each target. It is the strongest signal, so write it for the targets you care about. Reflex leaves the field empty and never invents one.
+
+Write the accounts, sites, and work behind a target:
+
+- `Slumber company work: GitHub, Linear, company mail, deploy dashboards`
+- `Personal Google account: shopping, YouTube, personal mail, travel`
+- `Acadia university account: Microsoft 365, Teams, coursework`
+- `Banking, government sites, and Apple services`
+
+Measured against a list of twelve targets:
+
+| Purposes | Link | Confidence |
+| --- | --- | --- |
+| `General browsing in ...` everywhere | a work pull request, opened from Slack | 0.26, chooser |
+| written as above | the same link | 0.99, opens by itself |
+| written for four targets only | the same link | 1.00, opens by itself |
+| written as above | a Teams meeting from Outlook, two work accounts | 0.72, chooser with the suggestion |
+
+You do not need a purpose for every target. Describe the ones that matter, and leave the rest empty.
+
 ## Privacy
 
 Original URLs stay only in memory while they wait for routing. Reflex does not save link history or URL data. It does not log incoming URLs, API keys, authorization headers, or API response bodies.
@@ -101,7 +123,7 @@ For Jev selection, Reflex sends only:
 
 - The URL scheme, host, and path
 - Query parameter names without their values
-- The source application bundle identifier when macOS provides it
+- The source application bundle identifier when macOS provides it, and the application name it resolves to
 - Enabled and available target names and user-written purposes
 
 The URL fragment is removed. The browser launcher always receives the original URL. Reflex sends the reduced state to the OpenRouter decisions endpoint with the `~typesafe/jev-latest` model. If the request fails or does not return a valid answer in 1.5 seconds, Reflex shows the chooser.

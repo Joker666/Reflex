@@ -37,6 +37,7 @@ private struct JevRequest: Encodable {
         }
         var link: Link
         var sourceApplicationBundleIdentifier: String?
+        var sourceApplicationName: String?
         var targets: [Target]
     }
     struct Questions: Encodable {
@@ -67,6 +68,17 @@ private struct JevResponse: Decodable {
 struct JevClient {
     static let openRouterEndpoint = URL(string: "https://openrouter.ai/api/alpha/decisions")!
     static let model = "~typesafe/jev-latest"
+    /// Jev reads this with the state, so it says what each field means.
+    static let instructions = [
+        "Choose the browser target where this user would open `link`.",
+        "Each target is a browser. A name in parentheses is a browser profile,",
+        "which is a separate signed-in account.",
+        "The purpose text is the user's own description of that target and is the strongest signal.",
+        "The source application is the application the user clicked the link in.",
+        "It gives the context, for example a work chat or a personal message.",
+        "Match the link host and path against the purposes.",
+        "Choose one target only when it fits better than the others.",
+    ].joined(separator: " ")
 
     var endpoint = Self.openRouterEndpoint
     var transport: any JevTransport
@@ -96,7 +108,9 @@ struct JevClient {
             let key = "target_\(index)"
             mapping[key] = target.id
             requestTargets.append(.init(key: key, name: target.name, purpose: target.purpose))
-            criteria[key] = "\(target.name): \(target.purpose)"
+            criteria[key] = target.purpose.isEmpty
+                ? "\(target.name). The user gave no purpose for this target."
+                : "\(target.name): \(target.purpose)"
         }
         let body = JevRequest(
             state: .init(
@@ -107,12 +121,13 @@ struct JevClient {
                     queryParameterNames: context.queryParameterNames
                 ),
                 sourceApplicationBundleIdentifier: context.sourceApplicationBundleIdentifier,
+                sourceApplicationName: context.sourceApplicationName,
                 targets: requestTargets
             ),
             model: Self.model,
             questions: .init(
                 target: .init(
-                    instructions: "Which enabled browser target is the best place to open `link`, considering the source application and each target's stated purpose?",
+                    instructions: Self.instructions,
                     criteria: criteria
                 )
             )

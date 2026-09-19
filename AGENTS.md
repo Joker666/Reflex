@@ -79,7 +79,7 @@ The default Jev state may include:
 - URL scheme
 - Host
 - Path
-- Source application bundle identifier, if known
+- Source application bundle identifier, if known, and the application name that identifier resolves to
 - A list of enabled targets and each target's user-authored purpose
 
 Strip the fragment completely. Strip query parameter values. Supplying query parameter names is allowed only when useful for routing. Never send clipboard contents, page contents, browser history, cookies, local file paths, or window text.
@@ -95,6 +95,7 @@ Reflex should configure the initial target list automatically instead of requiri
 - Exclude Reflex itself so it can never appear as a destination and create a routing loop.
 - Limit discovery to Safari, Chrome, Dia, Comet, Helium, Edge, Phi, Zen, and Firefox. Remove other registered handlers from the target list.
 - For each new browser, pre-populate its display name, bundle identifier, application icon, enabled state, and a neutral editable purpose such as `General browsing in <browser name>`.
+- Leave the purpose empty for a new target. Boilerplate such as `General browsing in Safari` tells Jev nothing, and an empty field with a prompt asks the user for the words that decide the routing.
 - Enable newly discovered browsers by default. The first-launch setup must let the user disable unwanted targets and edit each purpose before completing setup.
 - Browser purpose is user intent, not something Reflex can infer reliably. Do not label a browser as work or personal without the user's input.
 - Discover Chromium profile names and directory identifiers for Chrome, Edge, Comet, Dia, Helium, and Phi. Read only `profile.info_cache` keys and each entry's `name` from the browser's `Local State` file. Do not read account details, history, cookies, or page data.
@@ -167,6 +168,7 @@ Content-Type: application/json
       "queryParameterNames": []
     },
     "sourceApplicationBundleIdentifier": "com.tinyspeck.slackmacgap",
+    "sourceApplicationName": "Slack",
     "targets": [
       {
         "key": "target_0",
@@ -184,7 +186,7 @@ Content-Type: application/json
   "questions": {
     "target": {
       "type": "choice",
-      "instructions": "Which enabled browser target is the best place to open `link`, considering the source application and each target's stated purpose?",
+      "instructions": "<see JevClient.instructions: a target is a browser, a name in parentheses is a profile, the purpose is the user's own words, the source application gives the context>",
       "criteria": {
         "target_0": "Chrome Work: Work accounts, GitHub, Linear, and company links",
         "target_1": "Safari Personal: Personal browsing, shopping, and personal accounts"
@@ -195,6 +197,8 @@ Content-Type: application/json
 ```
 
 Decode only the fields the app needs from `answers.target`: `choice`, `probabilities`, and `confidence`. Treat an unknown choice key, missing confidence, non-finite confidence, or confidence outside `0...1` as an invalid response.
+
+The question instructions must say what each field means: a target is a browser, a name in parentheses is a profile, the purpose is the user's own words, and the source application gives the context. Measured on a 12-target list: boilerplate purposes gave confidence 0.26 for a work link, and user-written purposes gave 0.99.
 
 Jev questions must stay atomic. For the MVP, make one `Choice` decision. Do not add separate work/personal, sensitivity, or urgency questions unless actual product behavior consumes them.
 

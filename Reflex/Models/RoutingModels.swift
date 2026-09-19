@@ -6,6 +6,7 @@ struct RoutingContext: Codable, Equatable {
     var path: String
     var queryParameterNames: [String]
     var sourceApplicationBundleIdentifier: String?
+    var sourceApplicationName: String?
 }
 
 struct RouteDecision: Equatable {

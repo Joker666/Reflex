@@ -100,6 +100,9 @@ struct SettingsView: View {
                 if state.targets.isEmpty {
                     Text("No registered web browser was found.")
                 }
+                Text("The purpose is what Jev reads. Write the accounts, sites, and work you use a target for, for example \"Slumber work: GitHub, Linear, company mail\". A target with no purpose is hard for Jev to choose, so Reflex shows the chooser instead.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
                 if state.targets.count > 1 {
                     Text("Drag a row by its handle to set the chooser order. The number is the key that opens that target.")
                         .font(.caption)
@@ -183,7 +186,8 @@ struct SettingsView: View {
                 .buttonStyle(.borderless)
                 .accessibilityLabel("Remove \(target.name)")
             }
-            TextField("Purpose", text: $state.targets[index].purpose)
+            TextField("Purpose: what you use this target for", text: $state.targets[index].purpose)
+                .accessibilityLabel("Purpose")
             TextField(
                 "Chromium profile directory (optional)",
                 text: Binding(

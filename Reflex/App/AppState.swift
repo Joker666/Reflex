@@ -109,6 +109,17 @@ final class AppState: ObservableObject {
         return icon
     }
 
+    private func applicationName(for bundleIdentifier: String?) -> String? {
+        guard let bundleIdentifier,
+              let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleIdentifier),
+              let bundle = Bundle(url: url) else {
+            return nil
+        }
+        return (bundle.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String)
+            ?? (bundle.object(forInfoDictionaryKey: "CFBundleName") as? String)
+            ?? url.deletingPathExtension().lastPathComponent
+    }
+
     private func advancePending() {
         pendingURL = queue.advance()?.url
         suggestedTargetID = nil
@@ -132,9 +143,9 @@ final class AppState: ObservableObject {
         browsersWithReadProfiles = result.readableBundleIdentifiers
         unreadableProfileBrowsers = result.unreadableBrowserNames
 
-        targets = merged.expandingProfiles(
-            Dictionary(grouping: result.profiles, by: \.bundleIdentifier)
-        )
+        targets = merged
+            .expandingProfiles(Dictionary(grouping: result.profiles, by: \.bundleIdentifier))
+            .clearingGeneratedPurposes()
     }
 
     func addTarget(applicationURL: URL) {
@@ -156,7 +167,7 @@ final class AppState: ObservableObject {
                 id: UUID(),
                 name: name,
                 bundleIdentifier: bundleIdentifier,
-                purpose: "General browsing in \(name)",
+                purpose: "",
                 chromiumProfileDirectory: nil,
                 isEnabled: true
             )
@@ -234,10 +245,12 @@ final class AppState: ObservableObject {
 
         chooserPresenter?.presentChooser()
 
+        let sourceBundleIdentifier = queue.current?.sourceApplicationBundleIdentifier
         guard let apiKey = try? keychain.readAPIKey(),
               let context = URLSanitizer.sanitize(
                 url,
-                sourceApplicationBundleIdentifier: queue.current?.sourceApplicationBundleIdentifier
+                sourceApplicationBundleIdentifier: sourceBundleIdentifier,
+                sourceApplicationName: applicationName(for: sourceBundleIdentifier)
               ) else {
             suggestedTargetID = nil
             isJevUnavailable = true

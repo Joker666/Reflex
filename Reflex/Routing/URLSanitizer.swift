@@ -3,7 +3,8 @@ import Foundation
 enum URLSanitizer {
     static func sanitize(
         _ url: URL,
-        sourceApplicationBundleIdentifier: String? = nil
+        sourceApplicationBundleIdentifier: String? = nil,
+        sourceApplicationName: String? = nil
     ) -> RoutingContext? {
         guard let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
               let scheme = components.scheme?.lowercased(),
@@ -21,7 +22,8 @@ enum URLSanitizer {
             host: host,
             path: components.path.isEmpty ? "/" : components.path,
             queryParameterNames: queryParameterNames,
-            sourceApplicationBundleIdentifier: sourceApplicationBundleIdentifier
+            sourceApplicationBundleIdentifier: sourceApplicationBundleIdentifier,
+            sourceApplicationName: sourceApplicationName
         )
     }
 }

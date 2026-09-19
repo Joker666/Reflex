@@ -131,7 +131,7 @@ struct ReflexTests {
 
         #expect(result.count == 2)
         #expect(result[0].name == "Microsoft Edge (Ayaz)")
-        #expect(result[0].purpose == "General browsing in Microsoft Edge (Ayaz)")
+        #expect(result[0].purpose == "General browsing in Microsoft Edge (Profile 1)")
         #expect(result[1].name == "Edge for invoices")
         #expect(result[1].purpose == "Invoices")
     }
@@ -240,6 +240,31 @@ struct ReflexTests {
         #expect(queue.advance() == nil)
     }
 
+    @Test("A scan clears the purpose Reflex wrote itself")
+    func clearsGeneratedPurposes() {
+        let generated = BrowserTarget(
+            id: UUID(),
+            name: "Safari",
+            bundleIdentifier: "com.apple.Safari",
+            purpose: "General browsing in Safari",
+            chromiumProfileDirectory: nil,
+            isEnabled: true
+        )
+        let written = BrowserTarget(
+            id: UUID(),
+            name: "Dia",
+            bundleIdentifier: "company.thebrowser.dia",
+            purpose: "Reading long articles",
+            chromiumProfileDirectory: nil,
+            isEnabled: true
+        )
+
+        let result = [generated, written].clearingGeneratedPurposes()
+
+        #expect(result[0].purpose.isEmpty)
+        #expect(result[1].purpose == "Reading long articles")
+    }
+
     @Test("Discovery merge keeps configured values")
     func discoveryMergePreservesConfiguration() {
         let id = UUID()
@@ -269,7 +294,7 @@ struct ReflexTests {
         #expect(result.count == 2)
         #expect(result[0] == configured)
         #expect(result[1].name == "Firefox")
-        #expect(result[1].purpose == "General browsing in Firefox")
+        #expect(result[1].purpose.isEmpty)
         #expect(result[1].isEnabled)
     }
 
@@ -361,13 +386,24 @@ struct ReflexTests {
 
     @Test("Jev request uses stable local keys and contains no query values")
     func jevRequestEncoding() throws {
-        let targets = [makeTarget(name: "Work"), makeTarget(name: "Personal")]
+        let targets = [
+            BrowserTarget(
+                id: UUID(),
+                name: "Work",
+                bundleIdentifier: "com.example.work",
+                purpose: "",
+                chromiumProfileDirectory: nil,
+                isEnabled: true
+            ),
+            makeTarget(name: "Personal"),
+        ]
         let context = RoutingContext(
             scheme: "https",
             host: "example.com",
             path: "/item",
             queryParameterNames: ["token"],
-            sourceApplicationBundleIdentifier: nil
+            sourceApplicationBundleIdentifier: "com.tinyspeck.slackmacgap",
+            sourceApplicationName: "Slack"
         )
         let (request, mapping) = try JevClient().makeRequest(
             context: context,
@@ -386,6 +422,12 @@ struct ReflexTests {
         #expect(mapping.keyToTargetID["target_0"] == targets[0].id)
         #expect(mapping.keyToTargetID["target_1"] == targets[1].id)
         #expect(!encoded.contains("queryValue"))
+        #expect(state["sourceApplicationName"] as? String == "Slack")
+        let questions = try #require(object["questions"] as? [String: Any])
+        let question = try #require(questions["target"] as? [String: Any])
+        let criteria = try #require(question["criteria"] as? [String: String])
+        // A target without a purpose says so, instead of sending an empty line.
+        #expect(criteria["target_0"]?.contains("no purpose") == true)
     }
 
     @Test("Jev response accepts valid choices and rejects invalid answers")

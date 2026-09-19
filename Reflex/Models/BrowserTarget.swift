@@ -81,9 +81,6 @@ extension Array where Element == BrowserTarget {
                 let fallbackName = BrowserTarget.profileName(part, of: browserName)
                 guard group[index].name == fallbackName else { continue }
                 let name = BrowserTarget.profileName(profile.profileName, of: browserName)
-                if group[index].purpose == "General browsing in \(fallbackName)" {
-                    group[index].purpose = "General browsing in \(name)"
-                }
                 group[index].name = name
             }
 
@@ -95,7 +92,7 @@ extension Array where Element == BrowserTarget {
                         id: UUID(),
                         name: name,
                         bundleIdentifier: bundleIdentifier,
-                        purpose: "General browsing in \(name)",
+                        purpose: "",
                         chromiumProfileDirectory: profile.profileDirectory,
                         isEnabled: true
                     )
@@ -104,6 +101,16 @@ extension Array where Element == BrowserTarget {
             result.append(contentsOf: group)
         }
         return result
+    }
+
+    /// Reflex wrote "General browsing in ..." before. It says nothing, so Jev should not read it.
+    func clearingGeneratedPurposes() -> [BrowserTarget] {
+        map { target in
+            guard target.purpose.hasPrefix("General browsing in ") else { return target }
+            var cleared = target
+            cleared.purpose = ""
+            return cleared
+        }
     }
 
     func mergingDiscoveries(_ discoveries: [DiscoveredBrowser]) -> [BrowserTarget] {
@@ -116,7 +123,7 @@ extension Array where Element == BrowserTarget {
                     id: UUID(),
                     name: browser.name,
                     bundleIdentifier: browser.bundleIdentifier,
-                    purpose: "General browsing in \(browser.name)",
+                    purpose: "",
                     chromiumProfileDirectory: nil,
                     isEnabled: true
                 )
