@@ -78,7 +78,9 @@ final class AppState: ObservableObject {
     }
 
     func rescanBrowsers() {
-        targets = targets.mergingDiscoveries(BrowserDiscovery().discover())
+        targets = targets
+            .filter(BrowserDiscovery.isSupportedTarget)
+            .mergingDiscoveries(BrowserDiscovery().discover())
     }
 
     func addTarget(applicationURL: URL) {
@@ -91,6 +93,10 @@ final class AppState: ObservableObject {
         let name = (bundle.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String)
             ?? (bundle.object(forInfoDictionaryKey: "CFBundleName") as? String)
             ?? applicationURL.deletingPathExtension().lastPathComponent
+        guard BrowserDiscovery.isSupportedBrowser(name: name, bundleIdentifier: bundleIdentifier) else {
+            setupMessage = "Select Safari, Chrome, Dia, Comet, Helium, Edge, Phi, Zen, or Firefox."
+            return
+        }
         targets.append(
             BrowserTarget(
                 id: UUID(),

@@ -12,6 +12,24 @@ struct WorkspaceBrowserApplicationQuery: BrowserApplicationQuerying {
 }
 
 struct BrowserDiscovery {
+    private static let supportedBundleIdentifierPrefixes = [
+        "com.apple.Safari",
+        "com.google.Chrome",
+        "company.thebrowser.dia",
+        "ai.perplexity.comet",
+        "net.imput.helium",
+        "com.microsoft.edgemac",
+        "com.phibrowser.Mac",
+        "app.zen-browser.zen",
+        "io.github.zen-browser.zen",
+        "org.mozilla.firefox",
+    ]
+
+    private static let supportedApplicationNames = [
+        "safari", "chrome", "google chrome", "dia", "comet", "helium",
+        "edge", "microsoft edge", "phi", "zen", "zen browser", "firefox",
+    ]
+
     var query: BrowserApplicationQuerying
     var selfBundleIdentifier: String?
 
@@ -42,10 +60,28 @@ struct BrowserDiscovery {
             let name = (bundle.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String)
                 ?? (bundle.object(forInfoDictionaryKey: "CFBundleName") as? String)
                 ?? standardizedURL.deletingPathExtension().lastPathComponent
+            guard Self.isSupportedBrowser(name: name, bundleIdentifier: identifier) else { continue }
             result.append(
                 DiscoveredBrowser(name: name, bundleIdentifier: identifier, applicationURL: standardizedURL)
             )
         }
         return result.sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+    }
+
+    static func isSupportedBrowser(name: String, bundleIdentifier: String) -> Bool {
+        if supportedBundleIdentifierPrefixes.contains(where: { bundleIdentifier.hasPrefix($0) }) {
+            return true
+        }
+
+        let normalizedName = name
+            .lowercased()
+            .replacingOccurrences(of: " developer edition", with: "")
+            .replacingOccurrences(of: " canary", with: "")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        return supportedApplicationNames.contains(normalizedName)
+    }
+
+    static func isSupportedTarget(_ target: BrowserTarget) -> Bool {
+        supportedBundleIdentifierPrefixes.contains { target.bundleIdentifier.hasPrefix($0) }
     }
 }

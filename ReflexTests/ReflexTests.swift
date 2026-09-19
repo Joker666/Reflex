@@ -38,7 +38,7 @@ struct ReflexTests {
         let configured = BrowserTarget(
             id: id,
             name: "My Work Browser",
-            bundleIdentifier: "com.example.browser",
+            bundleIdentifier: "com.google.Chrome",
             purpose: "Company links",
             chromiumProfileDirectory: "Profile 2",
             isEnabled: false
@@ -46,13 +46,13 @@ struct ReflexTests {
         let discoveries = [
             DiscoveredBrowser(
                 name: "Example Browser",
-                bundleIdentifier: "com.example.browser",
+                bundleIdentifier: "com.google.Chrome",
                 applicationURL: URL(fileURLWithPath: "/Applications/Example.app")
             ),
             DiscoveredBrowser(
-                name: "New Browser",
-                bundleIdentifier: "com.example.new",
-                applicationURL: URL(fileURLWithPath: "/Applications/New.app")
+                name: "Firefox",
+                bundleIdentifier: "org.mozilla.firefox",
+                applicationURL: URL(fileURLWithPath: "/Applications/Firefox.app")
             ),
         ]
 
@@ -60,8 +60,8 @@ struct ReflexTests {
 
         #expect(result.count == 2)
         #expect(result[0] == configured)
-        #expect(result[1].name == "New Browser")
-        #expect(result[1].purpose == "General browsing in New Browser")
+        #expect(result[1].name == "Firefox")
+        #expect(result[1].purpose == "General browsing in Firefox")
         #expect(result[1].isEnabled)
     }
 
@@ -80,21 +80,32 @@ struct ReflexTests {
         ).isComplete)
     }
 
-    @Test("Discovery uses the HTTP and HTTPS union, removes duplicates, and excludes Reflex")
+    @Test("Discovery uses the HTTP and HTTPS union and keeps only supported browsers")
     func discoveryUnionDeduplicationAndSelfExclusion() throws {
         let root = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: root) }
         let reflex = try makeApplication(at: root, name: "Reflex", identifier: "com.example.Reflex")
-        let alpha = try makeApplication(at: root, name: "Alpha", identifier: "com.example.alpha")
-        let beta = try makeApplication(at: root, name: "Beta", identifier: "com.example.beta")
-        let query = FakeBrowserQuery(http: [reflex, alpha], https: [alpha, beta])
+        let safari = try makeApplication(at: root, name: "Safari", identifier: "com.apple.Safari")
+        let firefox = try makeApplication(at: root, name: "Firefox", identifier: "org.mozilla.firefox")
+        let chat = try makeApplication(at: root, name: "ChatGPT", identifier: "com.openai.chat")
+        let query = FakeBrowserQuery(http: [reflex, safari, chat], https: [safari, firefox])
 
         let result = BrowserDiscovery(
             query: query,
             selfBundleIdentifier: "com.example.Reflex"
         ).discover()
 
-        #expect(result.map(\.bundleIdentifier) == ["com.example.alpha", "com.example.beta"])
+        #expect(result.map(\.bundleIdentifier) == ["org.mozilla.firefox", "com.apple.Safari"])
+    }
+
+    @Test("Supported target filter removes other applications")
+    func supportedTargetFilter() {
+        let targets = [
+            makeTarget(name: "Chrome", bundleIdentifier: "com.google.Chrome"),
+            makeTarget(name: "ChatGPT", bundleIdentifier: "com.openai.chat"),
+        ]
+
+        #expect(targets.filter(BrowserDiscovery.isSupportedTarget).map(\.name) == ["Chrome"])
     }
 
     @Test("URL sanitization removes fragment and query values")
@@ -225,11 +236,14 @@ struct ReflexTests {
         return applicationURL
     }
 
-    private func makeTarget(name: String = "Browser") -> BrowserTarget {
+    private func makeTarget(
+        name: String = "Browser",
+        bundleIdentifier: String = "com.example.\(UUID().uuidString)"
+    ) -> BrowserTarget {
         BrowserTarget(
             id: UUID(),
             name: name,
-            bundleIdentifier: "com.example.\(UUID().uuidString)",
+            bundleIdentifier: bundleIdentifier,
             purpose: "Test browsing",
             chromiumProfileDirectory: nil,
             isEnabled: true

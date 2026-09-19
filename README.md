@@ -18,7 +18,7 @@ xcodebuild -project Reflex.xcodeproj -scheme Reflex -destination 'platform=macOS
 
 ## First setup
 
-Reflex scans the applications that Launch Services reports for representative HTTP and HTTPS URLs. It enables new applications and gives each one a neutral purpose. Open Settings to disable unwanted targets, edit names and purposes, add an optional Chromium profile directory, or select **Rescan Browsers**.
+Reflex scans the applications that Launch Services reports for representative HTTP and HTTPS URLs. It keeps Safari, Chrome, Dia, Comet, Helium, Edge, Phi, Zen, and Firefox. It removes other handlers from the target list. It enables new supported browsers and gives each one a neutral purpose. Open Settings to disable unwanted targets, edit names and purposes, add an optional Chromium profile directory, or select **Rescan Browsers**.
 
 Select **Make Reflex Default Browser**. Setup is complete only when Reflex is the handler for both HTTP and HTTPS. If macOS does not allow the direct change, Reflex opens System Settings. In **Desktop & Dock**, set **Default web browser** to Reflex.
 

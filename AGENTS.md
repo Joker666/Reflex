@@ -45,7 +45,7 @@ Do not add any of the following unless a later task explicitly asks for it:
 - Use `OSLog` for diagnostics, with privacy annotations. Never log the full incoming URL, query values, API key, authorization header, or API response body
 - Keep networking, routing policy, URL sanitization, and browser launching testable without SwiftUI
 - The app must remain useful when Jev is unavailable
-- Discover browser applications through Launch Services and `NSWorkspace`; do not hard-code a closed list of supported browsers
+- Discover browser applications through Launch Services and `NSWorkspace`; keep only Safari, Chrome, Dia, Comet, Helium, Edge, Phi, Zen, and Firefox
 
 ## Repository working rules
 
@@ -93,7 +93,7 @@ Reflex should configure the initial target list automatically instead of requiri
 - Ask Launch Services for every installed application capable of opening representative `http` and `https` URLs. Prefer public `NSWorkspace` APIs such as `urlsForApplications(toOpen:)` rather than scanning fixed filesystem directories.
 - Take the union of HTTP and HTTPS results, resolve each application bundle, and deduplicate by bundle identifier. If an application has no bundle identifier, deduplicate by standardized application URL.
 - Exclude Reflex itself so it can never appear as a destination and create a routing loop.
-- Do not limit discovery to Safari, Chrome, or Dia. Firefox, Edge, Brave, browser developer editions, and any other registered handler should appear when installed.
+- Limit discovery to Safari, Chrome, Dia, Comet, Helium, Edge, Phi, Zen, and Firefox. Remove other registered handlers from the target list.
 - For each new browser, pre-populate its display name, bundle identifier, application icon, enabled state, and a neutral editable purpose such as `General browsing in <browser name>`.
 - Enable newly discovered browsers by default. The first-launch setup must let the user disable unwanted targets and edit each purpose before completing setup.
 - Browser purpose is user intent, not something Reflex can infer reliably. Do not label a browser as work or personal without the user's input.
@@ -288,7 +288,7 @@ Acceptance criteria:
 - The project builds from a clean checkout
 - The app registers as an `http` and `https` handler
 - First launch discovers all applications that Launch Services reports as capable of opening HTTP or HTTPS URLs
-- Discovery excludes Reflex, deduplicates applications, and is not restricted to a hard-coded browser list
+- Discovery excludes Reflex, deduplicates applications, and keeps only the supported browser list
 - The initial setup pre-populates discovered browsers and lets the user edit their purposes or disable them
 - Reflex reports whether it is the default handler for both HTTP and HTTPS
 - The Make Reflex Default Browser action uses supported APIs or opens the appropriate System Settings page with instructions
@@ -351,7 +351,7 @@ Use dependency injection only at real boundaries: HTTP transport, credential sto
 Before final handoff, verify and report results for:
 
 1. Build the app and run all tests.
-2. Confirm that every installed browser registered with Launch Services appears after a rescan and that Reflex does not appear as a target.
+2. Confirm that each installed supported browser appears after a rescan, other handlers do not appear, and Reflex does not appear as a target.
 3. Edit an existing target, rescan, and confirm that the customization remains intact.
 4. Complete the default-browser flow and confirm Reflex is the handler for both HTTP and HTTPS.
 5. Configure at least two installed targets with distinct purposes.
