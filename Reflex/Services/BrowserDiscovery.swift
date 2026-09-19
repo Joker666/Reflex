@@ -22,28 +22,82 @@ struct WorkspaceBrowserApplicationQuery: BrowserApplicationQuerying {
     }
 }
 
+enum SupportedBrowser: CaseIterable {
+    case safari
+    case chrome
+    case dia
+    case comet
+    case helium
+    case edge
+    case phi
+    case zen
+    case firefox
+
+    var bundleIdentifierPrefixes: [String] {
+        switch self {
+        case .safari: ["com.apple.Safari"]
+        case .chrome: ["com.google.Chrome"]
+        case .dia: ["company.thebrowser.dia"]
+        case .comet: ["ai.perplexity.comet"]
+        case .helium: ["net.imput.helium"]
+        case .edge: ["com.microsoft.edgemac"]
+        case .phi: ["com.phibrowser.Mac"]
+        case .zen: ["app.zen-browser.zen", "io.github.zen-browser.zen"]
+        case .firefox: ["org.mozilla.firefox"]
+        }
+    }
+
+    var matchingNames: [String] {
+        switch self {
+        case .safari: ["safari"]
+        case .chrome: ["chrome", "google chrome"]
+        case .dia: ["dia"]
+        case .comet: ["comet"]
+        case .helium: ["helium"]
+        case .edge: ["edge", "microsoft edge"]
+        case .phi: ["phi"]
+        case .zen: ["zen", "zen browser"]
+        case .firefox: ["firefox"]
+        }
+    }
+
+    static func chromiumProfileDataDirectory(for bundleIdentifier: String) -> String? {
+        switch bundleIdentifier {
+        case "com.google.Chrome": "Google/Chrome"
+        case "com.microsoft.edgemac": "Microsoft Edge"
+        case "ai.perplexity.comet": "Comet"
+        case "company.thebrowser.dia": "Dia/User Data"
+        case "net.imput.helium": "net.imput.helium"
+        case "com.phibrowser.Mac": "com.phibrowser.Mac"
+        default: nil
+        }
+    }
+
+    static func matching(bundleIdentifier: String) -> SupportedBrowser? {
+        allCases.first { browser in
+            browser.bundleIdentifierPrefixes.contains { bundleIdentifier.hasPrefix($0) }
+        }
+    }
+
+    static func matching(name: String, bundleIdentifier: String) -> SupportedBrowser? {
+        if let browser = matching(bundleIdentifier: bundleIdentifier) {
+            return browser
+        }
+        let normalizedName = name
+            .lowercased()
+            .replacingOccurrences(of: " developer edition", with: "")
+            .replacingOccurrences(of: " canary", with: "")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        return allCases.first { browser in
+            browser.matchingNames.contains(normalizedName)
+        }
+    }
+}
+
 struct BrowserDiscovery {
     private static let discoveryURLs = [
         URL(string: "http://example.com")!,
         URL(string: "https://example.com")!,
-    ]
-
-    private static let supportedBundleIdentifierPrefixes = [
-        "com.apple.Safari",
-        "com.google.Chrome",
-        "company.thebrowser.dia",
-        "ai.perplexity.comet",
-        "net.imput.helium",
-        "com.microsoft.edgemac",
-        "com.phibrowser.Mac",
-        "app.zen-browser.zen",
-        "io.github.zen-browser.zen",
-        "org.mozilla.firefox",
-    ]
-
-    private static let supportedApplicationNames = [
-        "safari", "chrome", "google chrome", "dia", "comet", "helium",
-        "edge", "microsoft edge", "phi", "zen", "zen browser", "firefox",
     ]
 
     var query: BrowserApplicationQuerying
@@ -82,19 +136,10 @@ struct BrowserDiscovery {
     }
 
     static func isSupportedBrowser(name: String, bundleIdentifier: String) -> Bool {
-        if supportedBundleIdentifierPrefixes.contains(where: { bundleIdentifier.hasPrefix($0) }) {
-            return true
-        }
-
-        let normalizedName = name
-            .lowercased()
-            .replacingOccurrences(of: " developer edition", with: "")
-            .replacingOccurrences(of: " canary", with: "")
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-        return supportedApplicationNames.contains(normalizedName)
+        SupportedBrowser.matching(name: name, bundleIdentifier: bundleIdentifier) != nil
     }
 
     static func isSupportedTarget(_ target: BrowserTarget) -> Bool {
-        supportedBundleIdentifierPrefixes.contains { target.bundleIdentifier.hasPrefix($0) }
+        SupportedBrowser.matching(bundleIdentifier: target.bundleIdentifier) != nil
     }
 }

@@ -157,14 +157,6 @@ struct BrowserProfileDiscovery {
     }
 
     private static func relativeDataDirectory(for bundleIdentifier: String) -> String? {
-        switch bundleIdentifier {
-        case "com.google.Chrome": "Google/Chrome"
-        case "com.microsoft.edgemac": "Microsoft Edge"
-        case "ai.perplexity.comet": "Comet"
-        case "company.thebrowser.dia": "Dia/User Data"
-        case "net.imput.helium": "net.imput.helium"
-        case "com.phibrowser.Mac": "com.phibrowser.Mac"
-        default: nil
-        }
+        SupportedBrowser.chromiumProfileDataDirectory(for: bundleIdentifier)
     }
 }

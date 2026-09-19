@@ -1,3 +1,4 @@
+import OSLog
 import SwiftUI
 
 @main
@@ -31,4 +32,13 @@ private struct ReflexMenuBar: Scene {
             Button("Quit Reflex") { NSApplication.shared.terminate(nil) }
         }
     }
+}
+
+enum ReflexLog {
+    private static let subsystem = Bundle.main.bundleIdentifier ?? "com.rafi.Reflex"
+
+    static let routing = Logger(subsystem: subsystem, category: "Routing")
+    static let jev = Logger(subsystem: subsystem, category: "Jev")
+    static let launch = Logger(subsystem: subsystem, category: "Launch")
+    static let discovery = Logger(subsystem: subsystem, category: "Discovery")
 }

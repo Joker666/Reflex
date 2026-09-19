@@ -1,5 +1,6 @@
 import AppKit
 import Foundation
+import OSLog
 
 enum ChooserModifier: String, CaseIterable, Identifiable {
     case option
@@ -151,6 +152,7 @@ final class AppState: ObservableObject {
     ) {
         let needsRouting = queue.current == nil
         for url in urls where url.isHTTPOrHTTPS {
+            ReflexLog.routing.info("Enqueued link with scheme: \(url.scheme ?? "", privacy: .public), host: \(url.host() ?? "", privacy: .private)")
             queue.enqueue(
                 url,
                 sourceApplicationBundleIdentifier: sourceApplicationBundleIdentifier,
@@ -166,11 +168,13 @@ final class AppState: ObservableObject {
     func openPending(in target: BrowserTarget) {
         guard let url = pendingURL else { return }
         launchError = nil
+        ReflexLog.launch.info("Opening link in target: \(target.name, privacy: .private) (\(target.bundleIdentifier, privacy: .public))")
         Task {
             do {
                 try await launcher.open(url, in: target)
                 advancePending()
             } catch {
+                ReflexLog.launch.error("Failed to open target \(target.name, privacy: .private): \(error.localizedDescription, privacy: .private)")
                 launchError = (error as? LocalizedError)?.errorDescription ?? "Reflex could not open the link."
                 chooserPresenter?.presentChooser()
             }
@@ -228,6 +232,11 @@ final class AppState: ObservableObject {
         targets = merged
             .expandingProfiles(Dictionary(grouping: result.profiles, by: \.bundleIdentifier))
             .clearingGeneratedPurposes()
+
+        ReflexLog.discovery.info("Rescanned browsers. Discovered \(self.targets.count, privacy: .public) targets (\(result.profiles.count, privacy: .public) profiles)")
+        if !result.accessDeniedBrowserNames.isEmpty {
+            ReflexLog.discovery.warning("Profile access denied for: \(result.accessDeniedBrowserNames.joined(separator: ", "), privacy: .private)")
+        }
     }
 
     func addTarget(applicationURL: URL) {
@@ -312,6 +321,7 @@ final class AppState: ObservableObject {
         skipsAutomaticSelection = queue.current?.asksForChooser ?? false
         // The configured modifier was held, so the user wants the full list.
         if skipsAutomaticSelection, !targets.isEmpty {
+            ReflexLog.routing.info("Chooser modifier held; skipping automatic selection")
             suggestedTargetID = nil
             isJevUnavailable = false
             chooserPresenter?.presentChooser()
@@ -320,9 +330,11 @@ final class AppState: ObservableObject {
         let localAction = RoutingPolicy.action(availableTargets: targets, decision: nil)
         switch localAction {
         case .setup:
+            ReflexLog.routing.info("No targets available; showing setup")
             chooserPresenter?.presentChooser()
             return
         case let .open(targetID):
+            ReflexLog.routing.info("Single enabled target bypasses Jev decision")
             if let target = targets.first(where: { $0.id == targetID }) {
                 openPending(in: target)
             }
@@ -340,6 +352,7 @@ final class AppState: ObservableObject {
                 sourceApplicationBundleIdentifier: sourceBundleIdentifier,
                 sourceApplicationName: applicationName(for: sourceBundleIdentifier)
               ) else {
+            ReflexLog.routing.info("No API key configured or sanitization failed; showing chooser fallback")
             suggestedTargetID = nil
             isJevUnavailable = true
             return
@@ -347,6 +360,7 @@ final class AppState: ObservableObject {
 
         isRouting = true
         isJevUnavailable = false
+        ReflexLog.jev.info("Requesting Jev decision for host: \(context.host, privacy: .private) with \(targets.count, privacy: .public) targets")
         Task {
             defer { isRouting = false }
             do {
@@ -355,8 +369,10 @@ final class AppState: ObservableObject {
                     targets: targets,
                     apiKey: apiKey
                 )
+                ReflexLog.jev.info("Jev decision returned with confidence: \(decision.confidence, privacy: .public)")
                 apply(RoutingPolicy.action(availableTargets: targets, decision: decision), targets: targets)
             } catch {
+                ReflexLog.jev.error("Jev decision failed or timed out: \(error.localizedDescription, privacy: .private)")
                 isJevUnavailable = true
                 suggestedTargetID = nil
             }

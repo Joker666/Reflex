@@ -550,6 +550,17 @@ struct ReflexTests {
         #expect(bundle.displayName(fallbackURL: app) == "CustomBrowser")
     }
 
+    @Test("SupportedBrowser correctly classifies browsers and Chromium profile paths")
+    func supportedBrowserClassification() {
+        #expect(SupportedBrowser.matching(bundleIdentifier: "com.google.Chrome") == .chrome)
+        #expect(SupportedBrowser.matching(bundleIdentifier: "com.google.Chrome.canary") == .chrome)
+        #expect(SupportedBrowser.chromiumProfileDataDirectory(for: "com.google.Chrome") == "Google/Chrome")
+        #expect(SupportedBrowser.chromiumProfileDataDirectory(for: "com.google.Chrome.canary") == nil)
+        #expect(SupportedBrowser.chromiumProfileDataDirectory(for: "com.apple.Safari") == nil)
+        #expect(SupportedBrowser.matching(name: "Zen Browser", bundleIdentifier: "unknown") == .zen)
+        #expect(SupportedBrowser.matching(name: "Random Browser", bundleIdentifier: "com.unknown.browser") == nil)
+    }
+
     private func makeApplication(at root: URL, name: String, identifier: String) throws -> URL {
         let applicationURL = root.appending(path: "\(name).app")
         let contentsURL = applicationURL.appending(path: "Contents")
