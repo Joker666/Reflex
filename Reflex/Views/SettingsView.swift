@@ -74,6 +74,28 @@ struct SettingsView: View {
                     .foregroundStyle(.secondary)
             }
 
+            Section("Profile access") {
+                if state.unreadableProfileBrowsers.isEmpty {
+                    Label(
+                        "Reflex can read the profiles of every installed browser.",
+                        systemImage: "checkmark.circle.fill"
+                    )
+                    .foregroundStyle(.secondary)
+                } else {
+                    Label(
+                        "macOS blocks the profiles of \(state.unreadableProfileBrowsers.joined(separator: ", ")).",
+                        systemImage: "lock.circle"
+                    )
+                    Text("Reflex reads only the profile list of a browser, so it can offer one target for each profile. macOS keeps that data behind Full Disk Access. Reflex reads no history, no cookies, and no account data.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Button("Open Full Disk Access") { state.openFullDiskAccessSettings() }
+                    Text("Add Reflex to the list and switch it on. Then start Reflex again and select Rescan Browsers. Reflex works without this access, but it shows one target for each of these browsers.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+
             Section("Browser targets") {
                 if state.targets.isEmpty {
                     Text("No registered web browser was found.")
@@ -100,13 +122,6 @@ struct SettingsView: View {
                 Text("A browser with more than one profile becomes one target for each profile. A browser with a single profile stays one target.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
-                if let message = state.profileDiscoveryMessage {
-                    Text(message)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                    Button("Open Privacy Settings") { state.openPrivacySettings() }
-                        .controlSize(.small)
-                }
             }
         }
         .formStyle(.grouped)

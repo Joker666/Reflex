@@ -12,7 +12,7 @@ final class AppState: ObservableObject {
     @Published private(set) var hasAPIKey = false
     @Published private(set) var isRouting = false
     @Published private(set) var isJevUnavailable = false
-    @Published private(set) var profileDiscoveryMessage: String?
+    @Published private(set) var unreadableProfileBrowsers: [String] = []
     @Published var launchError: String?
     @Published var setupMessage: String?
     /// Not @Published: MenuBarExtra writes this binding on every update, and a publish
@@ -130,11 +130,7 @@ final class AppState: ObservableObject {
         let result = BrowserProfileDiscovery().discover(for: merged)
         knownProfileKeys = Set(result.profiles.map(\.id))
         browsersWithReadProfiles = result.readableBundleIdentifiers
-        if result.unreadableBrowserNames.isEmpty {
-            profileDiscoveryMessage = nil
-        } else {
-            profileDiscoveryMessage = "macOS did not allow profile access for \(result.unreadableBrowserNames.joined(separator: ", ")). Give Reflex Full Disk Access to read profile names, then select Rescan Browsers."
-        }
+        unreadableProfileBrowsers = result.unreadableBrowserNames
 
         targets = merged.expandingProfiles(
             Dictionary(grouping: result.profiles, by: \.bundleIdentifier)
@@ -173,11 +169,14 @@ final class AppState: ObservableObject {
         settingsAction?()
     }
 
-    func openPrivacySettings() {
-        guard let url = URL(
-            string: "x-apple.systempreferences:com.apple.preference.security?Privacy_AllFiles"
-        ) else { return }
-        NSWorkspace.shared.open(url)
+    func openFullDiskAccessSettings() {
+        let addresses = [
+            "x-apple.systempreferences:com.apple.settings.PrivacySecurity.extension?Privacy_AllFiles",
+            "x-apple.systempreferences:com.apple.preference.security?Privacy_AllFiles",
+        ]
+        for address in addresses {
+            if let url = URL(string: address), NSWorkspace.shared.open(url) { return }
+        }
     }
 
     func removeTarget(id: UUID) {

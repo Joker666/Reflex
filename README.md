@@ -52,9 +52,15 @@ A scan reads the local profile list of Chrome, Edge, Comet, Dia, Helium, and Phi
 - A rescan adds a new profile and keeps your names, purposes, order, and switches.
 - Safari, Firefox, and Zen have no profile support, because they do not accept the Chromium profile argument.
 
-macOS can deny access to a browser's data directory. Chrome and Edge are the usual ones. Reflex then names the affected browser and shows **Open Privacy Settings**. Give Reflex Full Disk Access there, then select **Rescan Browsers**. Reflex reads the profile names and creates one target for each profile.
+macOS keeps browser data behind Full Disk Access. Chrome and Edge are the usual ones it blocks. The **Profile access** section in Settings shows the state:
 
-Without that access, the browser stays one target. Reflex does not invent profiles.
+- It names the browsers macOS blocks.
+- It says what Reflex reads: the profile list only, no history, no cookies, no account data.
+- **Open Full Disk Access** opens the list in System Settings. Add Reflex, switch it on, start Reflex again, and select **Rescan Browsers**.
+
+macOS gives no way for an application to ask for this access in a dialog, so Reflex can only open that list for you.
+
+Without the access, each blocked browser stays one target. Reflex does not invent profiles.
 
 Select **Make Reflex Default Browser**. Setup is complete only when Reflex is the handler for both HTTP and HTTPS. If macOS does not allow the direct change, Reflex opens System Settings. In **Desktop & Dock**, set **Default web browser** to Reflex.
 
