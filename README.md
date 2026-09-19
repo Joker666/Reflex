@@ -84,9 +84,11 @@ The chooser uses the target order from Settings. Drag a target by the handle at 
 - Press Escape, or click outside the panel, to cancel the link.
 - Select the gear at the bottom right to open Settings. This cancels the link, the same as Escape.
 
-Hold **Option** while you click a link to skip automatic selection. The chooser opens with every target, even when Jev is sure and even when only one target is enabled. This is also the way back to Settings when the menu bar item is hidden: the chooser has the gear.
+The chooser shortcut uses **Option + click** by default. Settings lets you change the modifier to Control, Shift, Command, or Fn. Hold the selected modifier while you click a link to skip automatic selection. The chooser opens with every target, even when Jev is sure and even when only one target is enabled. This is also the way back to Settings when the menu bar item is hidden: the chooser has the gear.
 
-The footer line shows the state of automatic selection: **active** while an API key is configured and Jev answers, **unavailable** after a failure or without a key, and **skipped** when you held Option.
+The source application can use a modified click before it sends the link to macOS. For example, Control-click often opens a context menu and Command-click often opens a browser tab. Reflex can show the chooser only when the source application sends the link to Reflex.
+
+The footer line shows the state of automatic selection: **active** while an API key is configured and Jev answers, **unavailable** after a failure or without a key, and **skipped** when you held the selected modifier.
 
 The panel does not show the link or its host.
 

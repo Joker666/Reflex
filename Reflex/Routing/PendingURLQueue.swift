@@ -3,7 +3,7 @@ import Foundation
 struct PendingLink: Equatable {
     var url: URL
     var sourceApplicationBundleIdentifier: String?
-    /// The user held Option, so Reflex shows the chooser and does not route by itself.
+    /// The user held the configured modifier, so Reflex shows the chooser.
     var asksForChooser = false
 }
 

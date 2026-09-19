@@ -38,7 +38,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         state.receive(
             urls,
             sourceApplicationBundleIdentifier: sourceApplicationBundleIdentifier,
-            asksForChooser: NSEvent.modifierFlags.contains(.option)
+            asksForChooser: state.chooserModifier.isPressed(in: NSEvent.modifierFlags)
         )
     }
 

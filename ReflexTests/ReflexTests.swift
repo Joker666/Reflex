@@ -300,6 +300,15 @@ struct ReflexTests {
         #expect(queue.advance()?.asksForChooser == false)
     }
 
+    @Test("Chooser modifier uses Option by default and matches the selected key")
+    func chooserModifier() {
+        #expect(ChooserModifier.fromStoredValue(nil) == .option)
+        #expect(ChooserModifier.fromStoredValue("unknown") == .option)
+        #expect(ChooserModifier.fromStoredValue("fn") == .function)
+        #expect(ChooserModifier.control.isPressed(in: [.control]))
+        #expect(!ChooserModifier.control.isPressed(in: [.option]))
+    }
+
     @Test("Discovery merge keeps configured values")
     func discoveryMergePreservesConfiguration() {
         let id = UUID()

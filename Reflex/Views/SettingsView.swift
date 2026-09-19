@@ -70,7 +70,22 @@ struct SettingsView: View {
 
             Section("Menu bar") {
                 Toggle("Show Reflex in the menu bar", isOn: $state.showsMenuBarItem)
-                Text("When the menu bar item is on, closing this window removes the Dock icon and keeps Reflex in the menu bar. When it is off, closing this window quits Reflex. To return here without the menu bar item, open Reflex from the Applications folder, or hold Option while you click a link. Option also skips automatic selection, so the chooser opens with its settings button.")
+                Text("When the menu bar item is on, closing this window removes the Dock icon and keeps Reflex in the menu bar. When it is off, closing this window quits Reflex.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            Section("Chooser shortcut") {
+                Picker("Modifier key", selection: $state.chooserModifier) {
+                    ForEach(ChooserModifier.allCases) { modifier in
+                        Label(
+                            "\(modifier.name) + click",
+                            systemImage: modifier.symbolName
+                        )
+                        .tag(modifier)
+                    }
+                }
+                Text("Hold \(state.chooserModifier.name) while you click a link to skip automatic selection and show the chooser. The chooser also gives access to Settings. The source application can use some modified clicks itself, so the link might not reach Reflex.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }

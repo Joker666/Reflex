@@ -179,7 +179,7 @@ struct ChooserView: View {
             } else if state.skipsAutomaticSelection {
                 statusLine(
                     "Automatic selection skipped",
-                    systemImage: "option",
+                    systemImage: state.chooserModifier.symbolName,
                     tint: .secondary
                 )
             } else if state.isJevUnavailable {

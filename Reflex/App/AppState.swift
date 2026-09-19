@@ -1,6 +1,54 @@
 import AppKit
 import Foundation
 
+enum ChooserModifier: String, CaseIterable, Identifiable {
+    case option
+    case control
+    case shift
+    case command
+    case function = "fn"
+
+    var id: String { rawValue }
+
+    var name: String {
+        switch self {
+        case .option: "Option"
+        case .control: "Control"
+        case .shift: "Shift"
+        case .command: "Command"
+        case .function: "Fn"
+        }
+    }
+
+    var symbolName: String {
+        switch self {
+        case .option: "option"
+        case .control: "control"
+        case .shift: "shift"
+        case .command: "command"
+        case .function: "fn"
+        }
+    }
+
+    var eventFlag: NSEvent.ModifierFlags {
+        switch self {
+        case .option: .option
+        case .control: .control
+        case .shift: .shift
+        case .command: .command
+        case .function: .function
+        }
+    }
+
+    func isPressed(in flags: NSEvent.ModifierFlags) -> Bool {
+        flags.contains(eventFlag)
+    }
+
+    static func fromStoredValue(_ value: String?) -> ChooserModifier {
+        value.flatMap(ChooserModifier.init(rawValue:)) ?? .option
+    }
+}
+
 @MainActor
 final class AppState: ObservableObject {
     @Published var targets: [BrowserTarget] = [] {
@@ -17,6 +65,9 @@ final class AppState: ObservableObject {
     @Published private(set) var missingProfileDataBrowsers: [String] = []
     @Published var launchError: String?
     @Published var setupMessage: String?
+    @Published var chooserModifier = ChooserModifier.option {
+        didSet { defaults.set(chooserModifier.rawValue, forKey: chooserModifierKey) }
+    }
     /// Not @Published: MenuBarExtra writes this binding on every update, and a publish
     /// for an unchanged value starts an endless view update.
     var showsMenuBarItem: Bool {
@@ -38,6 +89,7 @@ final class AppState: ObservableObject {
     private let defaults = UserDefaults.standard
     private let targetsKey = "browserTargets"
     private let menuBarItemKey = "showsMenuBarItem"
+    private let chooserModifierKey = "chooserModifier"
     private var iconCache: [String: NSImage] = [:]
     private var availabilityCache: [String: Bool] = [:]
     private var storedShowsMenuBarItem = true
@@ -51,6 +103,7 @@ final class AppState: ObservableObject {
             targets = storedTargets
         }
         storedShowsMenuBarItem = defaults.object(forKey: menuBarItemKey) as? Bool ?? true
+        chooserModifier = ChooserModifier.fromStoredValue(defaults.string(forKey: chooserModifierKey))
         rescanBrowsers()
         refreshDefaultBrowserStatus()
         hasAPIKey = (try? keychain.readAPIKey()) != nil
@@ -242,7 +295,7 @@ final class AppState: ObservableObject {
         guard let url = pendingURL, !isRouting else { return }
         let targets = availableTargets
         skipsAutomaticSelection = queue.current?.asksForChooser ?? false
-        // Option held: the user wants the list, even with one target or a sure answer.
+        // The configured modifier was held, so the user wants the full list.
         if skipsAutomaticSelection, !targets.isEmpty {
             suggestedTargetID = nil
             isJevUnavailable = false
