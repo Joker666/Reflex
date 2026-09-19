@@ -211,6 +211,7 @@ Use deterministic local policy after Jev responds:
 - Confidence at or above `0.85`: open the selected target automatically
 - Confidence below `0.85`: show the chooser with the selected target highlighted
 - No API key, timeout, network error, non-2xx response, decoding error, or invalid answer: show the chooser
+- Option held when the link arrives: show the chooser, call no API, and skip the single-target bypass. This is also how the user reaches Settings when the menu bar item is hidden
 - If exactly one target is enabled, open it directly without calling Jev
 - If no targets are enabled, show setup instead of discarding the URL
 
@@ -241,6 +242,7 @@ Use a menu bar app with two small windows/panels. Reflex runs as an accessory ap
    - Shows a small offline/error indicator when Jev was unavailable, without exposing raw API errors
    - Shows that automatic selection is active while an API key is configured and Jev has not failed
    - Shows no scroll indicator
+   - Says that automatic selection was skipped when the user held Option
    - Has a settings button, because the menu bar item is optional. It cancels the pending link, closes the chooser, and opens Settings
 
 2. **Settings**

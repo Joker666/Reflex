@@ -176,6 +176,12 @@ struct ChooserView: View {
         HStack(spacing: 6) {
             if let error = state.launchError {
                 statusLine(error, systemImage: "exclamationmark.triangle", tint: .orange)
+            } else if state.skipsAutomaticSelection {
+                statusLine(
+                    "Automatic selection skipped",
+                    systemImage: "option",
+                    tint: .secondary
+                )
             } else if state.isJevUnavailable {
                 statusLine(
                     "Automatic selection is unavailable",

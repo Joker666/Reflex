@@ -12,6 +12,7 @@ final class AppState: ObservableObject {
     @Published private(set) var hasAPIKey = false
     @Published private(set) var isRouting = false
     @Published private(set) var isJevUnavailable = false
+    @Published private(set) var skipsAutomaticSelection = false
     @Published private(set) var unreadableProfileBrowsers: [String] = []
     @Published var launchError: String?
     @Published var setupMessage: String?
@@ -72,10 +73,18 @@ final class AppState: ObservableObject {
         return available
     }
 
-    func receive(_ urls: [URL], sourceApplicationBundleIdentifier: String? = nil) {
+    func receive(
+        _ urls: [URL],
+        sourceApplicationBundleIdentifier: String? = nil,
+        asksForChooser: Bool = false
+    ) {
         let needsRouting = queue.current == nil
         for url in urls where ["http", "https"].contains(url.scheme?.lowercased()) {
-            queue.enqueue(url, sourceApplicationBundleIdentifier: sourceApplicationBundleIdentifier)
+            queue.enqueue(
+                url,
+                sourceApplicationBundleIdentifier: sourceApplicationBundleIdentifier,
+                asksForChooser: asksForChooser
+            )
         }
         pendingURL = queue.current?.url
         if needsRouting, pendingURL != nil {
@@ -124,6 +133,7 @@ final class AppState: ObservableObject {
         pendingURL = queue.advance()?.url
         suggestedTargetID = nil
         isJevUnavailable = false
+        skipsAutomaticSelection = false
         if pendingURL == nil {
             chooserPresenter?.dismissChooser()
         } else {
@@ -229,6 +239,14 @@ final class AppState: ObservableObject {
     private func routePending() {
         guard let url = pendingURL, !isRouting else { return }
         let targets = availableTargets
+        skipsAutomaticSelection = queue.current?.asksForChooser ?? false
+        // Option held: the user wants the list, even with one target or a sure answer.
+        if skipsAutomaticSelection, !targets.isEmpty {
+            suggestedTargetID = nil
+            isJevUnavailable = false
+            chooserPresenter?.presentChooser()
+            return
+        }
         let localAction = RoutingPolicy.action(availableTargets: targets, decision: nil)
         switch localAction {
         case .setup:

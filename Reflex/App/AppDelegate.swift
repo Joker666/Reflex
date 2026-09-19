@@ -37,7 +37,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             .stringValue
         state.receive(
             urls,
-            sourceApplicationBundleIdentifier: sourceApplicationBundleIdentifier
+            sourceApplicationBundleIdentifier: sourceApplicationBundleIdentifier,
+            asksForChooser: NSEvent.modifierFlags.contains(.option)
         )
     }
 

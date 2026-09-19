@@ -69,7 +69,7 @@ struct SettingsView: View {
 
             Section("Menu bar") {
                 Toggle("Show Reflex in the menu bar", isOn: $state.showsMenuBarItem)
-                Text("Reflex quits when you close this window, because macOS starts it again for the next link. Open Reflex from the Applications folder to return to Settings.")
+                Text("Reflex quits when you close this window, because macOS starts it again for the next link. To return here without the menu bar item, open Reflex from the Applications folder, or hold Option while you click a link. Option also skips automatic selection, so the chooser opens with its settings button.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }

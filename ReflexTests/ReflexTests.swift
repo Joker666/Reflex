@@ -265,6 +265,16 @@ struct ReflexTests {
         #expect(result[1].purpose == "Reading long articles")
     }
 
+    @Test("The queue keeps the request for the chooser")
+    func queueKeepsChooserRequest() {
+        var queue = PendingURLQueue()
+        queue.enqueue(URL(string: "https://example.com/one")!, asksForChooser: true)
+        queue.enqueue(URL(string: "https://example.com/two")!)
+
+        #expect(queue.current?.asksForChooser == true)
+        #expect(queue.advance()?.asksForChooser == false)
+    }
+
     @Test("Discovery merge keeps configured values")
     func discoveryMergePreservesConfiguration() {
         let id = UUID()
