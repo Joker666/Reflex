@@ -1,0 +1,111 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		A00100000000000000000001 /* ReflexApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00100000000000000000001 /* ReflexApp.swift */; };
+		A00100000000000000000002 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00100000000000000000002 /* AppDelegate.swift */; };
+		A00100000000000000000003 /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00100000000000000000003 /* AppState.swift */; };
+		A00100000000000000000004 /* BrowserTarget.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00100000000000000000004 /* BrowserTarget.swift */; };
+		A00100000000000000000005 /* PendingURLQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00100000000000000000005 /* PendingURLQueue.swift */; };
+		A00100000000000000000006 /* BrowserDiscovery.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00100000000000000000006 /* BrowserDiscovery.swift */; };
+		A00100000000000000000007 /* BrowserLauncher.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00100000000000000000007 /* BrowserLauncher.swift */; };
+		A00100000000000000000008 /* DefaultBrowserService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00100000000000000000008 /* DefaultBrowserService.swift */; };
+		A00100000000000000000009 /* ChooserView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00100000000000000000009 /* ChooserView.swift */; };
+		A0010000000000000000000A /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0010000000000000000000A /* SettingsView.swift */; };
+		A0010000000000000000000B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B0010000000000000000000B /* Assets.xcassets */; };
+		A0010000000000000000000C /* ReflexTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0010000000000000000000D /* ReflexTests.swift */; };
+		A0010000000000000000000D /* RoutingModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00100000000000000000010 /* RoutingModels.swift */; };
+		A0010000000000000000000E /* URLSanitizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00100000000000000000011 /* URLSanitizer.swift */; };
+		A0010000000000000000000F /* RoutingPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00100000000000000000012 /* RoutingPolicy.swift */; };
+		A00100000000000000000010 /* KeychainStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00100000000000000000013 /* KeychainStore.swift */; };
+		A00100000000000000000011 /* JevClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00100000000000000000014 /* JevClient.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		C00100000000000000000001 = {isa = PBXContainerItemProxy; containerPortal = D00100000000000000000001 /* Project object */; proxyType = 1; remoteGlobalIDString = E00100000000000000000001; remoteInfo = Reflex; };
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		B00100000000000000000001 /* ReflexApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReflexApp.swift; sourceTree = "<group>"; };
+		B00100000000000000000002 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		B00100000000000000000003 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
+		B00100000000000000000004 /* BrowserTarget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowserTarget.swift; sourceTree = "<group>"; };
+		B00100000000000000000005 /* PendingURLQueue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PendingURLQueue.swift; sourceTree = "<group>"; };
+		B00100000000000000000006 /* BrowserDiscovery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowserDiscovery.swift; sourceTree = "<group>"; };
+		B00100000000000000000007 /* BrowserLauncher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowserLauncher.swift; sourceTree = "<group>"; };
+		B00100000000000000000008 /* DefaultBrowserService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DefaultBrowserService.swift; sourceTree = "<group>"; };
+		B00100000000000000000009 /* ChooserView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChooserView.swift; sourceTree = "<group>"; };
+		B0010000000000000000000A /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		B0010000000000000000000B /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Resources/Assets.xcassets; sourceTree = "<group>"; };
+		B0010000000000000000000C /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		B0010000000000000000000D /* ReflexTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReflexTests.swift; sourceTree = "<group>"; };
+		B0010000000000000000000E /* Reflex.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Reflex.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		B0010000000000000000000F /* ReflexTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ReflexTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		B00100000000000000000010 /* RoutingModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoutingModels.swift; sourceTree = "<group>"; };
+		B00100000000000000000011 /* URLSanitizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = URLSanitizer.swift; sourceTree = "<group>"; };
+		B00100000000000000000012 /* RoutingPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoutingPolicy.swift; sourceTree = "<group>"; };
+		B00100000000000000000013 /* KeychainStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainStore.swift; sourceTree = "<group>"; };
+		B00100000000000000000014 /* JevClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JevClient.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		F00100000000000000000001 = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+		F00100000000000000000002 = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		100100000000000000000001 = {isa = PBXGroup; children = (100100000000000000000002 /* Reflex */, 100100000000000000000008 /* ReflexTests */, 100100000000000000000009 /* Products */); sourceTree = "<group>"; };
+		100100000000000000000002 /* Reflex */ = {isa = PBXGroup; path = Reflex; sourceTree = "<group>"; children = (100100000000000000000003 /* App */, 100100000000000000000004 /* Models */, 100100000000000000000005 /* Routing */, 100100000000000000000006 /* Services */, 100100000000000000000007 /* Views */, B0010000000000000000000B /* Assets.xcassets */, B0010000000000000000000C /* Info.plist */); };
+		100100000000000000000003 /* App */ = {isa = PBXGroup; path = App; sourceTree = "<group>"; children = (B00100000000000000000001, B00100000000000000000002, B00100000000000000000003); };
+		100100000000000000000004 /* Models */ = {isa = PBXGroup; path = Models; sourceTree = "<group>"; children = (B00100000000000000000004, B00100000000000000000010); };
+		100100000000000000000005 /* Routing */ = {isa = PBXGroup; path = Routing; sourceTree = "<group>"; children = (B00100000000000000000005, B00100000000000000000011, B00100000000000000000012); };
+		100100000000000000000006 /* Services */ = {isa = PBXGroup; path = Services; sourceTree = "<group>"; children = (B00100000000000000000006, B00100000000000000000007, B00100000000000000000008, B00100000000000000000013, B00100000000000000000014); };
+		100100000000000000000007 /* Views */ = {isa = PBXGroup; path = Views; sourceTree = "<group>"; children = (B00100000000000000000009, B0010000000000000000000A); };
+		100100000000000000000008 /* ReflexTests */ = {isa = PBXGroup; path = ReflexTests; sourceTree = "<group>"; children = (B0010000000000000000000D); };
+		100100000000000000000009 /* Products */ = {isa = PBXGroup; name = Products; sourceTree = "<group>"; children = (B0010000000000000000000E, B0010000000000000000000F); };
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		E00100000000000000000001 /* Reflex */ = {isa = PBXNativeTarget; buildConfigurationList = 300100000000000000000001; buildPhases = (400100000000000000000001, F00100000000000000000001, 500100000000000000000001); buildRules = (); dependencies = (); name = Reflex; productName = Reflex; productReference = B0010000000000000000000E; productType = "com.apple.product-type.application"; };
+		E00100000000000000000002 /* ReflexTests */ = {isa = PBXNativeTarget; buildConfigurationList = 300100000000000000000002; buildPhases = (400100000000000000000002, F00100000000000000000002, 500100000000000000000002); buildRules = (); dependencies = (600100000000000000000001); name = ReflexTests; productName = ReflexTests; productReference = B0010000000000000000000F; productType = "com.apple.product-type.bundle.unit-test"; };
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		D00100000000000000000001 /* Project object */ = {isa = PBXProject; attributes = {BuildIndependentTargetsInParallel = 1; LastSwiftUpdateCheck = 2700; LastUpgradeCheck = 2700; TargetAttributes = {E00100000000000000000001 = {CreatedOnToolsVersion = 27.0; }; E00100000000000000000002 = {CreatedOnToolsVersion = 27.0; TestTargetID = E00100000000000000000001; }; }; }; buildConfigurationList = 300100000000000000000003; compatibilityVersion = "Xcode 16.0"; developmentRegion = en; hasScannedForEncodings = 0; knownRegions = (en, Base); mainGroup = 100100000000000000000001; productRefGroup = 100100000000000000000009; projectDirPath = ""; projectRoot = ""; targets = (E00100000000000000000001, E00100000000000000000002); };
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		500100000000000000000001 = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (A0010000000000000000000B); runOnlyForDeploymentPostprocessing = 0; };
+		500100000000000000000002 = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		400100000000000000000001 = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (A00100000000000000000001, A00100000000000000000002, A00100000000000000000003, A00100000000000000000004, A00100000000000000000005, A00100000000000000000006, A00100000000000000000007, A00100000000000000000008, A00100000000000000000009, A0010000000000000000000A, A0010000000000000000000D, A0010000000000000000000E, A0010000000000000000000F, A00100000000000000000010, A00100000000000000000011); runOnlyForDeploymentPostprocessing = 0; };
+		400100000000000000000002 = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (A0010000000000000000000C); runOnlyForDeploymentPostprocessing = 0; };
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		600100000000000000000001 = {isa = PBXTargetDependency; target = E00100000000000000000001 /* Reflex */; targetProxy = C00100000000000000000001; };
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		700100000000000000000001 = {isa = XCBuildConfiguration; buildSettings = {CLANG_ENABLE_MODULES = YES; MACOSX_DEPLOYMENT_TARGET = 14.0; SDKROOT = macosx; SWIFT_OPTIMIZATION_LEVEL = "-Onone"; SWIFT_VERSION = 6.0; }; name = Debug; };
+		700100000000000000000002 = {isa = XCBuildConfiguration; buildSettings = {CLANG_ENABLE_MODULES = YES; MACOSX_DEPLOYMENT_TARGET = 14.0; SDKROOT = macosx; SWIFT_COMPILATION_MODE = wholemodule; SWIFT_VERSION = 6.0; }; name = Release; };
+		700100000000000000000003 = {isa = XCBuildConfiguration; buildSettings = {ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon; CODE_SIGN_STYLE = Automatic; COMBINE_HIDPI_IMAGES = YES; CURRENT_PROJECT_VERSION = 1; ENABLE_TESTABILITY = YES; GENERATE_INFOPLIST_FILE = NO; INFOPLIST_FILE = Reflex/Info.plist; MARKETING_VERSION = 0.1.0; PRODUCT_BUNDLE_IDENTIFIER = com.rafi.Reflex; PRODUCT_NAME = "$(TARGET_NAME)"; SWIFT_EMIT_LOC_STRINGS = YES; }; name = Debug; };
+		700100000000000000000004 = {isa = XCBuildConfiguration; buildSettings = {ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon; CODE_SIGN_STYLE = Automatic; COMBINE_HIDPI_IMAGES = YES; CURRENT_PROJECT_VERSION = 1; GENERATE_INFOPLIST_FILE = NO; INFOPLIST_FILE = Reflex/Info.plist; MARKETING_VERSION = 0.1.0; PRODUCT_BUNDLE_IDENTIFIER = com.rafi.Reflex; PRODUCT_NAME = "$(TARGET_NAME)"; SWIFT_EMIT_LOC_STRINGS = YES; }; name = Release; };
+		700100000000000000000005 = {isa = XCBuildConfiguration; buildSettings = {BUNDLE_LOADER = "$(TEST_HOST)"; CODE_SIGN_STYLE = Automatic; GENERATE_INFOPLIST_FILE = YES; PRODUCT_BUNDLE_IDENTIFIER = com.rafi.ReflexTests; PRODUCT_NAME = "$(TARGET_NAME)"; TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Reflex.app/Contents/MacOS/Reflex"; }; name = Debug; };
+		700100000000000000000006 = {isa = XCBuildConfiguration; buildSettings = {BUNDLE_LOADER = "$(TEST_HOST)"; CODE_SIGN_STYLE = Automatic; GENERATE_INFOPLIST_FILE = YES; PRODUCT_BUNDLE_IDENTIFIER = com.rafi.ReflexTests; PRODUCT_NAME = "$(TARGET_NAME)"; TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Reflex.app/Contents/MacOS/Reflex"; }; name = Release; };
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		300100000000000000000001 = {isa = XCConfigurationList; buildConfigurations = (700100000000000000000003, 700100000000000000000004); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+		300100000000000000000002 = {isa = XCConfigurationList; buildConfigurations = (700100000000000000000005, 700100000000000000000006); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+		300100000000000000000003 = {isa = XCConfigurationList; buildConfigurations = (700100000000000000000001, 700100000000000000000002); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+/* End XCConfigurationList section */
+	};
+	rootObject = D00100000000000000000001 /* Project object */;
+}

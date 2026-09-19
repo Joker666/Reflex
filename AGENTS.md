@@ -147,11 +147,11 @@ Keep a stable mapping from Jev choice keys to target IDs. Do not use user-visibl
 
 ## Jev integration
 
-Use the official TypeSafe endpoint and request shape:
+Use TypeSafe Jev through the OpenRouter decisions endpoint and the TypeSafe request shape:
 
 ```http
-POST https://api.typesafe.ai/v1/systemone
-Authorization: Bearer <API_KEY>
+POST https://openrouter.ai/api/alpha/decisions
+Authorization: Bearer <OPENROUTER_API_KEY>
 Content-Type: application/json
 ```
 
@@ -178,7 +178,7 @@ Content-Type: application/json
       }
     ]
   },
-  "model": "jev-latest",
+  "model": "~typesafe/jev-latest",
   "questions": {
     "target": {
       "type": "choice",
@@ -375,5 +375,6 @@ When the TypeSafe API and this file disagree, verify the current behavior in the
 - Quick start: <https://docs.typesafe.ai/introduction/quickstart>
 - Question primitives: <https://docs.typesafe.ai/primitives>
 - Confidence: <https://docs.typesafe.ai/confidence>
+- OpenRouter TypeSafe models: <https://openrouter.ai/typesafe>
 
 Do not silently adapt to an API change. Update request/response fixtures, tests, and this document together.
