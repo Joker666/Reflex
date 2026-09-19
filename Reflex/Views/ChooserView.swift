@@ -88,6 +88,7 @@ struct ChooserView: View {
                 }
             }
             .frame(height: listHeight)
+            .scrollIndicators(.hidden)
             .scrollDisabled(state.availableTargets.count <= visibleRowLimit)
             .onChange(of: scrollRequestCount) { _, _ in
                 guard let selectedTargetID else { return }

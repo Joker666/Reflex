@@ -224,7 +224,8 @@ Keep the threshold in preferences, but a settings UI for changing it is optional
 
 ## App shape
 
-Use a menu bar app with two small windows/panels:
+Use a menu bar app with two small windows/panels. Reflex runs as an accessory application, so a link shows the chooser and nothing else. It becomes a normal application with a Dock icon only while the settings window is open.
+
 
 1. **Chooser**
    - Opens as a compact borderless panel at the pointer, next to the clicked link
@@ -234,6 +235,7 @@ Use a menu bar app with two small windows/panels:
    - Supports arrow keys, Return to open, number shortcuts, and Escape to cancel
    - The pointer selects the row below it, the same as the arrow keys
    - Shows a small offline/error indicator when Jev was unavailable, without exposing raw API errors
+   - Shows no scroll indicator
 
 2. **Settings**
    - Opens when the user starts Reflex without a link, and from the menu bar item

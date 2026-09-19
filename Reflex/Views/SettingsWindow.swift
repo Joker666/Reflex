@@ -17,6 +17,8 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
 
         let window = window ?? makeWindow()
         self.window = window
+        // Reflex has no Dock icon while it routes links. Settings is a normal window.
+        NSApplication.shared.setActivationPolicy(.regular)
         NSApplication.shared.activate(ignoringOtherApps: true)
         window.makeKeyAndOrderFront(nil)
     }
