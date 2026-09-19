@@ -592,6 +592,106 @@ struct ReflexTests {
         #expect(state.pendingURL == nil)
     }
 
+    @Test("An old Jev decision cannot route the next link")
+    @MainActor
+    func staleJevDecisionCannotRouteNextLink() async throws {
+        let suiteName = "ReflexTests.\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let targets = [
+            makeTarget(name: "Chrome", bundleIdentifier: "com.google.Chrome"),
+            makeTarget(name: "Safari", bundleIdentifier: "com.apple.Safari"),
+        ]
+        defaults.set(try JSONEncoder().encode(targets), forKey: "browserTargets")
+        let decider = ControlledJevDecider()
+        let recorder = BrowserOpenRecorder()
+        let state = AppState(
+            keychain: TestKeychainStore(apiKey: "test-key"),
+            launcher: RecordingBrowserLauncher(recorder: recorder),
+            jevClient: decider,
+            defaults: defaults,
+            browserScanner: FixedBrowserScanner(),
+            defaultBrowserService: FixedDefaultBrowserService()
+        )
+        let firstURL = URL(string: "https://first.example/path")!
+        let secondURL = URL(string: "https://second.example/path")!
+
+        state.receive([firstURL, secondURL])
+        for _ in 0..<100 {
+            if await decider.hasRequest(for: "first.example") { break }
+            await Task.yield()
+        }
+        state.cancelPending()
+        for _ in 0..<100 {
+            if await decider.hasRequest(for: "second.example") { break }
+            await Task.yield()
+        }
+
+        await decider.resume(
+            host: "first.example",
+            decision: RouteDecision(targetID: targets[0].id, confidence: 1)
+        )
+        await Task.yield()
+        #expect(state.pendingURL == secondURL)
+        #expect(await recorder.targetID == nil)
+
+        await decider.resume(
+            host: "second.example",
+            decision: RouteDecision(targetID: targets[1].id, confidence: 1)
+        )
+        for _ in 0..<100 {
+            if state.pendingURL == nil { break }
+            await Task.yield()
+        }
+
+        #expect(await recorder.targetID == targets[1].id)
+        #expect(state.pendingURL == nil)
+    }
+
+    @Test("An old browser launch cannot advance the next link")
+    @MainActor
+    func staleBrowserLaunchCannotAdvanceNextLink() async throws {
+        let suiteName = "ReflexTests.\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let target = makeTarget(name: "Safari", bundleIdentifier: "com.apple.Safari")
+        defaults.set(try JSONEncoder().encode([target]), forKey: "browserTargets")
+        let launcherState = ControlledBrowserLauncherState()
+        let state = AppState(
+            keychain: TestKeychainStore(apiKey: nil),
+            launcher: ControlledBrowserLauncher(state: launcherState),
+            jevClient: FirstTargetJevDecider(),
+            defaults: defaults,
+            browserScanner: FixedBrowserScanner(),
+            defaultBrowserService: FixedDefaultBrowserService()
+        )
+        let firstURL = URL(string: "https://first.example/path")!
+        let secondURL = URL(string: "https://second.example/path")!
+
+        state.receive([firstURL, secondURL])
+        for _ in 0..<100 {
+            if await launcherState.hasRequest(for: "first.example") { break }
+            await Task.yield()
+        }
+        state.cancelPending()
+        for _ in 0..<100 {
+            if await launcherState.hasRequest(for: "second.example") { break }
+            await Task.yield()
+        }
+
+        await launcherState.resume(host: "first.example")
+        await Task.yield()
+        #expect(state.pendingURL == secondURL)
+
+        await launcherState.resume(host: "second.example")
+        for _ in 0..<100 {
+            if state.pendingURL == nil { break }
+            await Task.yield()
+        }
+
+        #expect(state.pendingURL == nil)
+    }
+
     @Test("URL helper accurately identifies HTTP and HTTPS schemes")
     func urlHTTPValidation() {
         #expect(URL(string: "http://example.com")!.isHTTPOrHTTPS)
@@ -693,6 +793,58 @@ private actor BrowserOpenRecorder {
 
     func record(_ targetID: UUID) {
         self.targetID = targetID
+    }
+}
+
+private actor ControlledJevDecider: JevDeciding {
+    private var continuations: [String: CheckedContinuation<RouteDecision, Error>] = [:]
+
+    func decide(
+        context: RoutingContext,
+        targets: [BrowserTarget],
+        apiKey: String
+    ) async throws -> RouteDecision {
+        try await withCheckedThrowingContinuation { continuation in
+            continuations[context.host] = continuation
+        }
+    }
+
+    func hasRequest(for host: String) -> Bool {
+        continuations[host] != nil
+    }
+
+    func resume(host: String, decision: RouteDecision) {
+        continuations.removeValue(forKey: host)?.resume(returning: decision)
+    }
+}
+
+private actor ControlledBrowserLauncherState {
+    private var continuations: [String: CheckedContinuation<Void, Error>] = [:]
+
+    func open(_ url: URL) async throws {
+        let host = url.host() ?? ""
+        try await withCheckedThrowingContinuation { continuation in
+            continuations[host] = continuation
+        }
+    }
+
+    func hasRequest(for host: String) -> Bool {
+        continuations[host] != nil
+    }
+
+    func resume(host: String) {
+        continuations.removeValue(forKey: host)?.resume()
+    }
+}
+
+private struct ControlledBrowserLauncher: BrowserLaunching {
+    var state: ControlledBrowserLauncherState
+
+    func isAvailable(_ target: BrowserTarget) -> Bool { true }
+    func icon(for target: BrowserTarget) -> NSImage? { nil }
+
+    func open(_ originalURL: URL, in target: BrowserTarget) async throws {
+        try await state.open(originalURL)
     }
 }
 

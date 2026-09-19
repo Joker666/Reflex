@@ -1,6 +1,7 @@
 import Foundation
 
-struct PendingLink: Equatable {
+struct PendingLink: Identifiable, Equatable {
+    let id: UUID
     var url: URL
     var sourceApplicationBundleIdentifier: String?
     /// The user held the configured modifier, so Reflex shows the chooser.
@@ -17,6 +18,7 @@ struct PendingURLQueue: Equatable {
         asksForChooser: Bool = false
     ) {
         let link = PendingLink(
+            id: UUID(),
             url: url,
             sourceApplicationBundleIdentifier: sourceApplicationBundleIdentifier,
             asksForChooser: asksForChooser
