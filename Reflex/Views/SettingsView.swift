@@ -79,7 +79,7 @@ struct SettingsView: View {
                 ForEach($state.targets) { $target in
                     VStack(alignment: .leading, spacing: 6) {
                         HStack {
-                            dragHandle(for: target)
+                            DragHandle(target: target, draggingTargetID: $draggingTargetID)
                             Toggle("Enabled", isOn: $target.isEnabled).labelsHidden()
                             if let icon = BrowserLauncher().icon(for: target) {
                                 Image(nsImage: icon)
@@ -93,20 +93,12 @@ struct SettingsView: View {
                             if !BrowserLauncher().isAvailable(target) {
                                 Text("Unavailable").foregroundStyle(.secondary)
                             }
-                            if let number = shortcutNumber(for: target) {
-                                Text("\(number)")
-                                    .font(.system(size: 11, weight: .semibold, design: .rounded))
-                                    .frame(width: 20, height: 20)
-                                    .background(
-                                        Color.primary.opacity(0.10),
-                                        in: RoundedRectangle(cornerRadius: 5, style: .continuous)
-                                    )
-                                    .accessibilityLabel("Key \(number)")
-                            }
+                            keyBadge(for: target)
                             Button(role: .destructive) {
                                 state.removeTarget(id: target.id)
                             } label: {
                                 Image(systemName: "trash")
+                                    .frame(width: 22, height: 22)
                             }
                             .buttonStyle(.borderless)
                             .accessibilityLabel("Remove \(target.name)")
@@ -170,16 +162,21 @@ struct SettingsView: View {
         .onAppear { state.discoverProfiles() }
     }
 
-    private func dragHandle(for target: BrowserTarget) -> some View {
-        Image(systemName: "line.3.horizontal")
-            .foregroundStyle(.secondary)
-            .frame(width: 16, height: 20)
-            .contentShape(Rectangle())
-            .accessibilityLabel("Reorder \(target.name)")
-            .onDrag {
-                draggingTargetID = target.id
-                return NSItemProvider(object: target.id.uuidString as NSString)
-            }
+    /// An empty badge keeps the trash button in the same column on every row.
+    @ViewBuilder
+    private func keyBadge(for target: BrowserTarget) -> some View {
+        if let number = shortcutNumber(for: target) {
+            Text("\(number)")
+                .font(.system(size: 11, weight: .semibold, design: .rounded))
+                .frame(width: 22, height: 22)
+                .background(
+                    Color.primary.opacity(0.10),
+                    in: RoundedRectangle(cornerRadius: 5, style: .continuous)
+                )
+                .accessibilityLabel("Key \(number)")
+        } else {
+            Color.clear.frame(width: 22, height: 22)
+        }
     }
 
     /// The chooser numbers the targets it can show, so a disabled or missing browser has no key.
@@ -199,6 +196,40 @@ struct SettingsView: View {
         panel.message = "Select a browser application."
         guard panel.runModal() == .OK, let applicationURL = panel.url else { return }
         state.addTarget(applicationURL: applicationURL)
+    }
+}
+
+private struct DragHandle: View {
+    let target: BrowserTarget
+    @Binding var draggingTargetID: UUID?
+    @State private var showsOpenHand = false
+
+    var body: some View {
+        Image(systemName: "line.3.horizontal")
+            .foregroundStyle(.secondary)
+            .frame(width: 18, height: 22)
+            .contentShape(Rectangle())
+            .accessibilityLabel("Reorder \(target.name)")
+            .onDrag {
+                draggingTargetID = target.id
+                NSCursor.closedHand.set()
+                return NSItemProvider(object: target.id.uuidString as NSString)
+            }
+            .onHover { isHovering in
+                if isHovering, !showsOpenHand {
+                    NSCursor.openHand.push()
+                    showsOpenHand = true
+                } else if !isHovering, showsOpenHand {
+                    NSCursor.pop()
+                    showsOpenHand = false
+                }
+            }
+            .onDisappear {
+                if showsOpenHand {
+                    NSCursor.pop()
+                    showsOpenHand = false
+                }
+            }
     }
 }
 
