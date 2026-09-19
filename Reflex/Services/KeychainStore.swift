@@ -5,7 +5,13 @@ enum KeychainStoreError: Error {
     case unexpectedStatus(OSStatus)
 }
 
-struct KeychainStore {
+protocol APIKeyStoring {
+    func saveAPIKey(_ key: String) throws
+    func readAPIKey() throws -> String?
+    func removeAPIKey() throws
+}
+
+struct KeychainStore: APIKeyStoring {
     private let service = "com.rafi.Reflex.openrouter"
     private let account = "api-key"
 
@@ -58,4 +64,10 @@ struct KeychainStore {
             throw KeychainStoreError.unexpectedStatus(status)
         }
     }
+}
+
+struct DisabledKeychainStore: APIKeyStoring {
+    func saveAPIKey(_ key: String) throws {}
+    func readAPIKey() throws -> String? { nil }
+    func removeAPIKey() throws {}
 }

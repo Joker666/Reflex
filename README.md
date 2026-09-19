@@ -16,6 +16,29 @@ xcodebuild -project Reflex.xcodeproj -scheme Reflex -destination 'platform=macOS
 xcodebuild -project Reflex.xcodeproj -scheme Reflex -destination 'platform=macOS' test
 ```
 
+Local builds use Apple Development signing for team `FA8NWUSJ95` and the hardened runtime. This gives Reflex a stable signing identity for Keychain access. If Keychain asks after a newly signed build replaces an older ad-hoc build, select **Always Allow** once.
+
+## Direct distribution
+
+Reflex uses Developer ID distribution outside the Mac App Store. Apple requires a **Developer ID Application** certificate, hardened runtime, a secure timestamp, notarization, and a stapled ticket. The existing **Apple Distribution** certificate is not valid for this workflow.
+
+Before the first production release:
+
+1. Create and install a **Developer ID Application** certificate for team `FA8NWUSJ95` in the Apple Developer account.
+2. Save notarization credentials in Keychain. This command asks for the Apple ID and app-specific password without saving them in the repository:
+
+   ```sh
+   xcrun notarytool store-credentials ReflexNotary --apple-id YOUR_APPLE_ID --team-id FA8NWUSJ95
+   ```
+
+3. Run the distribution workflow:
+
+   ```sh
+   NOTARY_PROFILE=ReflexNotary ./Scripts/distribute.sh
+   ```
+
+The script runs all tests, creates a Release archive with Developer ID signing, verifies the signature, submits a ZIP to Apple with `notarytool`, staples and validates the ticket, checks the app with Gatekeeper, and writes the final ZIP and SHA-256 digest under `dist/`. It stops before building if the required certificate or Keychain profile name is missing. It does not store signing secrets in the repository.
+
 ## First setup
 
 Reflex scans the applications that Launch Services reports for representative HTTP and HTTPS URLs. It keeps Safari, Chrome, Dia, Comet, Helium, Edge, Phi, Zen, and Firefox. It removes other handlers from the target list. It enables new supported browsers and gives each one a neutral purpose. Open Settings to disable unwanted targets, edit names and purposes, or select **Rescan Browsers**.
@@ -49,7 +72,3 @@ The URL fragment is removed. The browser launcher always receives the original U
 - Reflex supports one chooser selection at a time. More incoming links wait in memory in FIFO order.
 - A Chromium profile value is treated as a profile identifier. Control characters are not allowed.
 - The target name and purpose are editable. The browser application is identified by its discovered bundle identifier.
-
-## Future work
-
-- Add a production signing and distribution workflow.

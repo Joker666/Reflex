@@ -6,7 +6,12 @@ struct ReflexApp: App {
     @StateObject private var state: AppState
 
     init() {
-        let state = AppState()
+        let state: AppState
+        if ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil {
+            state = AppState(keychain: DisabledKeychainStore())
+        } else {
+            state = AppState()
+        }
         _state = StateObject(wrappedValue: state)
     }
 

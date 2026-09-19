@@ -19,12 +19,13 @@ final class AppState: ObservableObject {
 
     private var queue = PendingURLQueue()
     private let launcher = BrowserLauncher()
-    private let keychain = KeychainStore()
+    private let keychain: any APIKeyStoring
     private let jevClient = JevClient()
     private let defaults = UserDefaults.standard
     private let targetsKey = "browserTargets"
 
-    init() {
+    init(keychain: any APIKeyStoring = KeychainStore()) {
+        self.keychain = keychain
         if let data = defaults.data(forKey: targetsKey),
            let storedTargets = try? JSONDecoder().decode([BrowserTarget].self, from: data) {
             targets = storedTargets
