@@ -66,16 +66,24 @@ struct BrowserLauncher: BrowserLaunching {
                 profileDirectory: profile,
                 url: originalURL
             )
-            let terminationStatus: Int32 = try await withCheckedThrowingContinuation { continuation in
-                process.terminationHandler = { completedProcess in
-                    continuation.resume(returning: completedProcess.terminationStatus)
+            let terminationStatus: Int32 = try await withTaskCancellationHandler {
+                try await withCheckedThrowingContinuation { continuation in
+                    process.terminationHandler = { completedProcess in
+                        continuation.resume(returning: completedProcess.terminationStatus)
+                    }
+                    do {
+                        try process.run()
+                    } catch {
+                        process.terminationHandler = nil
+                        continuation.resume(throwing: error)
+                    }
                 }
-                do {
-                    try process.run()
-                } catch {
-                    continuation.resume(throwing: error)
+            } onCancel: {
+                if process.isRunning {
+                    process.terminate()
                 }
             }
+            try Task.checkCancellation()
             guard terminationStatus == 0 else {
                 throw BrowserLaunchError.launchFailed("open exited with status \(terminationStatus)")
             }

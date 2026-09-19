@@ -166,8 +166,10 @@ struct ChooserView: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
-            SettingsLink { Text("Open Settings") }
-                .controlSize(.small)
+            Button("Open Settings") {
+                state.openSettings()
+            }
+            .controlSize(.small)
         }
         .padding(12)
     }

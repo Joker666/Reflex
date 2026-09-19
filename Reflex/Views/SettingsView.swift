@@ -20,7 +20,7 @@ struct SettingsView: View {
                             apiKey = ""
                             keyMessage = "The API key is saved in Keychain."
                         } catch {
-                            keyMessage = "Reflex could not save the API key."
+                            keyMessage = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
                         }
                     }
                     .disabled(apiKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
@@ -30,7 +30,7 @@ struct SettingsView: View {
                             apiKey = ""
                             keyMessage = "The API key was removed."
                         } catch {
-                            keyMessage = "Reflex could not remove the API key."
+                            keyMessage = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
                         }
                     }
                     .disabled(!state.hasAPIKey)

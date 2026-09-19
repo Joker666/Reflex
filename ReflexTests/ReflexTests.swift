@@ -1,5 +1,6 @@
 import AppKit
 import Foundation
+import Security
 import Testing
 @testable import Reflex
 
@@ -723,6 +724,16 @@ struct ReflexTests {
 
         let unknown = AppleEventSender.bundleIdentifier(from: event) { _ in nil }
         #expect(unknown == nil)
+    }
+
+    @Test("Keychain store error provides localized error descriptions")
+    func keychainStoreErrorDescription() {
+        let error = KeychainStoreError.unexpectedStatus(errSecAuthFailed)
+        #expect(error.errorDescription != nil)
+        #expect(!error.errorDescription!.isEmpty)
+
+        let customError = KeychainStoreError.unexpectedStatus(-99999)
+        #expect(customError.errorDescription?.contains("-99999") == true)
     }
 
     @Test("URL helper accurately identifies HTTP and HTTPS schemes")

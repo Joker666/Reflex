@@ -1,8 +1,18 @@
 import Foundation
 import Security
 
-enum KeychainStoreError: Error {
+enum KeychainStoreError: LocalizedError, Equatable {
     case unexpectedStatus(OSStatus)
+
+    var errorDescription: String? {
+        switch self {
+        case let .unexpectedStatus(status):
+            if let message = SecCopyErrorMessageString(status, nil) as String? {
+                return message
+            }
+            return "Keychain error (\(status))."
+        }
+    }
 }
 
 protocol APIKeyStoring {
