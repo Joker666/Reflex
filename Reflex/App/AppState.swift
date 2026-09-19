@@ -26,6 +26,12 @@ final class AppState: ObservableObject {
     @Published var chooserModifier = ChooserModifier.option {
         didSet { defaults.set(chooserModifier.rawValue, forKey: chooserModifierKey) }
     }
+    @Published var usesJev = true {
+        didSet {
+            defaults.set(usesJev, forKey: usesJevKey)
+            linkRouter.retryPending()
+        }
+    }
     /// Not @Published: MenuBarExtra writes this binding on every update, and a publish
     /// for an unchanged value starts an endless view update.
     var showsMenuBarItem: Bool {
@@ -52,6 +58,7 @@ final class AppState: ObservableObject {
     private let targetsKey = "browserTargets"
     private let menuBarItemKey = "showsMenuBarItem"
     private let chooserModifierKey = "chooserModifier"
+    private let usesJevKey = "usesJev"
     private var iconCache: [String: NSImage] = [:]
     private var availabilityCache: [TargetProfileKey: Bool] = [:]
     private var storedShowsMenuBarItem = true
@@ -65,7 +72,8 @@ final class AppState: ObservableObject {
         keychain: keychain,
         jevClient: jevClient,
         availableTargets: { [weak self] in self?.availableTargets ?? [] },
-        sourceApplicationName: { [weak self] in self?.applicationName(for: $0) }
+        sourceApplicationName: { [weak self] in self?.applicationName(for: $0) },
+        usesJev: { [weak self] in self?.usesJev ?? true }
     )
 
     var pendingURL: URL? { linkRouter.pendingURL }
@@ -95,6 +103,7 @@ final class AppState: ObservableObject {
         }
         storedShowsMenuBarItem = defaults.object(forKey: menuBarItemKey) as? Bool ?? true
         chooserModifier = ChooserModifier.fromStoredValue(defaults.string(forKey: chooserModifierKey))
+        usesJev = defaults.object(forKey: usesJevKey) as? Bool ?? true
         refreshDefaultBrowserStatus()
         hasAPIKey = (try? keychain.readAPIKey()) != nil
         updateAvailableTargets()

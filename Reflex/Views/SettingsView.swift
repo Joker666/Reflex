@@ -41,6 +41,8 @@ struct SettingsView: View {
                 if let keyMessage {
                     Text(keyMessage).font(.caption).foregroundStyle(.secondary)
                 }
+                Toggle("Use Jev for automatic selection", isOn: $state.usesJev)
+                    .disabled(!state.hasAPIKey)
                 Text("Reflex sends the link scheme, host, path, query parameter names, source application identifier when available, and enabled target names and purposes. It never sends query values or fragments.")
                     .font(.caption)
                     .foregroundStyle(.secondary)

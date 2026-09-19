@@ -18,6 +18,7 @@ final class LinkRouter: ObservableObject {
     private let jevClient: any JevDeciding
     private let availableTargets: () -> [BrowserTarget]
     private let sourceApplicationName: (String?) -> String?
+    private let usesJev: () -> Bool
     private var routingTask: Task<Void, Never>?
     private var routingLinkID: UUID?
     private var launchTask: Task<Void, Never>?
@@ -28,13 +29,15 @@ final class LinkRouter: ObservableObject {
         keychain: any APIKeyStoring,
         jevClient: any JevDeciding,
         availableTargets: @escaping () -> [BrowserTarget],
-        sourceApplicationName: @escaping (String?) -> String?
+        sourceApplicationName: @escaping (String?) -> String?,
+        usesJev: @escaping () -> Bool = { true }
     ) {
         self.launcher = launcher
         self.keychain = keychain
         self.jevClient = jevClient
         self.availableTargets = availableTargets
         self.sourceApplicationName = sourceApplicationName
+        self.usesJev = usesJev
     }
 
     func receive(
@@ -148,6 +151,13 @@ final class LinkRouter: ObservableObject {
         }
 
         chooserPresenter?.presentChooser()
+
+        guard usesJev() else {
+            ReflexLog.routing.info("Automatic selection disabled by user preference; showing chooser")
+            suggestedTargetID = nil
+            isJevUnavailable = false
+            return
+        }
 
         let sourceBundleIdentifier = link.sourceApplicationBundleIdentifier
         guard let apiKey = try? keychain.readAPIKey(),

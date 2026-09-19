@@ -184,6 +184,12 @@ struct ChooserView: View {
                     systemImage: state.chooserModifier.symbolName,
                     tint: .secondary
                 )
+            } else if state.hasAPIKey && !state.usesJev {
+                statusLine(
+                    "Automatic selection is turned off",
+                    systemImage: "bolt.slash",
+                    tint: .secondary
+                )
             } else if state.isJevUnavailable {
                 statusLine(
                     "Automatic selection is unavailable",

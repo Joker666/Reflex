@@ -593,6 +593,48 @@ struct ReflexTests {
         #expect(state.pendingURL == nil)
     }
 
+    @Test("Toggling usesJev to false bypasses Jev and does not auto-open")
+    @MainActor
+    func usesJevToggleBypassesJev() async throws {
+        let suiteName = "ReflexTests.\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let targets = [
+            makeTarget(name: "Chrome", bundleIdentifier: "com.google.Chrome"),
+            makeTarget(name: "Safari", bundleIdentifier: "com.apple.Safari"),
+        ]
+        defaults.set(try JSONEncoder().encode(targets), forKey: "browserTargets")
+        defaults.set(false, forKey: "usesJev")
+        let recorder = BrowserOpenRecorder()
+        let state = AppState(
+            keychain: TestKeychainStore(apiKey: "test-key"),
+            launcher: RecordingBrowserLauncher(recorder: recorder),
+            jevClient: FirstTargetJevDecider(),
+            defaults: defaults,
+            browserScanner: FixedBrowserScanner(),
+            defaultBrowserService: FixedDefaultBrowserService()
+        )
+        #expect(!state.usesJev)
+
+        state.receive([URL(string: "https://example.com")!])
+        for _ in 0..<20 {
+            await Task.yield()
+        }
+
+        #expect(await recorder.targetID == nil)
+        #expect(state.pendingURL != nil)
+        #expect(state.suggestedTargetID == nil)
+
+        state.usesJev = true
+        for _ in 0..<100 {
+            if await recorder.targetID != nil { break }
+            await Task.yield()
+        }
+
+        #expect(await recorder.targetID == targets[0].id)
+        #expect(state.pendingURL == nil)
+    }
+
     @Test("An old Jev decision cannot route the next link")
     @MainActor
     func staleJevDecisionCannotRouteNextLink() async throws {
