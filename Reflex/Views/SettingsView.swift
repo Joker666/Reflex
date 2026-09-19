@@ -67,6 +67,13 @@ struct SettingsView: View {
                     .foregroundStyle(.secondary)
             }
 
+            Section("Menu bar") {
+                Toggle("Show Reflex in the menu bar", isOn: $state.showsMenuBarItem)
+                Text("Reflex quits when you close this window, because macOS starts it again for the next link. Open Reflex from the Applications folder to return to Settings.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
             Section("Browser targets") {
                 if state.targets.isEmpty {
                     Text("No registered web browser was found.")
@@ -76,12 +83,13 @@ struct SettingsView: View {
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
+                let shortcutNumbers = shortcutNumbers()
                 ForEach($state.targets) { $target in
                     VStack(alignment: .leading, spacing: 6) {
                         HStack {
                             DragHandle(target: target, draggingTargetID: $draggingTargetID)
                             Toggle("Enabled", isOn: $target.isEnabled).labelsHidden()
-                            if let icon = BrowserLauncher().icon(for: target) {
+                            if let icon = state.icon(for: target) {
                                 Image(nsImage: icon)
                                     .resizable()
                                     .frame(width: 24, height: 24)
@@ -90,10 +98,10 @@ struct SettingsView: View {
                             TextField("Name", text: $target.name)
                                 .labelsHidden()
                                 .accessibilityLabel("Target name")
-                            if !BrowserLauncher().isAvailable(target) {
+                            if !state.isAvailable(target) {
                                 Text("Unavailable").foregroundStyle(.secondary)
                             }
-                            keyBadge(for: target)
+                            keyBadge(shortcutNumbers[target.id])
                             Button(role: .destructive) {
                                 state.removeTarget(id: target.id)
                             } label: {
@@ -164,8 +172,8 @@ struct SettingsView: View {
 
     /// An empty badge keeps the trash button in the same column on every row.
     @ViewBuilder
-    private func keyBadge(for target: BrowserTarget) -> some View {
-        if let number = shortcutNumber(for: target) {
+    private func keyBadge(_ number: Int?) -> some View {
+        if let number {
             Text("\(number)")
                 .font(.system(size: 11, weight: .semibold, design: .rounded))
                 .frame(width: 22, height: 22)
@@ -180,12 +188,12 @@ struct SettingsView: View {
     }
 
     /// The chooser numbers the targets it can show, so a disabled or missing browser has no key.
-    private func shortcutNumber(for target: BrowserTarget) -> Int? {
-        guard let index = state.availableTargets.firstIndex(where: { $0.id == target.id }),
-              index < 9 else {
-            return nil
+    private func shortcutNumbers() -> [UUID: Int] {
+        var numbers: [UUID: Int] = [:]
+        for (index, target) in state.availableTargets.prefix(9).enumerated() {
+            numbers[target.id] = index + 1
         }
-        return index + 1
+        return numbers
     }
 
     private func addBrowser() {

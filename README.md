@@ -66,6 +66,12 @@ The chooser uses the target order from Settings. Drag a target by the handle at 
 
 The panel does not show the link or its host.
 
+## Settings and quitting
+
+Start Reflex without a link, from the Applications folder or the Dock, and Settings opens. Reflex quits when you close the settings window, because macOS starts it again for the next link.
+
+The menu bar item is a switch in Settings. Turn it off to keep the menu bar clean. Reflex still receives links, and you still reach Settings by starting Reflex again.
+
 ## Privacy
 
 Original URLs stay only in memory while they wait for routing. Reflex does not save link history or URL data. It does not log incoming URLs, API keys, authorization headers, or API response bodies.

@@ -234,6 +234,9 @@ Use a menu bar app with two small windows/panels:
    - Shows a small offline/error indicator when Jev was unavailable, without exposing raw API errors
 
 2. **Settings**
+   - Opens when the user starts Reflex without a link, and from the menu bar item
+   - Reflex quits when the settings window closes, because macOS starts it again for the next link
+   - A switch for the menu bar item, stored in `UserDefaults`
    - API key field with Save and Remove actions
    - Target list with name, application, purpose, optional Chromium profile directory, and enabled state
    - Drag a target by its handle to set the order. The chooser shows the targets and numbers the keys in this order

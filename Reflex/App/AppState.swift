@@ -16,6 +16,17 @@ final class AppState: ObservableObject {
     @Published private(set) var profileDiscoveryMessage: String?
     @Published var launchError: String?
     @Published var setupMessage: String?
+    /// Not @Published: MenuBarExtra writes this binding on every update, and a publish
+    /// for an unchanged value starts an endless view update.
+    var showsMenuBarItem: Bool {
+        get { storedShowsMenuBarItem }
+        set {
+            guard newValue != storedShowsMenuBarItem else { return }
+            objectWillChange.send()
+            storedShowsMenuBarItem = newValue
+            defaults.set(newValue, forKey: menuBarItemKey)
+        }
+    }
     weak var chooserPresenter: (any ChooserPresenting)?
 
     private var queue = PendingURLQueue()
@@ -24,7 +35,10 @@ final class AppState: ObservableObject {
     private let jevClient = JevClient()
     private let defaults = UserDefaults.standard
     private let targetsKey = "browserTargets"
+    private let menuBarItemKey = "showsMenuBarItem"
     private var iconCache: [String: NSImage] = [:]
+    private var availabilityCache: [String: Bool] = [:]
+    private var storedShowsMenuBarItem = true
 
     init(keychain: any APIKeyStoring = KeychainStore()) {
         self.keychain = keychain
@@ -32,13 +46,22 @@ final class AppState: ObservableObject {
            let storedTargets = try? JSONDecoder().decode([BrowserTarget].self, from: data) {
             targets = storedTargets
         }
+        storedShowsMenuBarItem = defaults.object(forKey: menuBarItemKey) as? Bool ?? true
         rescanBrowsers()
         refreshDefaultBrowserStatus()
         hasAPIKey = (try? keychain.readAPIKey()) != nil
     }
 
     var availableTargets: [BrowserTarget] {
-        targets.filter { $0.isEnabled && launcher.isAvailable($0) }
+        targets.filter { $0.isEnabled && isAvailable($0) }
+    }
+
+    /// Launch Services lookups are slow, and SwiftUI asks for these on every pass.
+    func isAvailable(_ target: BrowserTarget) -> Bool {
+        if let cached = availabilityCache[target.bundleIdentifier] { return cached }
+        let available = launcher.isAvailable(target)
+        availabilityCache[target.bundleIdentifier] = available
+        return available
     }
 
     func receive(_ urls: [URL], sourceApplicationBundleIdentifier: String? = nil) {
@@ -90,6 +113,8 @@ final class AppState: ObservableObject {
     }
 
     func rescanBrowsers() {
+        iconCache.removeAll()
+        availabilityCache.removeAll()
         targets = targets
             .filter(BrowserDiscovery.isSupportedTarget)
             .mergingDiscoveries(BrowserDiscovery().discover())
