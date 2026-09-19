@@ -14,6 +14,14 @@ protocol JevTransport: Sendable {
     func data(for request: URLRequest) async throws -> (Data, URLResponse)
 }
 
+protocol JevDeciding: Sendable {
+    func decide(
+        context: RoutingContext,
+        targets: [BrowserTarget],
+        apiKey: String
+    ) async throws -> RouteDecision
+}
+
 struct URLSessionJevTransport: JevTransport {
     var session: URLSession
 
@@ -65,7 +73,7 @@ private struct JevResponse: Decodable {
     var answers: Answers
 }
 
-struct JevClient {
+struct JevClient: JevDeciding {
     static let openRouterEndpoint = URL(string: "https://openrouter.ai/api/alpha/decisions")!
     static let model = "~typesafe/jev-latest"
     /// Jev reads this with the state, so it says what each field means.

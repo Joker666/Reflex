@@ -23,9 +23,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
            let icon = NSImage(contentsOf: iconURL) {
             NSApplication.shared.applicationIconImage = icon
         }
+        state.rescanBrowsers()
         // macOS delivers a link before this call, so a launch without one opens Settings.
         if !didReceiveURL {
-            openSettings()
+            settingsController.show(rescanBrowsers: false)
         }
     }
 

@@ -1,6 +1,12 @@
 import AppKit
 import Foundation
 
+protocol BrowserLaunching: Sendable {
+    func isAvailable(_ target: BrowserTarget) -> Bool
+    func icon(for target: BrowserTarget) -> NSImage?
+    func open(_ originalURL: URL, in target: BrowserTarget) async throws
+}
+
 enum BrowserLaunchError: LocalizedError, Equatable {
     case applicationUnavailable
     case invalidProfileDirectory
@@ -15,7 +21,7 @@ enum BrowserLaunchError: LocalizedError, Equatable {
     }
 }
 
-struct BrowserLauncher {
+struct BrowserLauncher: BrowserLaunching {
     static func isValidProfileDirectory(_ value: String) -> Bool {
         !value.isEmpty
             && value != "."

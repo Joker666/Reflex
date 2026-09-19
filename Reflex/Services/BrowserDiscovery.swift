@@ -114,10 +114,34 @@ enum SupportedBrowser: CaseIterable {
     }
 }
 
-struct DiscoveredBrowser: Equatable {
+struct DiscoveredBrowser: Equatable, Sendable {
     var name: String
     var bundleIdentifier: String
     var applicationURL: URL
+}
+
+struct BrowserScanResult: Sendable {
+    var discoveries: [DiscoveredBrowser]
+    var profiles: BrowserProfileDiscoveryResult
+}
+
+protocol BrowserScanning: Sendable {
+    func scan(existingTargets: [BrowserTarget]) async -> BrowserScanResult
+}
+
+struct BrowserScanner: BrowserScanning {
+    func scan(existingTargets: [BrowserTarget]) async -> BrowserScanResult {
+        await Task.detached(priority: .userInitiated) {
+            let discoveries = BrowserDiscovery().discover()
+            let merged = existingTargets
+                .filter(BrowserDiscovery.isSupportedTarget)
+                .mergingDiscoveries(discoveries)
+            return BrowserScanResult(
+                discoveries: discoveries,
+                profiles: BrowserProfileDiscovery().discover(for: merged)
+            )
+        }.value
+    }
 }
 
 struct BrowserDiscovery {

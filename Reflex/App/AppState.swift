@@ -46,10 +46,12 @@ final class AppState: ObservableObject {
     var settingsAction: (() -> Void)?
 
     private var queue = PendingURLQueue()
-    private let launcher = BrowserLauncher()
+    private let launcher: any BrowserLaunching
     private let keychain: any APIKeyStoring
-    private let jevClient = JevClient()
-    private let defaults = UserDefaults.standard
+    private let jevClient: any JevDeciding
+    private let defaults: UserDefaults
+    private let browserScanner: any BrowserScanning
+    private let defaultBrowserService: any DefaultBrowserServicing
     private let targetsKey = "browserTargets"
     private let menuBarItemKey = "showsMenuBarItem"
     private let chooserModifierKey = "chooserModifier"
@@ -58,16 +60,29 @@ final class AppState: ObservableObject {
     private var storedShowsMenuBarItem = true
     private var knownProfileKeys: Set<TargetProfileKey> = []
     private var browsersWithReadProfiles: Set<String> = []
+    private var browserScanTask: Task<Void, Never>?
+    private var browserScanGeneration = 0
 
-    init(keychain: any APIKeyStoring = KeychainStore()) {
+    init(
+        keychain: any APIKeyStoring = KeychainStore(),
+        launcher: any BrowserLaunching = BrowserLauncher(),
+        jevClient: any JevDeciding = JevClient(),
+        defaults: UserDefaults = .standard,
+        browserScanner: any BrowserScanning = BrowserScanner(),
+        defaultBrowserService: any DefaultBrowserServicing = DefaultBrowserService()
+    ) {
         self.keychain = keychain
+        self.launcher = launcher
+        self.jevClient = jevClient
+        self.defaults = defaults
+        self.browserScanner = browserScanner
+        self.defaultBrowserService = defaultBrowserService
         if let data = defaults.data(forKey: targetsKey),
            let storedTargets = try? JSONDecoder().decode([BrowserTarget].self, from: data) {
             targets = storedTargets
         }
         storedShowsMenuBarItem = defaults.object(forKey: menuBarItemKey) as? Bool ?? true
         chooserModifier = ChooserModifier.fromStoredValue(defaults.string(forKey: chooserModifierKey))
-        rescanBrowsers()
         refreshDefaultBrowserStatus()
         hasAPIKey = (try? keychain.readAPIKey()) != nil
         updateAvailableTargets()
@@ -168,13 +183,29 @@ final class AppState: ObservableObject {
     }
 
     func rescanBrowsers() {
+        browserScanGeneration += 1
+        let generation = browserScanGeneration
+        browserScanTask?.cancel()
+        let scanner = browserScanner
+        let existingTargets = targets
+        browserScanTask = Task { [weak self] in
+            let scan = await scanner.scan(existingTargets: existingTargets)
+            guard !Task.isCancelled,
+                  let self,
+                  generation == self.browserScanGeneration else { return }
+            self.applyBrowserScan(scan)
+            self.browserScanTask = nil
+        }
+    }
+
+    private func applyBrowserScan(_ scan: BrowserScanResult) {
         iconCache.removeAll()
         availabilityCache.removeAll()
         let merged = targets
             .filter(BrowserDiscovery.isSupportedTarget)
-            .mergingDiscoveries(BrowserDiscovery().discover())
+            .mergingDiscoveries(scan.discoveries)
 
-        let result = BrowserProfileDiscovery().discover(for: merged)
+        let result = scan.profiles
         knownProfileKeys = Set(result.profiles.map {
             TargetProfileKey(bundleIdentifier: $0.bundleIdentifier, profileDirectory: $0.profileDirectory)
         })
@@ -190,6 +221,7 @@ final class AppState: ObservableObject {
         if !result.accessDeniedBrowserNames.isEmpty {
             ReflexLog.discovery.warning("Profile access denied for: \(result.accessDeniedBrowserNames.joined(separator: ", "), privacy: .private)")
         }
+        if pendingURL != nil { routePending() }
     }
 
     func addTarget(applicationURL: URL) {
@@ -237,14 +269,14 @@ final class AppState: ObservableObject {
     }
 
     func refreshDefaultBrowserStatus() {
-        defaultBrowserStatus = DefaultBrowserService().currentStatus()
+        defaultBrowserStatus = defaultBrowserService.currentStatus()
     }
 
     func makeDefaultBrowser() {
         setupMessage = nil
         Task {
             do {
-                try await DefaultBrowserService().makeDefault()
+                try await defaultBrowserService.makeDefault()
                 refreshDefaultBrowserStatus()
             } catch {
                 setupMessage = "macOS did not change the default browser. Open System Settings, select Desktop & Dock, and set Default web browser to Reflex."

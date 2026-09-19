@@ -1,3 +1,4 @@
+import AppKit
 import Foundation
 import Testing
 @testable import Reflex
@@ -560,6 +561,37 @@ struct ReflexTests {
         #expect(RoutingPolicy.action(availableTargets: targets, decision: decision) == .choose(suggestedTargetID: nil))
     }
 
+    @Test("App state uses its injected routing services")
+    @MainActor
+    func appStateUsesInjectedRoutingServices() async throws {
+        let suiteName = "ReflexTests.\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let targets = [
+            makeTarget(name: "Chrome", bundleIdentifier: "com.google.Chrome"),
+            makeTarget(name: "Safari", bundleIdentifier: "com.apple.Safari"),
+        ]
+        defaults.set(try JSONEncoder().encode(targets), forKey: "browserTargets")
+        let recorder = BrowserOpenRecorder()
+        let state = AppState(
+            keychain: TestKeychainStore(apiKey: "test-key"),
+            launcher: RecordingBrowserLauncher(recorder: recorder),
+            jevClient: FirstTargetJevDecider(),
+            defaults: defaults,
+            browserScanner: FixedBrowserScanner(),
+            defaultBrowserService: FixedDefaultBrowserService()
+        )
+
+        state.receive([URL(string: "https://example.com")!])
+        for _ in 0..<100 {
+            if await recorder.targetID != nil { break }
+            await Task.yield()
+        }
+
+        #expect(await recorder.targetID == targets[0].id)
+        #expect(state.pendingURL == nil)
+    }
+
     @Test("URL helper accurately identifies HTTP and HTTPS schemes")
     func urlHTTPValidation() {
         #expect(URL(string: "http://example.com")!.isHTTPOrHTTPS)
@@ -646,4 +678,62 @@ private struct FailingJevTransport: JevTransport {
     func data(for request: URLRequest) async throws -> (Data, URLResponse) {
         throw URLError(errorCode)
     }
+}
+
+private struct TestKeychainStore: APIKeyStoring {
+    var apiKey: String?
+
+    func saveAPIKey(_ key: String) throws {}
+    func readAPIKey() throws -> String? { apiKey }
+    func removeAPIKey() throws {}
+}
+
+private actor BrowserOpenRecorder {
+    private(set) var targetID: UUID?
+
+    func record(_ targetID: UUID) {
+        self.targetID = targetID
+    }
+}
+
+private struct RecordingBrowserLauncher: BrowserLaunching {
+    var recorder: BrowserOpenRecorder
+
+    func isAvailable(_ target: BrowserTarget) -> Bool { true }
+    func icon(for target: BrowserTarget) -> NSImage? { nil }
+
+    func open(_ originalURL: URL, in target: BrowserTarget) async throws {
+        await recorder.record(target.id)
+    }
+}
+
+private struct FirstTargetJevDecider: JevDeciding {
+    func decide(
+        context: RoutingContext,
+        targets: [BrowserTarget],
+        apiKey: String
+    ) async throws -> RouteDecision {
+        RouteDecision(targetID: targets[0].id, confidence: 1)
+    }
+}
+
+private struct FixedBrowserScanner: BrowserScanning {
+    func scan(existingTargets: [BrowserTarget]) async -> BrowserScanResult {
+        BrowserScanResult(
+            discoveries: [],
+            profiles: BrowserProfileDiscoveryResult(
+                profiles: [],
+                accessDeniedBrowserNames: [],
+                missingProfileDataBrowserNames: []
+            )
+        )
+    }
+}
+
+private struct FixedDefaultBrowserService: DefaultBrowserServicing {
+    func currentStatus() -> DefaultBrowserStatus {
+        DefaultBrowserStatus(ownsHTTP: false, ownsHTTPS: false)
+    }
+
+    func makeDefault() async throws {}
 }

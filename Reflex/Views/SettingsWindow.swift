@@ -11,8 +11,10 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
         self.state = state
     }
 
-    func show() {
-        state.rescanBrowsers()
+    func show(rescanBrowsers: Bool = true) {
+        if rescanBrowsers {
+            state.rescanBrowsers()
+        }
         state.refreshDefaultBrowserStatus()
 
         let window = window ?? makeWindow()

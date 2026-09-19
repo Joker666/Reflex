@@ -1,6 +1,6 @@
 import Foundation
 
-struct DiscoveredBrowserProfile: Identifiable, Equatable {
+struct DiscoveredBrowserProfile: Identifiable, Equatable, Sendable {
     var id: String { "\(bundleIdentifier)|\(profileDirectory)" }
 
     var browserName: String
@@ -9,7 +9,7 @@ struct DiscoveredBrowserProfile: Identifiable, Equatable {
     var profileName: String
 }
 
-struct BrowserProfileDiscoveryResult: Equatable {
+struct BrowserProfileDiscoveryResult: Equatable, Sendable {
     var profiles: [DiscoveredBrowserProfile]
     var accessDeniedBrowserNames: [String]
     var missingProfileDataBrowserNames: [String]

@@ -1,6 +1,11 @@
 import AppKit
 import Foundation
 
+protocol DefaultBrowserServicing: Sendable {
+    func currentStatus() -> DefaultBrowserStatus
+    func makeDefault() async throws
+}
+
 struct DefaultBrowserStatus: Equatable {
     var ownsHTTP: Bool
     var ownsHTTPS: Bool
@@ -8,7 +13,7 @@ struct DefaultBrowserStatus: Equatable {
     var isComplete: Bool { ownsHTTP && ownsHTTPS }
 }
 
-struct DefaultBrowserService {
+struct DefaultBrowserService: DefaultBrowserServicing {
     static func status(
         defaultHTTPBundleIdentifier: String?,
         defaultHTTPSBundleIdentifier: String?,
