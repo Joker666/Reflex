@@ -119,14 +119,14 @@ struct SettingsView: View {
                     ForEach(state.discoveredProfiles) { profile in
                         HStack {
                             VStack(alignment: .leading) {
-                                Text(profile.browserName)
+                                Text("\(profile.browserName) — \(profile.profileName)")
                                 Text(profile.profileDirectory)
                                     .font(.caption)
                                     .foregroundStyle(.secondary)
                             }
                             Spacer()
                             Button("Add") { state.addDiscoveredProfile(profile) }
-                                .accessibilityLabel("Add \(profile.browserName) profile \(profile.profileDirectory)")
+                                .accessibilityLabel("Add \(profile.browserName) profile \(profile.profileName)")
                         }
                     }
                 }

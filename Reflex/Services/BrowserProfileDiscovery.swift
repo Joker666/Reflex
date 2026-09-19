@@ -6,6 +6,7 @@ struct DiscoveredBrowserProfile: Identifiable, Equatable {
     var browserName: String
     var bundleIdentifier: String
     var profileDirectory: String
+    var profileName: String
 }
 
 struct BrowserProfileDiscoveryResult: Equatable {
@@ -77,7 +78,7 @@ struct BrowserProfileDiscovery {
             return ([], browserName)
         }
 
-        let profiles: [DiscoveredBrowserProfile] = infoCache.keys.compactMap { directory in
+        let profiles: [DiscoveredBrowserProfile] = infoCache.compactMap { directory, value in
             guard BrowserLauncher.isValidProfileDirectory(directory),
                   !configuredProfiles.contains(key(
                     bundleIdentifier: bundleIdentifier,
@@ -86,10 +87,15 @@ struct BrowserProfileDiscovery {
                   fileManager.fileExists(atPath: dataDirectory.appending(path: directory).path) else {
                 return nil
             }
+            let metadata = value as? [String: Any]
+            let storedName = (metadata?["name"] as? String)?
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+            let profileName = storedName.flatMap { $0.isEmpty ? nil : $0 } ?? directory
             return DiscoveredBrowserProfile(
                 browserName: browserName,
                 bundleIdentifier: bundleIdentifier,
-                profileDirectory: directory
+                profileDirectory: directory,
+                profileName: profileName
             )
         }
         return (profiles, nil)

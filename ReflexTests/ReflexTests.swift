@@ -62,7 +62,8 @@ struct ReflexTests {
             DiscoveredBrowserProfile(
                 browserName: "Chrome",
                 bundleIdentifier: "com.google.Chrome",
-                profileDirectory: "Profile 1"
+                profileDirectory: "Profile 1",
+                profileName: "Another private name"
             ),
         ])
         #expect(result.unreadableBrowserNames == ["Edge"])

@@ -97,7 +97,7 @@ Reflex should configure the initial target list automatically instead of requiri
 - For each new browser, pre-populate its display name, bundle identifier, application icon, enabled state, and a neutral editable purpose such as `General browsing in <browser name>`.
 - Enable newly discovered browsers by default. The first-launch setup must let the user disable unwanted targets and edit each purpose before completing setup.
 - Browser purpose is user intent, not something Reflex can infer reliably. Do not label a browser as work or personal without the user's input.
-- Discover Chromium profile directory identifiers for Chrome, Edge, Comet, Dia, Helium, and Phi. Read only `profile.info_cache` keys from each browser's `Local State` file. Do not read profile display names, account details, history, cookies, or page data. The user must explicitly add a discovered profile target.
+- Discover Chromium profile names and directory identifiers for Chrome, Edge, Comet, Dia, Helium, and Phi. Read only `profile.info_cache` keys and each entry's `name` from the browser's `Local State` file. Do not read account details, history, cookies, or page data. Keep discovered names local until the user explicitly adds a profile target.
 - Add a **Rescan Browsers** action in Settings. A rescan merges new discoveries into the existing target list without overwriting user-authored names, purposes, enabled states, or profile settings.
 - If a previously configured application is no longer installed, retain its configuration but mark it unavailable and exclude it from Jev choices until it becomes available again.
 - Do not continuously watch the filesystem for browser changes in the MVP. Scan on first launch, when Settings opens, and when the user explicitly requests a rescan.

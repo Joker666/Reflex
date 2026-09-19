@@ -105,9 +105,9 @@ final class AppState: ObservableObject {
         targets.append(
             BrowserTarget(
                 id: UUID(),
-                name: "\(profile.browserName) — \(profile.profileDirectory)",
+                name: "\(profile.browserName) — \(profile.profileName)",
                 bundleIdentifier: profile.bundleIdentifier,
-                purpose: "Browsing with \(profile.browserName) profile \(profile.profileDirectory)",
+                purpose: "Browsing with \(profile.browserName) profile \(profile.profileName)",
                 chromiumProfileDirectory: profile.profileDirectory,
                 isEnabled: true
             )

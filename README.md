@@ -20,7 +20,7 @@ xcodebuild -project Reflex.xcodeproj -scheme Reflex -destination 'platform=macOS
 
 Reflex scans the applications that Launch Services reports for representative HTTP and HTTPS URLs. It keeps Safari, Chrome, Dia, Comet, Helium, Edge, Phi, Zen, and Firefox. It removes other handlers from the target list. It enables new supported browsers and gives each one a neutral purpose. Open Settings to disable unwanted targets, edit names and purposes, or select **Rescan Browsers**.
 
-Select **Rescan Profiles** to find local Chromium profile directory identifiers for Chrome, Edge, Comet, Dia, Helium, and Phi. Reflex reads only the directory identifiers from each browser's `Local State` file. It does not read profile display names, account details, history, cookies, or page data. Select **Add** to create a separate editable target for a profile. Safari, Firefox, and Zen profile discovery is not supported because they do not use the same Chromium launch argument.
+Select **Rescan Profiles** to find local Chromium profile names and directory identifiers for Chrome, Edge, Comet, Dia, Helium, and Phi. Reflex reads only those two fields from each browser's `Local State` file. It does not read account details, history, cookies, or page data. A discovered name stays local until you select **Add** to create a separate editable routing target. Safari, Firefox, and Zen profile discovery is not supported because they do not use the same Chromium launch argument.
 
 macOS can deny access to some browser data directories. Reflex reports the affected browser and keeps the manual profile directory field available. Reflex does not ask for Full Disk Access.
 
