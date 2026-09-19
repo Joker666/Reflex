@@ -16,7 +16,7 @@ struct ReflexTests {
         #expect(!BrowserLauncher.isValidProfileDirectory("Profile\u{0000}1"))
     }
 
-    @Test("Profile discovery reads directory identifiers and excludes configured profiles")
+    @Test("Profile discovery reads every profile directory and name")
     func profileDiscovery() throws {
         let root = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: root) }
@@ -45,14 +45,6 @@ struct ReflexTests {
         try Data("not JSON".utf8).write(to: edgeDirectory.appending(path: "Local State"))
         let targets = [
             makeTarget(name: "Chrome", bundleIdentifier: "com.google.Chrome"),
-            BrowserTarget(
-                id: UUID(),
-                name: "Chrome Default",
-                bundleIdentifier: "com.google.Chrome",
-                purpose: "Default Chrome profile",
-                chromiumProfileDirectory: "Default",
-                isEnabled: true
-            ),
             makeTarget(name: "Edge", bundleIdentifier: "com.microsoft.edgemac"),
         ]
 
@@ -62,11 +54,103 @@ struct ReflexTests {
             DiscoveredBrowserProfile(
                 browserName: "Chrome",
                 bundleIdentifier: "com.google.Chrome",
+                profileDirectory: "Default",
+                profileName: "Private account name"
+            ),
+            DiscoveredBrowserProfile(
+                browserName: "Chrome",
+                bundleIdentifier: "com.google.Chrome",
                 profileDirectory: "Profile 1",
                 profileName: "Another private name"
             ),
         ])
         #expect(result.unreadableBrowserNames == ["Edge"])
+        #expect(result.readableBundleIdentifiers == ["com.google.Chrome"])
+    }
+
+    @Test("Two profiles replace the plain target and keep its purpose")
+    func profileExpansionReplacesPlainTarget() {
+        let chrome = BrowserTarget(
+            id: UUID(),
+            name: "Google Chrome",
+            bundleIdentifier: "com.google.Chrome",
+            purpose: "Work links",
+            chromiumProfileDirectory: nil,
+            isEnabled: true
+        )
+        let safari = makeTarget(name: "Safari", bundleIdentifier: "com.apple.Safari")
+
+        let result = [chrome, safari].expandingProfiles([
+            "com.google.Chrome": [
+                makeProfile(directory: "Default", name: "Personal"),
+                makeProfile(directory: "Profile 1", name: "Slumber"),
+            ],
+        ])
+
+        #expect(result.count == 3)
+        #expect(result[0].id == chrome.id)
+        #expect(result[0].name == "Google Chrome (Personal)")
+        #expect(result[0].chromiumProfileDirectory == "Default")
+        #expect(result[0].purpose == "Work links")
+        #expect(result[1].name == "Google Chrome (Slumber)")
+        #expect(result[1].chromiumProfileDirectory == "Profile 1")
+        #expect(result[1].isEnabled)
+        #expect(result[2].id == safari.id)
+    }
+
+    @Test("A single profile keeps one plain target")
+    func singleProfileKeepsPlainTarget() {
+        let chrome = makeTarget(name: "Google Chrome", bundleIdentifier: "com.google.Chrome")
+
+        let result = [chrome].expandingProfiles([
+            "com.google.Chrome": [makeProfile(directory: "Default", name: "Personal")],
+        ])
+
+        #expect(result == [chrome])
+    }
+
+    @Test("A rescan keeps profile targets and adds new profiles")
+    func profileExpansionKeepsConfiguration() {
+        let personal = BrowserTarget(
+            id: UUID(),
+            name: "Chrome Work",
+            bundleIdentifier: "com.google.Chrome",
+            purpose: "Company links",
+            chromiumProfileDirectory: "Default",
+            isEnabled: false
+        )
+
+        let result = [personal].expandingProfiles([
+            "com.google.Chrome": [
+                makeProfile(directory: "Default", name: "Personal"),
+                makeProfile(directory: "Profile 1", name: "Slumber"),
+            ],
+        ])
+
+        #expect(result.count == 2)
+        #expect(result[0] == personal)
+        #expect(result[1].name == "Chrome Work (Slumber)")
+        #expect(result[1].chromiumProfileDirectory == "Profile 1")
+    }
+
+    @Test("A profile launch passes the original URL as one argument")
+    func profileLaunchArguments() throws {
+        let url = try #require(URL(string: "https://example.com/a%20b?q=one two;rm -rf /#frag"))
+
+        let arguments = BrowserLauncher.profileLaunchArguments(
+            applicationPath: "/Applications/Google Chrome.app",
+            profileDirectory: "Profile 1",
+            url: url
+        )
+
+        #expect(arguments == [
+            "-na",
+            "/Applications/Google Chrome.app",
+            "--args",
+            "--profile-directory=Profile 1",
+            url.absoluteString,
+        ])
+        #expect(arguments.last == url.absoluteString)
     }
 
     @Test("URL queue advances in FIFO order")
@@ -305,6 +389,15 @@ struct ReflexTests {
             isEnabled: true
         )
     }
+}
+
+private func makeProfile(directory: String, name: String) -> DiscoveredBrowserProfile {
+    DiscoveredBrowserProfile(
+        browserName: "Google Chrome",
+        bundleIdentifier: "com.google.Chrome",
+        profileDirectory: directory,
+        profileName: name
+    )
 }
 
 private struct FakeBrowserQuery: BrowserApplicationQuerying {

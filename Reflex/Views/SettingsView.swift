@@ -84,90 +84,117 @@ struct SettingsView: View {
                         .foregroundStyle(.secondary)
                 }
                 let shortcutNumbers = shortcutNumbers()
-                ForEach($state.targets) { $target in
-                    VStack(alignment: .leading, spacing: 6) {
-                        HStack {
-                            DragHandle(target: target, draggingTargetID: $draggingTargetID)
-                            Toggle("Enabled", isOn: $target.isEnabled).labelsHidden()
-                            if let icon = state.icon(for: target) {
-                                Image(nsImage: icon)
-                                    .resizable()
-                                    .frame(width: 24, height: 24)
-                                    .accessibilityHidden(true)
-                            }
-                            TextField("Name", text: $target.name)
-                                .labelsHidden()
-                                .accessibilityLabel("Target name")
-                            if !state.isAvailable(target) {
-                                Text("Unavailable").foregroundStyle(.secondary)
-                            }
-                            keyBadge(shortcutNumbers[target.id])
-                            Button(role: .destructive) {
-                                state.removeTarget(id: target.id)
-                            } label: {
-                                Image(systemName: "trash")
-                                    .frame(width: 22, height: 22)
-                            }
-                            .buttonStyle(.borderless)
-                            .accessibilityLabel("Remove \(target.name)")
+                ForEach(browserGroups(), id: \.first) { indices in
+                    VStack(alignment: .leading, spacing: 8) {
+                        browserHeader(for: indices)
+                        ForEach(indices, id: \.self) { index in
+                            targetRow(index: index, shortcutNumbers: shortcutNumbers)
                         }
-                        Text(target.bundleIdentifier)
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
-                        TextField("Purpose", text: $target.purpose)
-                        TextField(
-                            "Chromium profile directory (optional)",
-                            text: Binding(
-                                get: { target.chromiumProfileDirectory ?? "" },
-                                set: { target.chromiumProfileDirectory = $0.isEmpty ? nil : $0 }
-                            )
-                        )
-                        .font(.caption)
                     }
                     .padding(.vertical, 4)
-                    .opacity(draggingTargetID == target.id ? 0.4 : 1)
-                    .onDrop(
-                        of: [.text],
-                        delegate: TargetDropDelegate(
-                            target: target,
-                            targets: $state.targets,
-                            draggingTargetID: $draggingTargetID
-                        )
-                    )
                 }
                 HStack {
                     Button("Add Browser…") { addBrowser() }
                     Button("Rescan Browsers") { state.rescanBrowsers() }
-                    Button("Rescan Profiles") { state.discoverProfiles() }
                 }
-                if !state.discoveredProfiles.isEmpty {
-                    Divider()
-                    Text("Discovered profiles")
-                        .font(.headline)
-                    ForEach(state.discoveredProfiles) { profile in
-                        HStack {
-                            VStack(alignment: .leading) {
-                                Text("\(profile.browserName) — \(profile.profileName)")
-                                Text(profile.profileDirectory)
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-                            }
-                            Spacer()
-                            Button("Add") { state.addDiscoveredProfile(profile) }
-                                .accessibilityLabel("Add \(profile.browserName) profile \(profile.profileName)")
-                        }
-                    }
-                }
+                Text("A browser with more than one profile becomes one target for each profile. A browser with a single profile stays one target. Select Add Profile to enter a profile directory yourself.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
                 if let message = state.profileDiscoveryMessage {
                     Text(message)
                         .font(.caption)
                         .foregroundStyle(.secondary)
+                    Button("Open Privacy Settings") { state.openPrivacySettings() }
+                        .controlSize(.small)
                 }
             }
         }
         .formStyle(.grouped)
         .padding()
-        .onAppear { state.discoverProfiles() }
+    }
+
+    /// Targets of one browser sit next to each other, so a run of them is one group.
+    private func browserGroups() -> [[Int]] {
+        var groups: [[Int]] = []
+        for index in state.targets.indices {
+            if let lastIndex = groups.last?.last,
+               state.targets[lastIndex].bundleIdentifier == state.targets[index].bundleIdentifier {
+                groups[groups.count - 1].append(index)
+            } else {
+                groups.append([index])
+            }
+        }
+        return groups
+    }
+
+    @ViewBuilder
+    private func browserHeader(for indices: [Int]) -> some View {
+        let target = state.targets[indices[0]]
+        HStack(spacing: 8) {
+            if let icon = state.icon(for: target) {
+                Image(nsImage: icon)
+                    .resizable()
+                    .frame(width: 20, height: 20)
+                    .accessibilityHidden(true)
+            }
+            Text(BrowserTarget.baseName(of: target.name))
+                .font(.system(size: 13, weight: .semibold))
+            Text(target.bundleIdentifier)
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+            Spacer()
+            if BrowserProfileDiscovery.supportsProfiles(bundleIdentifier: target.bundleIdentifier) {
+                Button("Add Profile") {
+                    state.addProfileTarget(bundleIdentifier: target.bundleIdentifier)
+                }
+                .controlSize(.small)
+                .accessibilityLabel("Add a profile to \(BrowserTarget.baseName(of: target.name))")
+            }
+        }
+    }
+
+    private func targetRow(index: Int, shortcutNumbers: [UUID: Int]) -> some View {
+        let target = state.targets[index]
+        return VStack(alignment: .leading, spacing: 6) {
+            HStack {
+                DragHandle(target: target, draggingTargetID: $draggingTargetID)
+                Toggle("Enabled", isOn: $state.targets[index].isEnabled).labelsHidden()
+                TextField("Name", text: $state.targets[index].name)
+                    .labelsHidden()
+                    .accessibilityLabel("Target name")
+                if !state.isAvailable(target) {
+                    Text("Unavailable").foregroundStyle(.secondary)
+                }
+                keyBadge(shortcutNumbers[target.id])
+                Button(role: .destructive) {
+                    state.removeTarget(id: target.id)
+                } label: {
+                    Image(systemName: "trash")
+                        .frame(width: 22, height: 22)
+                }
+                .buttonStyle(.borderless)
+                .accessibilityLabel("Remove \(target.name)")
+            }
+            TextField("Purpose", text: $state.targets[index].purpose)
+            TextField(
+                "Chromium profile directory (optional)",
+                text: Binding(
+                    get: { state.targets[index].chromiumProfileDirectory ?? "" },
+                    set: { state.targets[index].chromiumProfileDirectory = $0.isEmpty ? nil : $0 }
+                )
+            )
+            .font(.caption)
+        }
+        .padding(.leading, 12)
+        .opacity(draggingTargetID == target.id ? 0.4 : 1)
+        .onDrop(
+            of: [.text],
+            delegate: TargetDropDelegate(
+                target: target,
+                targets: $state.targets,
+                draggingTargetID: $draggingTargetID
+            )
+        )
     }
 
     /// An empty badge keeps the trash button in the same column on every row.

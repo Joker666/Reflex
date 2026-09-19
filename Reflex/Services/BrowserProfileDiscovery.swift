@@ -12,6 +12,7 @@ struct DiscoveredBrowserProfile: Identifiable, Equatable {
 struct BrowserProfileDiscoveryResult: Equatable {
     var profiles: [DiscoveredBrowserProfile]
     var unreadableBrowserNames: [String]
+    var readableBundleIdentifiers: Set<String> = []
 }
 
 struct BrowserProfileDiscovery {
@@ -28,26 +29,22 @@ struct BrowserProfileDiscovery {
     }
 
     func discover(for targets: [BrowserTarget]) -> BrowserProfileDiscoveryResult {
-        let configuredProfiles = Set(targets.compactMap { target -> String? in
-            guard let directory = target.chromiumProfileDirectory else { return nil }
-            return key(bundleIdentifier: target.bundleIdentifier, profileDirectory: directory)
-        })
         let browsers = Dictionary(
-            targets.map { ($0.bundleIdentifier, $0.name) },
+            targets.map { ($0.bundleIdentifier, baseBrowserName(for: $0.bundleIdentifier, in: targets)) },
             uniquingKeysWith: { first, _ in first }
         )
 
         let results = browsers.map { bundleIdentifier, browserName in
-            discover(
-                browserName: browserName,
-                bundleIdentifier: bundleIdentifier,
-                excluding: configuredProfiles
-            )
+            discover(browserName: browserName, bundleIdentifier: bundleIdentifier)
         }
         let profiles = results.flatMap(\.profiles).sorted {
             let browserOrder = $0.browserName.localizedCaseInsensitiveCompare($1.browserName)
             if browserOrder == .orderedSame {
-                return $0.profileDirectory.localizedStandardCompare($1.profileDirectory) == .orderedAscending
+                // The default profile comes first, so it keeps the plain target's purpose.
+                if ($0.profileDirectory == "Default") != ($1.profileDirectory == "Default") {
+                    return $0.profileDirectory == "Default"
+                }
+                return $0.profileName.localizedStandardCompare($1.profileName) == .orderedAscending
             }
             return browserOrder == .orderedAscending
         }
@@ -56,34 +53,43 @@ struct BrowserProfileDiscovery {
         }
         return BrowserProfileDiscoveryResult(
             profiles: profiles,
-            unreadableBrowserNames: unreadableBrowserNames
+            unreadableBrowserNames: unreadableBrowserNames,
+            readableBundleIdentifiers: Set(results.compactMap(\.readableBundleIdentifier))
         )
+    }
+
+    /// A target that already carries a profile has the profile in its name, so it is not a base name.
+    private func baseBrowserName(for bundleIdentifier: String, in targets: [BrowserTarget]) -> String {
+        let group = targets.filter { $0.bundleIdentifier == bundleIdentifier }
+        if let plain = group.first(where: { $0.chromiumProfileDirectory == nil }) {
+            return plain.name
+        }
+        return group.first.map { BrowserTarget.baseName(of: $0.name) } ?? bundleIdentifier
     }
 
     private func discover(
         browserName: String,
-        bundleIdentifier: String,
-        excluding configuredProfiles: Set<String>
-    ) -> (profiles: [DiscoveredBrowserProfile], unreadableBrowserName: String?) {
+        bundleIdentifier: String
+    ) -> (
+        profiles: [DiscoveredBrowserProfile],
+        unreadableBrowserName: String?,
+        readableBundleIdentifier: String?
+    ) {
         guard let relativeDirectory = Self.relativeDataDirectory(for: bundleIdentifier) else {
-            return ([], nil)
+            return ([], nil, nil)
         }
         let dataDirectory = applicationSupportURL.appending(path: relativeDirectory, directoryHint: .isDirectory)
         let localStateURL = dataDirectory.appending(path: "Local State")
-        guard fileManager.fileExists(atPath: localStateURL.path) else { return ([], nil) }
+        guard fileManager.fileExists(atPath: localStateURL.path) else { return ([], nil, nil) }
         guard let data = try? Data(contentsOf: localStateURL),
               let root = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
               let profile = root["profile"] as? [String: Any],
               let infoCache = profile["info_cache"] as? [String: Any] else {
-            return ([], browserName)
+            return ([], browserName, nil)
         }
 
         let profiles: [DiscoveredBrowserProfile] = infoCache.compactMap { directory, value in
             guard BrowserLauncher.isValidProfileDirectory(directory),
-                  !configuredProfiles.contains(key(
-                    bundleIdentifier: bundleIdentifier,
-                    profileDirectory: directory
-                  )),
                   fileManager.fileExists(atPath: dataDirectory.appending(path: directory).path) else {
                 return nil
             }
@@ -98,11 +104,11 @@ struct BrowserProfileDiscovery {
                 profileName: profileName
             )
         }
-        return (profiles, nil)
+        return (profiles, nil, bundleIdentifier)
     }
 
-    private func key(bundleIdentifier: String, profileDirectory: String) -> String {
-        "\(bundleIdentifier)|\(profileDirectory)"
+    static func supportsProfiles(bundleIdentifier: String) -> Bool {
+        relativeDataDirectory(for: bundleIdentifier) != nil
     }
 
     private static func relativeDataDirectory(for bundleIdentifier: String) -> String? {

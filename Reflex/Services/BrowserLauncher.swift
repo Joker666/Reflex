@@ -27,6 +27,15 @@ struct BrowserLauncher {
             }
     }
 
+    /// One argument per element, so a URL can never become shell syntax.
+    static func profileLaunchArguments(
+        applicationPath: String,
+        profileDirectory: String,
+        url: URL
+    ) -> [String] {
+        ["-na", applicationPath, "--args", "--profile-directory=\(profileDirectory)", url.absoluteString]
+    }
+
     func isAvailable(_ target: BrowserTarget) -> Bool {
         applicationURL(for: target) != nil
     }
@@ -46,9 +55,11 @@ struct BrowserLauncher {
             }
             let process = Process()
             process.executableURL = URL(fileURLWithPath: "/usr/bin/open")
-            process.arguments = [
-                "-na", applicationURL.path, "--args", "--profile-directory=\(profile)", originalURL.absoluteString,
-            ]
+            process.arguments = Self.profileLaunchArguments(
+                applicationPath: applicationURL.path,
+                profileDirectory: profile,
+                url: originalURL
+            )
             let terminationStatus: Int32 = try await withCheckedThrowingContinuation { continuation in
                 process.terminationHandler = { completedProcess in
                     continuation.resume(returning: completedProcess.terminationStatus)

@@ -14,7 +14,6 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
     func show() {
         state.rescanBrowsers()
         state.refreshDefaultBrowserStatus()
-        state.discoverProfiles()
 
         let window = window ?? makeWindow()
         self.window = window

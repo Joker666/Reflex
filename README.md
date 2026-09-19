@@ -43,9 +43,19 @@ The script runs all tests, creates a Release archive with Developer ID signing, 
 
 Reflex scans the applications that Launch Services reports for representative HTTP and HTTPS URLs. It keeps Safari, Chrome, Dia, Comet, Helium, Edge, Phi, Zen, and Firefox. It removes other handlers from the target list. It enables new supported browsers and gives each one a neutral purpose. Open Settings to disable unwanted targets, edit names and purposes, or select **Rescan Browsers**.
 
-Select **Rescan Profiles** to find local Chromium profile names and directory identifiers for Chrome, Edge, Comet, Dia, Helium, and Phi. Reflex reads only those two fields from each browser's `Local State` file. It does not read account details, history, cookies, or page data. A discovered name stays local until you select **Add** to create a separate editable routing target. Safari, Firefox, and Zen profile discovery is not supported because they do not use the same Chromium launch argument.
+## Profiles
 
-macOS can deny access to some browser data directories. Reflex reports the affected browser and keeps the manual profile directory field available. Reflex does not ask for Full Disk Access.
+A scan reads the local profile list of Chrome, Edge, Comet, Dia, Helium, and Phi. Reflex reads only the profile directory and the profile name from each browser's `Local State` file. It does not read account details, history, cookies, or page data.
+
+- A browser with more than one profile becomes one target for each profile, for example **Google Chrome (Personal)** and **Google Chrome (Slumber)**.
+- A browser with a single profile stays one target, named after the browser.
+- A rescan adds a new profile and keeps your names, purposes, order, and switches.
+- Safari, Firefox, and Zen have no profile support, because they do not accept the Chromium profile argument.
+
+macOS can deny access to a browser's data directory. Chrome and Edge are the usual ones. Reflex then names the affected browser and offers two ways forward:
+
+1. Give Reflex Full Disk Access in System Settings, then select **Rescan Browsers**. Reflex reads the profile names and creates the targets.
+2. Select **Add Profile** in the browser group and type the profile directory, for example `Default` or `Profile 1`. Chrome shows the directory of the open profile at `chrome://version`, in the Profile Path line.
 
 Select **Make Reflex Default Browser**. Setup is complete only when Reflex is the handler for both HTTP and HTTPS. If macOS does not allow the direct change, Reflex opens System Settings. In **Desktop & Dock**, set **Default web browser** to Reflex.
 
