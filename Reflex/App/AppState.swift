@@ -103,7 +103,7 @@ final class AppState: ObservableObject {
         self.defaultBrowserService = defaultBrowserService
         if let data = defaults.data(forKey: targetsKey),
            let storedTargets = try? JSONDecoder().decode([BrowserTarget].self, from: data) {
-            targets = storedTargets
+            targets = storedTargets.groupingTargetsByBrowser()
         }
         storedShowsMenuBarItem = defaults.object(forKey: menuBarItemKey) as? Bool ?? true
         chooserModifier = ChooserModifier.fromStoredValue(defaults.string(forKey: chooserModifierKey))

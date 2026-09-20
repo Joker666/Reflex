@@ -32,6 +32,60 @@ extension BrowserTarget {
 // MARK: - Discovery & Profile Expansion
 
 extension Array where Element == BrowserTarget {
+    /// Keep all targets for one browser together while preserving the first browser and target order.
+    func groupingTargetsByBrowser() -> [BrowserTarget] {
+        var bundleIdentifierOrder: [String] = []
+        var groups: [String: [BrowserTarget]] = [:]
+
+        for target in self {
+            if groups[target.bundleIdentifier] == nil {
+                bundleIdentifierOrder.append(target.bundleIdentifier)
+            }
+            groups[target.bundleIdentifier, default: []].append(target)
+        }
+
+        return bundleIdentifierOrder.flatMap { groups[$0] ?? [] }
+    }
+
+    /// Reorder one profile inside its browser, or move the full browser group across browsers.
+    func movingTarget(_ targetID: UUID, over destinationID: UUID) -> [BrowserTarget] {
+        let grouped = groupingTargetsByBrowser()
+        guard targetID != destinationID,
+              let sourceIndex = grouped.firstIndex(where: { $0.id == targetID }),
+              let destinationIndex = grouped.firstIndex(where: { $0.id == destinationID }) else {
+            return grouped
+        }
+
+        let sourceBundleIdentifier = grouped[sourceIndex].bundleIdentifier
+        let destinationBundleIdentifier = grouped[destinationIndex].bundleIdentifier
+
+        if sourceBundleIdentifier == destinationBundleIdentifier {
+            var result = grouped
+            let target = result.remove(at: sourceIndex)
+            result.insert(target, at: destinationIndex)
+            return result
+        }
+
+        let sourceGroup = grouped.filter { $0.bundleIdentifier == sourceBundleIdentifier }
+        var result = grouped.filter { $0.bundleIdentifier != sourceBundleIdentifier }
+        guard let firstDestinationIndex = result.firstIndex(where: {
+            $0.bundleIdentifier == destinationBundleIdentifier
+        }) else {
+            return grouped
+        }
+
+        let insertionIndex: Int
+        if sourceIndex < destinationIndex {
+            insertionIndex = result.lastIndex(where: {
+                $0.bundleIdentifier == destinationBundleIdentifier
+            }).map { result.index(after: $0) } ?? firstDestinationIndex
+        } else {
+            insertionIndex = firstDestinationIndex
+        }
+        result.insert(contentsOf: sourceGroup, at: insertionIndex)
+        return result
+    }
+
     /// A browser with more than one profile becomes one target per profile. A browser with a
     /// single profile stays one plain target, so the chooser shows only the browser name.
     func expandingProfiles(

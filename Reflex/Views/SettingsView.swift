@@ -358,25 +358,18 @@ private struct TargetDropDelegate: DropDelegate {
     @Binding var targets: [BrowserTarget]
     @Binding var draggingTargetID: UUID?
 
-    func dropEntered(info: DropInfo) {
-        guard let draggingTargetID,
-              draggingTargetID != target.id,
-              let from = targets.firstIndex(where: { $0.id == draggingTargetID }),
-              let to = targets.firstIndex(where: { $0.id == target.id }) else {
-            return
-        }
-        withAnimation {
-            targets.move(fromOffsets: IndexSet(integer: from), toOffset: to > from ? to + 1 : to)
-        }
-    }
-
     func dropUpdated(info: DropInfo) -> DropProposal? {
         DropProposal(operation: draggingTargetID == nil ? .cancel : .move)
     }
 
     func performDrop(info: DropInfo) -> Bool {
-        let wasDragging = draggingTargetID != nil
+        guard let draggedID = draggingTargetID else { return false }
+        // Apply the move on drop. A live row move can put the pointer over a different
+        // row and immediately reverse a full browser-group move.
+        withAnimation {
+            targets = targets.movingTarget(draggedID, over: target.id)
+        }
         draggingTargetID = nil
-        return wasDragging
+        return true
     }
 }

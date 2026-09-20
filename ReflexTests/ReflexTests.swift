@@ -6,6 +6,44 @@ import Testing
 
 @Suite("Phase 1 routing")
 struct ReflexTests {
+    @Test("Target grouping repairs split browser groups")
+    func targetGroupingRepairsSplitBrowserGroups() {
+        let chromePersonal = makeTarget(name: "Chrome Personal", bundleIdentifier: "com.google.Chrome")
+        let safari = makeTarget(name: "Safari", bundleIdentifier: "com.apple.Safari")
+        let chromeWork = makeTarget(name: "Chrome Work", bundleIdentifier: "com.google.Chrome")
+
+        let result = [chromePersonal, safari, chromeWork].groupingTargetsByBrowser()
+
+        #expect(result.map(\.id) == [chromePersonal.id, chromeWork.id, safari.id])
+    }
+
+    @Test("Dragging inside a browser reorders only its profiles")
+    func targetMoveReordersProfilesInsideBrowser() {
+        let chromePersonal = makeTarget(name: "Chrome Personal", bundleIdentifier: "com.google.Chrome")
+        let chromeWork = makeTarget(name: "Chrome Work", bundleIdentifier: "com.google.Chrome")
+        let safari = makeTarget(name: "Safari", bundleIdentifier: "com.apple.Safari")
+
+        let result = [chromePersonal, chromeWork, safari]
+            .movingTarget(chromePersonal.id, over: chromeWork.id)
+
+        #expect(result.map(\.id) == [chromeWork.id, chromePersonal.id, safari.id])
+    }
+
+    @Test("Dragging across browsers moves the full browser group")
+    func targetMoveKeepsBrowserGroupTogether() {
+        let chromePersonal = makeTarget(name: "Chrome Personal", bundleIdentifier: "com.google.Chrome")
+        let chromeWork = makeTarget(name: "Chrome Work", bundleIdentifier: "com.google.Chrome")
+        let safari = makeTarget(name: "Safari", bundleIdentifier: "com.apple.Safari")
+        let firefox = makeTarget(name: "Firefox", bundleIdentifier: "org.mozilla.firefox")
+
+        let movedDown = [chromePersonal, chromeWork, safari, firefox]
+            .movingTarget(chromeWork.id, over: safari.id)
+        let movedUp = movedDown.movingTarget(chromePersonal.id, over: safari.id)
+
+        #expect(movedDown.map(\.id) == [safari.id, chromePersonal.id, chromeWork.id, firefox.id])
+        #expect(movedUp.map(\.id) == [chromePersonal.id, chromeWork.id, safari.id, firefox.id])
+    }
+
     @Test("Profile validation rejects control characters")
     func profileValidation() {
         #expect(BrowserLauncher.isValidProfileDirectory("Profile 1"))
@@ -1092,4 +1130,3 @@ private final class MockAppleEventDescriptor: NSAppleEventDescriptor {
         attributes[keyword]
     }
 }
-
