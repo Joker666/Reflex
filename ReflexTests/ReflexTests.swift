@@ -635,6 +635,54 @@ struct ReflexTests {
         #expect(state.pendingURL == nil)
     }
 
+    @Test("Turning off usesJev while Jev request is active cancels routing and keeps pending link in chooser")
+    @MainActor
+    func turningOffUsesJevWhileRoutingCancelsActiveTask() async throws {
+        let suiteName = "ReflexTests.\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let targets = [
+            makeTarget(name: "Chrome", bundleIdentifier: "com.google.Chrome"),
+            makeTarget(name: "Safari", bundleIdentifier: "com.apple.Safari"),
+        ]
+        defaults.set(try JSONEncoder().encode(targets), forKey: "browserTargets")
+        defaults.set(true, forKey: "usesJev")
+        let recorder = BrowserOpenRecorder()
+        let decider = ControllableJevDecider()
+        let state = AppState(
+            keychain: TestKeychainStore(apiKey: "test-key"),
+            launcher: RecordingBrowserLauncher(recorder: recorder),
+            jevClient: decider,
+            defaults: defaults,
+            browserScanner: FixedBrowserScanner(),
+            defaultBrowserService: FixedDefaultBrowserService()
+        )
+        #expect(state.usesJev)
+
+        state.receive([URL(string: "https://example.com")!])
+        await decider.waitUntilStarted()
+        #expect(state.isRouting)
+        #expect(state.pendingURL != nil)
+
+        // Switch off automatic selection while the Jev request is active
+        state.usesJev = false
+
+        #expect(!state.isRouting)
+        #expect(state.pendingURL != nil)
+        #expect(state.suggestedTargetID == nil)
+
+        // Complete the in-flight request with high confidence
+        await decider.complete(targetID: targets[0].id, confidence: 1.0)
+        for _ in 0..<20 {
+            await Task.yield()
+        }
+
+        // Must NOT auto-open; must remain in the chooser
+        #expect(await recorder.targetID == nil)
+        #expect(state.pendingURL != nil)
+        #expect(state.suggestedTargetID == nil)
+    }
+
     @Test("An old Jev decision cannot route the next link")
     @MainActor
     func staleJevDecisionCannotRouteNextLink() async throws {
@@ -952,6 +1000,46 @@ private struct FirstTargetJevDecider: JevDeciding {
         apiKey: String
     ) async throws -> RouteDecision {
         RouteDecision(targetID: targets[0].id, confidence: 1)
+    }
+}
+
+private actor ControllableJevDecider: JevDeciding {
+    private var continuation: CheckedContinuation<RouteDecision, Error>?
+    private var startedContinuation: CheckedContinuation<Void, Never>?
+    private var hasStarted = false
+
+    func decide(
+        context: RoutingContext,
+        targets: [BrowserTarget],
+        apiKey: String
+    ) async throws -> RouteDecision {
+        try await withTaskCancellationHandler {
+            try await withCheckedThrowingContinuation { cont in
+                continuation = cont
+                hasStarted = true
+                startedContinuation?.resume()
+                startedContinuation = nil
+            }
+        } onCancel: {
+            Task { await self.cancel() }
+        }
+    }
+
+    func waitUntilStarted() async {
+        if hasStarted { return }
+        await withCheckedContinuation { cont in
+            startedContinuation = cont
+        }
+    }
+
+    func cancel() {
+        continuation?.resume(throwing: CancellationError())
+        continuation = nil
+    }
+
+    func complete(targetID: UUID, confidence: Double = 1.0) {
+        continuation?.resume(returning: RouteDecision(targetID: targetID, confidence: confidence))
+        continuation = nil
     }
 }
 

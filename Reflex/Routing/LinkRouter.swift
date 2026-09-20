@@ -93,8 +93,25 @@ final class LinkRouter: ObservableObject {
         advancePending(expectedLinkID: linkID)
     }
 
+    func cancelRouting() {
+        routingTask?.cancel()
+        routingTask = nil
+        routingLinkID = nil
+        isRouting = false
+        suggestedTargetID = nil
+        isJevUnavailable = false
+        if pendingURL != nil {
+            chooserPresenter?.presentChooser()
+        }
+    }
+
     func retryPending() {
-        if pendingURL != nil { routePending() }
+        guard pendingURL != nil else { return }
+        if !usesJev() {
+            cancelRouting()
+            return
+        }
+        routePending()
     }
 
     private func advancePending(expectedLinkID: UUID) {
@@ -191,7 +208,7 @@ final class LinkRouter: ObservableObject {
                     targets: targets,
                     apiKey: apiKey
                 )
-                guard !Task.isCancelled, self.queue.current?.id == linkID else { return }
+                guard !Task.isCancelled, self.queue.current?.id == linkID, self.usesJev() else { return }
                 ReflexLog.jev.info("Jev decision returned with confidence: \(decision.confidence, privacy: .public)")
                 self.apply(
                     RoutingPolicy.action(availableTargets: targets, decision: decision),
@@ -199,7 +216,7 @@ final class LinkRouter: ObservableObject {
                     linkID: linkID
                 )
             } catch {
-                guard !Task.isCancelled, self.queue.current?.id == linkID else { return }
+                guard !Task.isCancelled, self.queue.current?.id == linkID, self.usesJev() else { return }
                 ReflexLog.jev.error("Jev decision failed or timed out: \(error.localizedDescription, privacy: .private)")
                 self.isJevUnavailable = true
                 self.suggestedTargetID = nil
@@ -213,6 +230,10 @@ final class LinkRouter: ObservableObject {
         case .setup:
             suggestedTargetID = nil
         case let .open(targetID):
+            guard usesJev() else {
+                suggestedTargetID = nil
+                return
+            }
             if let target = targets.first(where: { $0.id == targetID }) {
                 openPending(in: target)
             }

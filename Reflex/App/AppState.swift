@@ -29,7 +29,11 @@ final class AppState: ObservableObject {
     @Published var usesJev = true {
         didSet {
             defaults.set(usesJev, forKey: usesJevKey)
-            linkRouter.retryPending()
+            if !usesJev {
+                linkRouter.cancelRouting()
+            } else {
+                linkRouter.retryPending()
+            }
         }
     }
     /// Not @Published: MenuBarExtra writes this binding on every update, and a publish

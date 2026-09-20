@@ -3,31 +3,75 @@ import UniformTypeIdentifiers
 
 struct SettingsView: View {
     @ObservedObject var state: AppState
+    @FocusState private var isFieldFocused: Bool
     @State private var apiKey = ""
+    @State private var isShowingSavedPlaceholder = false
     @State private var keyMessage: String?
     @State private var draggingTargetID: UUID?
+
+    private let savedKeyMask = "••••••••••••••••"
+
+    private var isKeySaveable: Bool {
+        !isShowingSavedPlaceholder &&
+        apiKey != savedKeyMask &&
+        !apiKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
 
     var body: some View {
         Form {
             Section("OpenRouter") {
                 SecureField("API key", text: $apiKey)
+                    .focused($isFieldFocused)
                     .textContentType(.password)
                     .accessibilityLabel("OpenRouter API key")
+                    .accessibilityValue(isShowingSavedPlaceholder ? "Saved in Keychain" : (apiKey.isEmpty ? "Not configured" : "Entered API key"))
+                    .onChange(of: isFieldFocused) { _, isFocused in
+                        if isFocused {
+                            if isShowingSavedPlaceholder || apiKey == savedKeyMask {
+                                apiKey = ""
+                                isShowingSavedPlaceholder = false
+                            }
+                        } else {
+                            if apiKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && state.hasAPIKey {
+                                apiKey = savedKeyMask
+                                isShowingSavedPlaceholder = true
+                            }
+                        }
+                    }
+                    .onAppear {
+                        if state.hasAPIKey && apiKey.isEmpty {
+                            apiKey = savedKeyMask
+                            isShowingSavedPlaceholder = true
+                        }
+                    }
+                    .onChange(of: state.hasAPIKey) { _, hasKey in
+                        if !hasKey {
+                            apiKey = ""
+                            isShowingSavedPlaceholder = false
+                        } else if !isFieldFocused && (apiKey.isEmpty || isShowingSavedPlaceholder) {
+                            apiKey = savedKeyMask
+                            isShowingSavedPlaceholder = true
+                        }
+                    }
                 HStack {
                     Button("Save") {
                         do {
                             try state.saveAPIKey(apiKey)
-                            apiKey = ""
+                            isFieldFocused = false
+                            apiKey = savedKeyMask
+                            isShowingSavedPlaceholder = true
                             keyMessage = "The API key is saved in Keychain."
                         } catch {
                             keyMessage = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
                         }
                     }
-                    .disabled(apiKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                    .disabled(!isKeySaveable)
                     Button("Remove") {
                         do {
                             try state.removeAPIKey()
+                            isFieldFocused = false
                             apiKey = ""
+                            isShowingSavedPlaceholder = false
                             keyMessage = "The API key was removed."
                         } catch {
                             keyMessage = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
