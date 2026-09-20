@@ -37,13 +37,13 @@ Before the first production release:
    NOTARY_PROFILE=ReflexNotary ./Scripts/distribute.sh
    ```
 
-The script runs all tests, creates a Release archive with Developer ID signing, verifies the signature, submits a ZIP to Apple with `notarytool`, staples and validates the ticket, checks the app with Gatekeeper, and writes the final ZIP and SHA-256 digest under `dist/`. It stops before building if the required certificate or notarization credential is missing. It does not store signing secrets in the repository.
+The script runs all tests, creates a Release archive with Developer ID signing, builds and signs a DMG that contains Reflex and an Applications shortcut, submits the DMG to Apple with `notarytool`, staples and validates the ticket, checks the DMG with Gatekeeper, and writes the final DMG and SHA-256 digest under `dist/`. It stops before building if the required certificate or notarization credential is missing. It does not store signing secrets in the repository.
 
 ### GitHub CI and releases
 
 GitHub Actions runs the tests and an unsigned Release build for each pull request and each push to `main`.
 
-The release workflow starts when a tag such as `v0.1.0` is pushed. The tag version must equal `MARKETING_VERSION`. The workflow imports a temporary Developer ID certificate, runs the distribution script, notarizes and verifies the app, and creates a GitHub release with the ZIP and its SHA-256 file. It does not publish an unsigned or unnotarized app.
+The release workflow starts when a tag such as `v0.1.0` is pushed. The tag version must equal `MARKETING_VERSION`. The workflow imports a temporary Developer ID certificate, runs the distribution script, notarizes and verifies the disk image, and creates a GitHub release with the DMG and its SHA-256 file. It does not publish an unsigned or unnotarized app.
 
 Configure these GitHub Actions secrets before a release:
 
@@ -65,7 +65,7 @@ GitHub secrets contain production signing credentials. Give the release workflow
 
 ### Homebrew
 
-Reflex can use a Homebrew cask after the first signed and notarized GitHub release exists. The cask must use the immutable release ZIP URL and its SHA-256 value. Keep the cask in a public tap repository such as `Joker666/homebrew-tap`, under `Casks/reflex.rb`. Do not use an unsigned build or `sha256 :no_check` for a stable release.
+Reflex can use a Homebrew cask after the first signed and notarized GitHub release exists. The cask must use the immutable release DMG URL and its SHA-256 value. Keep the cask in a public tap repository such as `Joker666/homebrew-tap`, under `Casks/reflex.rb`. Do not use an unsigned build or `sha256 :no_check` for a stable release.
 
 ## First setup
 

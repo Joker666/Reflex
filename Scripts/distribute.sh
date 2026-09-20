@@ -13,7 +13,8 @@ api_issuer_id=${APPLE_API_ISSUER_ID:-}
 output_directory=${OUTPUT_DIRECTORY:-${project_directory}/dist}
 temporary_directory=$(mktemp -d "${TMPDIR%/}/ReflexDistribution.XXXXXX")
 archive_path="${temporary_directory}/Reflex.xcarchive"
-unsigned_zip="${temporary_directory}/Reflex-notarization.zip"
+dmg_staging_directory="${temporary_directory}/dmg"
+notarization_dmg="${temporary_directory}/Reflex.dmg"
 
 cleanup() {
     rm -rf "${temporary_directory}"
@@ -73,18 +74,30 @@ app_path="${archive_path}/Products/Applications/Reflex.app"
 [[ -d "${app_path}" ]] || fail "The archive did not contain Reflex.app."
 
 codesign --verify --deep --strict --verbose=2 "${app_path}"
-ditto -c -k --keepParent "${app_path}" "${unsigned_zip}"
-xcrun notarytool submit "${unsigned_zip}" \
+mkdir -p "${dmg_staging_directory}"
+ditto "${app_path}" "${dmg_staging_directory}/Reflex.app"
+ln -s /Applications "${dmg_staging_directory}/Applications"
+hdiutil create \
+    -volname Reflex \
+    -srcfolder "${dmg_staging_directory}" \
+    -ov \
+    -format UDZO \
+    "${notarization_dmg}"
+codesign --force --sign "${developer_id_identity}" --timestamp "${notarization_dmg}"
+codesign --verify --verbose=2 "${notarization_dmg}"
+xcrun notarytool submit "${notarization_dmg}" \
     "${notary_arguments[@]}" \
     --wait
-xcrun stapler staple "${app_path}"
-xcrun stapler validate "${app_path}"
-spctl --assess --type execute --verbose=2 "${app_path}"
+xcrun stapler staple "${notarization_dmg}"
+xcrun stapler validate "${notarization_dmg}"
+spctl --assess --type open --context context:primary-signature --verbose=2 "${notarization_dmg}"
+hdiutil verify "${notarization_dmg}"
 
 version=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "${app_path}/Contents/Info.plist")
 build=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "${app_path}/Contents/Info.plist")
 mkdir -p "${output_directory}"
-output_zip="${output_directory}/Reflex-${version}-${build}.zip"
-ditto -c -k --keepParent "${app_path}" "${output_zip}"
-shasum -a 256 "${output_zip}" | tee "${output_zip}.sha256"
-print "Created notarized distribution: ${output_zip}"
+output_dmg="${output_directory}/Reflex-${version}-${build}.dmg"
+ditto "${notarization_dmg}" "${output_dmg}"
+xcrun stapler validate "${output_dmg}"
+shasum -a 256 "${output_dmg}" | tee "${output_dmg}.sha256"
+print "Created notarized distribution: ${output_dmg}"

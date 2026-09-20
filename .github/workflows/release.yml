@@ -82,14 +82,14 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          archive=$(find "$RUNNER_TEMP/release" -maxdepth 1 -name 'Reflex-*.zip' -print -quit)
-          if [[ -z "$archive" ]]; then
-            echo "The release archive was not created." >&2
+          disk_image=$(find "$RUNNER_TEMP/release" -maxdepth 1 -name 'Reflex-*.dmg' -print -quit)
+          if [[ -z "$disk_image" ]]; then
+            echo "The release disk image was not created." >&2
             exit 1
           fi
           gh release create "$GITHUB_REF_NAME" \
-            "$archive" \
-            "$archive.sha256" \
+            "$disk_image" \
+            "$disk_image.sha256" \
             --verify-tag \
             --generate-notes \
             --title "Reflex $GITHUB_REF_NAME"
