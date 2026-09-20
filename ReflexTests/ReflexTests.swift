@@ -783,12 +783,43 @@ struct ReflexTests {
         #expect(state.pendingURL == nil)
     }
 
-    @Test("AppleEventSender extracts sender bundle identifier from PID or address descriptor")
+    @Test("AppleEventSender extracts sender bundle identifier from sender PID or audit token, ignoring target address")
     func appleEventSenderResolution() throws {
         #expect(AppleEventSender.bundleIdentifier(from: nil) == nil)
 
+        let pidEvent = MockAppleEventDescriptor()
+        var pid: pid_t = 4242
+        let pidDesc = try #require(
+            NSAppleEventDescriptor(
+                descriptorType: DescType(typeKernelProcessID),
+                data: Data(bytes: &pid, count: MemoryLayout<pid_t>.size)
+            )
+        )
+        pidEvent.attributes[keySenderPIDAttr] = pidDesc
+
+        let resolved = AppleEventSender.bundleIdentifier(from: pidEvent) { queryPID in
+            queryPID == 4242 ? "com.tinyspeck.slackmacgap" : nil
+        }
+        #expect(resolved == "com.tinyspeck.slackmacgap")
+
+        // Sender audit token attribute
+        let auditEvent = MockAppleEventDescriptor()
+        var token = audit_token_t(val: (0, 0, 0, 0, 0, 4243, 0, 0))
+        let auditDesc = try #require(
+            NSAppleEventDescriptor(
+                descriptorType: DescType(typeWildCard),
+                data: Data(bytes: &token, count: MemoryLayout<audit_token_t>.size)
+            )
+        )
+        auditEvent.attributes[keySenderAuditTokenAttr] = auditDesc
+        let resolvedAudit = AppleEventSender.bundleIdentifier(from: auditEvent) { queryPID in
+            queryPID == 4243 ? "com.tinyspeck.slackmacgap" : nil
+        }
+        #expect(resolvedAudit == "com.tinyspeck.slackmacgap")
+
+        // Target address attributes must NOT be used as sender fallback
         let target = NSAppleEventDescriptor.null()
-        let event = try #require(
+        let targetAddrEvent = try #require(
             NSAppleEventDescriptor.appleEvent(
                 withEventClass: AEEventClass(kInternetEventClass),
                 eventID: AEEventID(kAEGetURL),
@@ -797,22 +828,13 @@ struct ReflexTests {
                 transactionID: AETransactionID(kAnyTransactionID)
             )
         )
-
-        var pid: pid_t = 4242
-        let pidDesc = try #require(
-            NSAppleEventDescriptor(
-                descriptorType: DescType(typeKernelProcessID),
-                data: Data(bytes: &pid, count: MemoryLayout<pid_t>.size)
-            )
-        )
-        event.setAttribute(pidDesc, forKeyword: keyAddressAttr)
-
-        let resolved = AppleEventSender.bundleIdentifier(from: event) { queryPID in
-            queryPID == 4242 ? "com.tinyspeck.slackmacgap" : nil
+        targetAddrEvent.setAttribute(pidDesc, forKeyword: keyAddressAttr)
+        let targetAddrResolved = AppleEventSender.bundleIdentifier(from: targetAddrEvent) { _ in
+            "com.rafi.Reflex"
         }
-        #expect(resolved == "com.tinyspeck.slackmacgap")
+        #expect(targetAddrResolved == nil)
 
-        let unknown = AppleEventSender.bundleIdentifier(from: event) { _ in nil }
+        let unknown = AppleEventSender.bundleIdentifier(from: pidEvent) { _ in nil }
         #expect(unknown == nil)
     }
 
@@ -1063,3 +1085,11 @@ private struct FixedDefaultBrowserService: DefaultBrowserServicing {
 
     func makeDefault() async throws {}
 }
+
+private final class MockAppleEventDescriptor: NSAppleEventDescriptor {
+    var attributes: [AEKeyword: NSAppleEventDescriptor] = [:]
+    override func attributeDescriptor(forKeyword keyword: AEKeyword) -> NSAppleEventDescriptor? {
+        attributes[keyword]
+    }
+}
+
