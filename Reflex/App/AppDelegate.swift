@@ -15,7 +15,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         settingsController = SettingsWindowController(state: state)
         super.init()
         state.chooserPresenter = chooserController
-        state.settingsAction = { [weak settingsController] in settingsController?.show() }
+        state.settingsAction = { [weak settingsController] rescan in
+            settingsController?.show(rescanBrowsers: rescan)
+        }
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -26,7 +28,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         state.rescanBrowsers()
         // macOS delivers a link before this call, so a launch without one opens Settings.
         if !didReceiveURL {
-            settingsController.show(rescanBrowsers: false)
+            openSettings(rescanBrowsers: false)
         }
     }
 
@@ -52,6 +54,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func openSettings() {
-        settingsController.show()
+        openSettings(rescanBrowsers: true)
+    }
+
+    func openSettings(rescanBrowsers: Bool) {
+        settingsController.show(rescanBrowsers: rescanBrowsers)
     }
 }

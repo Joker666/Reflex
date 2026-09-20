@@ -51,7 +51,7 @@ final class AppState: ObservableObject {
         get { linkRouter.chooserPresenter }
         set { linkRouter.chooserPresenter = newValue }
     }
-    var settingsAction: (() -> Void)?
+    var settingsAction: ((_ rescanBrowsers: Bool) -> Void)?
 
     private let launcher: any BrowserLaunching
     private let keychain: any APIKeyStoring
@@ -218,7 +218,8 @@ final class AppState: ObservableObject {
                 Dictionary(grouping: result.profiles, by: \.bundleIdentifier),
                 scannedBundleIdentifiers: scannedProfileBundleIdentifiers,
                 browserNamesByBundleIdentifier: Dictionary(
-                    uniqueKeysWithValues: scan.discoveries.map { ($0.bundleIdentifier, $0.name) }
+                    scan.discoveries.map { ($0.bundleIdentifier, $0.name) },
+                    uniquingKeysWith: { first, _ in first }
                 )
             )
             .clearingGeneratedPurposes()
@@ -254,10 +255,10 @@ final class AppState: ObservableObject {
         )
     }
 
-    func openSettings() {
+    func openSettings(rescanBrowsers: Bool = true) {
         linkRouter.cancelPendingForSettings()
         chooserPresenter?.dismissChooser()
-        settingsAction?()
+        settingsAction?(rescanBrowsers)
     }
 
     func settingsDidClose() {
