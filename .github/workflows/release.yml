@@ -72,8 +72,8 @@ jobs:
           APPLE_API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
           OUTPUT_DIRECTORY: ${{ runner.temp }}/release
         run: |
-          if [[ -z "$APPLE_API_KEY_ID" || -z "$APPLE_API_ISSUER_ID" ]]; then
-            echo "Notarization API key identifiers are not configured." >&2
+          if [[ -z "$APPLE_API_KEY_ID" ]]; then
+            echo "The notarization API key identifier is not configured." >&2
             exit 1
           fi
           ./Scripts/distribute.sh

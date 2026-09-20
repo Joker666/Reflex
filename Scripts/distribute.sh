@@ -35,11 +35,14 @@ fi
 notary_arguments=()
 if [[ -n "${notary_profile}" ]]; then
     notary_arguments=(--keychain-profile "${notary_profile}")
-elif [[ -n "${api_key_path}" && -n "${api_key_id}" && -n "${api_issuer_id}" ]]; then
+elif [[ -n "${api_key_path}" && -n "${api_key_id}" ]]; then
     [[ -f "${api_key_path}" ]] || fail "APPLE_API_KEY_PATH does not point to a file."
-    notary_arguments=(--key "${api_key_path}" --key-id "${api_key_id}" --issuer "${api_issuer_id}")
+    notary_arguments=(--key "${api_key_path}" --key-id "${api_key_id}")
+    if [[ -n "${api_issuer_id}" ]]; then
+        notary_arguments+=(--issuer "${api_issuer_id}")
+    fi
 else
-    fail "Set NOTARY_PROFILE, or set APPLE_API_KEY_PATH, APPLE_API_KEY_ID, and APPLE_API_ISSUER_ID."
+    fail "Set NOTARY_PROFILE, or set APPLE_API_KEY_PATH and APPLE_API_KEY_ID. A team API key also requires APPLE_API_ISSUER_ID."
 fi
 
 cd "${project_directory}"

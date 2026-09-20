@@ -52,7 +52,7 @@ Configure these GitHub Actions secrets before a release:
 - `KEYCHAIN_PASSWORD`: a random password for the temporary CI Keychain
 - `APP_STORE_CONNECT_API_KEY_BASE64`: the App Store Connect `.p8` private key, encoded with Base64
 - `APP_STORE_CONNECT_API_KEY_ID`: the API key identifier
-- `APP_STORE_CONNECT_ISSUER_ID`: the API issuer identifier
+- `APP_STORE_CONNECT_ISSUER_ID`: the API issuer identifier for a team key; leave this unset for an individual key
 
 Create a release only from a clean `main` branch:
 
