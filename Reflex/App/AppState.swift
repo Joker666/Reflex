@@ -207,9 +207,20 @@ final class AppState: ObservableObject {
         browsersWithReadProfiles = result.readableBundleIdentifiers
         profileAccessDeniedBrowsers = result.accessDeniedBrowserNames
         missingProfileDataBrowsers = result.missingProfileDataBrowserNames
+        let scannedProfileBundleIdentifiers = Set(merged.compactMap { target in
+            SupportedBrowser.chromiumProfileDataDirectory(for: target.bundleIdentifier) == nil
+                ? nil
+                : target.bundleIdentifier
+        })
 
         targets = merged
-            .expandingProfiles(Dictionary(grouping: result.profiles, by: \.bundleIdentifier))
+            .expandingProfiles(
+                Dictionary(grouping: result.profiles, by: \.bundleIdentifier),
+                scannedBundleIdentifiers: scannedProfileBundleIdentifiers,
+                browserNamesByBundleIdentifier: Dictionary(
+                    uniqueKeysWithValues: scan.discoveries.map { ($0.bundleIdentifier, $0.name) }
+                )
+            )
             .clearingGeneratedPurposes()
 
         ReflexLog.discovery.info("Rescanned browsers. Discovered \(self.targets.count, privacy: .public) targets (\(result.profiles.count, privacy: .public) profiles)")
@@ -244,9 +255,13 @@ final class AppState: ObservableObject {
     }
 
     func openSettings() {
-        cancelPending()
+        linkRouter.cancelPendingForSettings()
         chooserPresenter?.dismissChooser()
         settingsAction?()
+    }
+
+    func settingsDidClose() {
+        linkRouter.resumePendingAfterSettings()
     }
 
     func openFullDiskAccessSettings() {

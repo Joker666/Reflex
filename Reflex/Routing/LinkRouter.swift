@@ -23,6 +23,7 @@ final class LinkRouter: ObservableObject {
     private var routingLinkID: UUID?
     private var launchTask: Task<Void, Never>?
     private var launchingLinkID: UUID?
+    private var isPausedForSettings = false
 
     init(
         launcher: any BrowserLaunching,
@@ -93,6 +94,17 @@ final class LinkRouter: ObservableObject {
         advancePending(expectedLinkID: linkID)
     }
 
+    func cancelPendingForSettings() {
+        isPausedForSettings = true
+        cancelPending()
+    }
+
+    func resumePendingAfterSettings() {
+        guard isPausedForSettings else { return }
+        isPausedForSettings = false
+        routePending()
+    }
+
     func cancelRouting() {
         routingTask?.cancel()
         routingTask = nil
@@ -139,7 +151,7 @@ final class LinkRouter: ObservableObject {
     }
 
     private func routePending() {
-        guard let link = queue.current, !isRouting else { return }
+        guard let link = queue.current, !isRouting, !isPausedForSettings else { return }
         let linkID = link.id
         let targets = availableTargets()
         skipsAutomaticSelection = link.asksForChooser
@@ -209,10 +221,11 @@ final class LinkRouter: ObservableObject {
                     apiKey: apiKey
                 )
                 guard !Task.isCancelled, self.queue.current?.id == linkID, self.usesJev() else { return }
+                let currentTargets = self.availableTargets()
                 ReflexLog.jev.info("Jev decision returned with confidence: \(decision.confidence, privacy: .public)")
                 self.apply(
-                    RoutingPolicy.action(availableTargets: targets, decision: decision),
-                    targets: targets,
+                    RoutingPolicy.action(availableTargets: currentTargets, decision: decision),
+                    targets: currentTargets,
                     linkID: linkID
                 )
             } catch {

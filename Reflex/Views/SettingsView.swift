@@ -182,11 +182,11 @@ struct SettingsView: View {
                         .foregroundStyle(.secondary)
                 }
                 let shortcutNumbers = shortcutNumbers()
-                ForEach(browserGroups(), id: \.first) { indices in
+                ForEach(browserGroups(), id: \.first) { targetIDs in
                     VStack(alignment: .leading, spacing: 8) {
-                        browserHeader(for: indices)
-                        ForEach(indices, id: \.self) { index in
-                            targetRow(index: index, shortcutNumbers: shortcutNumbers)
+                        browserHeader(for: targetIDs)
+                        ForEach(targetIDs, id: \.self) { targetID in
+                            targetRow(targetID: targetID, shortcutNumbers: shortcutNumbers)
                         }
                     }
                     .padding(.vertical, 4)
@@ -205,81 +205,92 @@ struct SettingsView: View {
     }
 
     /// Targets of one browser sit next to each other, so a run of them is one group.
-    private func browserGroups() -> [[Int]] {
-        var groups: [[Int]] = []
-        for index in state.targets.indices {
-            if let lastIndex = groups.last?.last,
-               state.targets[lastIndex].bundleIdentifier == state.targets[index].bundleIdentifier {
-                groups[groups.count - 1].append(index)
+    private func browserGroups() -> [[UUID]] {
+        var groups: [[UUID]] = []
+        for target in state.targets {
+            if let lastID = groups.last?.last,
+               state.targets.first(where: { $0.id == lastID })?.bundleIdentifier == target.bundleIdentifier {
+                groups[groups.count - 1].append(target.id)
             } else {
-                groups.append([index])
+                groups.append([target.id])
             }
         }
         return groups
     }
 
     @ViewBuilder
-    private func browserHeader(for indices: [Int]) -> some View {
-        let target = state.targets[indices[0]]
-        HStack(spacing: 8) {
-            if let icon = state.icon(for: target) {
-                Image(nsImage: icon)
-                    .resizable()
-                    .frame(width: 20, height: 20)
-                    .accessibilityHidden(true)
+    private func browserHeader(for targetIDs: [UUID]) -> some View {
+        if let targetID = targetIDs.first,
+           let target = state.targets.first(where: { $0.id == targetID }) {
+            HStack(spacing: 8) {
+                if let icon = state.icon(for: target) {
+                    Image(nsImage: icon)
+                        .resizable()
+                        .frame(width: 20, height: 20)
+                        .accessibilityHidden(true)
+                }
+                Text(BrowserTarget.baseName(of: target.name))
+                    .font(.system(size: 13, weight: .semibold))
+                Text(target.bundleIdentifier)
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                Spacer()
             }
-            Text(BrowserTarget.baseName(of: target.name))
-                .font(.system(size: 13, weight: .semibold))
-            Text(target.bundleIdentifier)
-                .font(.caption2)
-                .foregroundStyle(.secondary)
-            Spacer()
         }
     }
 
-    private func targetRow(index: Int, shortcutNumbers: [UUID: Int]) -> some View {
-        let target = state.targets[index]
-        return VStack(alignment: .leading, spacing: 6) {
-            HStack {
-                DragHandle(target: target, draggingTargetID: $draggingTargetID)
-                Toggle("Enabled", isOn: $state.targets[index].isEnabled).labelsHidden()
-                TextField("Name", text: $state.targets[index].name)
-                    .labelsHidden()
-                    .accessibilityLabel("Target name")
-                if !state.isAvailable(target) {
-                    Text("Unavailable").foregroundStyle(.secondary)
+    @ViewBuilder
+    private func targetRow(targetID: UUID, shortcutNumbers: [UUID: Int]) -> some View {
+        if let target = state.targets.first(where: { $0.id == targetID }) {
+            let targetBinding = Binding(
+                get: { state.targets.first(where: { $0.id == targetID }) ?? target },
+                set: { updatedTarget in
+                    guard let index = state.targets.firstIndex(where: { $0.id == targetID }) else { return }
+                    state.targets[index] = updatedTarget
                 }
-                keyBadge(shortcutNumbers[target.id])
-                Button(role: .destructive) {
-                    state.removeTarget(id: target.id)
-                } label: {
-                    Image(systemName: "trash")
-                        .frame(width: 22, height: 22)
+            )
+            VStack(alignment: .leading, spacing: 6) {
+                HStack {
+                    DragHandle(target: target, draggingTargetID: $draggingTargetID)
+                    Toggle("Enabled", isOn: targetBinding.isEnabled).labelsHidden()
+                    TextField("Name", text: targetBinding.name)
+                        .labelsHidden()
+                        .accessibilityLabel("Target name")
+                    if !state.isAvailable(target) {
+                        Text("Unavailable").foregroundStyle(.secondary)
+                    }
+                    keyBadge(shortcutNumbers[target.id])
+                    Button(role: .destructive) {
+                        state.removeTarget(id: target.id)
+                    } label: {
+                        Image(systemName: "trash")
+                            .frame(width: 22, height: 22)
+                    }
+                    .buttonStyle(.borderless)
+                    .accessibilityLabel("Remove \(target.name)")
                 }
-                .buttonStyle(.borderless)
-                .accessibilityLabel("Remove \(target.name)")
+                TextField("Purpose: what you use this target for", text: targetBinding.purpose)
+                    .accessibilityLabel("Purpose")
+                TextField(
+                    "Chromium profile directory (optional)",
+                    text: Binding(
+                        get: { targetBinding.wrappedValue.chromiumProfileDirectory ?? "" },
+                        set: { targetBinding.wrappedValue.chromiumProfileDirectory = $0.isEmpty ? nil : $0 }
+                    )
+                )
+                .font(.caption)
             }
-            TextField("Purpose: what you use this target for", text: $state.targets[index].purpose)
-                .accessibilityLabel("Purpose")
-            TextField(
-                "Chromium profile directory (optional)",
-                text: Binding(
-                    get: { state.targets[index].chromiumProfileDirectory ?? "" },
-                    set: { state.targets[index].chromiumProfileDirectory = $0.isEmpty ? nil : $0 }
+            .padding(.leading, 12)
+            .opacity(draggingTargetID == target.id ? 0.4 : 1)
+            .onDrop(
+                of: [.text],
+                delegate: TargetDropDelegate(
+                    target: target,
+                    targets: $state.targets,
+                    draggingTargetID: $draggingTargetID
                 )
             )
-            .font(.caption)
         }
-        .padding(.leading, 12)
-        .opacity(draggingTargetID == target.id ? 0.4 : 1)
-        .onDrop(
-            of: [.text],
-            delegate: TargetDropDelegate(
-                target: target,
-                targets: $state.targets,
-                draggingTargetID: $draggingTargetID
-            )
-        )
     }
 
     /// An empty badge keeps the trash button in the same column on every row.

@@ -89,10 +89,14 @@ extension Array where Element == BrowserTarget {
     /// A browser with more than one profile becomes one target per profile. A browser with a
     /// single profile stays one plain target, so the chooser shows only the browser name.
     func expandingProfiles(
-        _ profilesByBundleIdentifier: [String: [DiscoveredBrowserProfile]]
+        _ profilesByBundleIdentifier: [String: [DiscoveredBrowserProfile]],
+        scannedBundleIdentifiers: Set<String>? = nil,
+        browserNamesByBundleIdentifier: [String: String] = [:]
     ) -> [BrowserTarget] {
         var result: [BrowserTarget] = []
         var emittedBundleIdentifiers: Set<String> = []
+        let scannedBundleIdentifiers = scannedBundleIdentifiers
+            ?? Set(profilesByBundleIdentifier.keys)
 
         for target in self {
             let bundleIdentifier = target.bundleIdentifier
@@ -100,22 +104,44 @@ extension Array where Element == BrowserTarget {
             emittedBundleIdentifiers.insert(bundleIdentifier)
 
             var group = filter { $0.bundleIdentifier == bundleIdentifier }
-            guard let profiles = profilesByBundleIdentifier[bundleIdentifier], !profiles.isEmpty else {
+            guard scannedBundleIdentifiers.contains(bundleIdentifier) else {
                 result.append(contentsOf: group)
                 continue
             }
-
-            if profiles.count == 1,
-               let plainIndex = group.firstIndex(where: { $0.chromiumProfileDirectory == nil }),
-               !group.compactMap(\.chromiumProfileDirectory).contains(profiles[0].profileDirectory) {
-                // Keep the plain browser name and the user's settings, but launch its one profile explicitly.
-                group[plainIndex].chromiumProfileDirectory = profiles[0].profileDirectory
-                result.append(contentsOf: group)
-                continue
-            }
-
+            let profiles = profilesByBundleIdentifier[bundleIdentifier] ?? []
             let browserName = group.first(where: { $0.chromiumProfileDirectory == nil })?.name
                 ?? BrowserTarget.baseName(of: group[0].name)
+            let discoveredBrowserName = browserNamesByBundleIdentifier[bundleIdentifier]
+                ?? profiles.first?.browserName
+                ?? browserName
+
+            guard !profiles.isEmpty else {
+                var plainTarget = group[0]
+                plainTarget.name = BrowserTarget.baseName(of: plainTarget.name)
+                plainTarget.chromiumProfileDirectory = nil
+                result.append(plainTarget)
+                continue
+            }
+
+            if profiles.count == 1 {
+                let profile = profiles[0]
+                var plainTarget = group.first(where: {
+                    $0.chromiumProfileDirectory == profile.profileDirectory
+                }) ?? group.first(where: { $0.chromiumProfileDirectory == nil }) ?? group[0]
+                if plainTarget.name == BrowserTarget.profileName(profile.profileName, of: browserName)
+                    || plainTarget.name == BrowserTarget.profileName(profile.profileDirectory, of: browserName) {
+                    plainTarget.name = browserName
+                }
+                plainTarget.chromiumProfileDirectory = profile.profileDirectory
+                result.append(plainTarget)
+                continue
+            }
+
+            let profileDirectories = Set(profiles.map(\.profileDirectory))
+            group = group.filter {
+                $0.chromiumProfileDirectory == nil
+                    || profileDirectories.contains($0.chromiumProfileDirectory ?? "")
+            }
 
             // The plain target takes the first free profile and keeps its purpose.
             if let plainIndex = group.firstIndex(where: { $0.chromiumProfileDirectory == nil }) {
@@ -133,8 +159,12 @@ extension Array where Element == BrowserTarget {
             // scan that finds the real profile name replaces it.
             for index in group.indices {
                 guard let directory = group[index].chromiumProfileDirectory,
-                      let profile = profiles.first(where: { $0.profileDirectory == directory }),
-                      let part = BrowserTarget.profilePart(of: group[index].name),
+                      let profile = profiles.first(where: { $0.profileDirectory == directory }) else { continue }
+                if group[index].name == discoveredBrowserName {
+                    group[index].name = BrowserTarget.profileName(profile.profileName, of: browserName)
+                    continue
+                }
+                guard let part = BrowserTarget.profilePart(of: group[index].name),
                       part != profile.profileName,
                       part == directory || BrowserProfileDiscovery.isPlaceholder(part) else { continue }
                 let fallbackName = BrowserTarget.profileName(part, of: browserName)

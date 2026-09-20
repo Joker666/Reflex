@@ -53,6 +53,7 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
     /// Closing Settings always removes the Dock icon. The menu bar item can keep Reflex running.
     func windowWillClose(_ notification: Notification) {
         DispatchQueue.main.async {
+            self.state.settingsDidClose()
             let shouldTerminate = Self.shouldTerminateOnClose(
                 showsMenuBarItem: self.state.showsMenuBarItem,
                 hasPendingURL: self.state.pendingURL != nil

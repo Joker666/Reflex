@@ -266,6 +266,89 @@ struct ReflexTests {
         #expect(result[1].chromiumProfileDirectory == "Profile 1")
     }
 
+    @Test("A later multi-profile scan names the former plain target")
+    func profileExpansionNamesFormerSingleProfileTarget() {
+        var chrome = makeTarget(name: "Google Chrome", bundleIdentifier: "com.google.Chrome")
+        chrome.chromiumProfileDirectory = "Default"
+
+        let result = [chrome].expandingProfiles([
+            "com.google.Chrome": [
+                makeProfile(directory: "Default", name: "Personal"),
+                makeProfile(directory: "Profile 1", name: "Slumber"),
+            ],
+        ])
+
+        #expect(result.count == 2)
+        #expect(result[0].id == chrome.id)
+        #expect(result[0].name == "Google Chrome (Personal)")
+        #expect(result[1].name == "Google Chrome (Slumber)")
+    }
+
+    @Test("A profile scan removes targets that are no longer present")
+    func profileExpansionRemovesMissingProfiles() {
+        let personal = BrowserTarget(
+            id: UUID(),
+            name: "Google Chrome (Personal)",
+            bundleIdentifier: "com.google.Chrome",
+            purpose: "Personal links",
+            chromiumProfileDirectory: "Default",
+            isEnabled: true
+        )
+        let removed = BrowserTarget(
+            id: UUID(),
+            name: "Google Chrome (Old)",
+            bundleIdentifier: "com.google.Chrome",
+            purpose: "Old links",
+            chromiumProfileDirectory: "Profile 2",
+            isEnabled: true
+        )
+
+        let result = [personal, removed].expandingProfiles([
+            "com.google.Chrome": [makeProfile(directory: "Default", name: "Personal")],
+        ])
+
+        #expect(result == [BrowserTarget(
+            id: personal.id,
+            name: "Google Chrome",
+            bundleIdentifier: personal.bundleIdentifier,
+            purpose: personal.purpose,
+            chromiumProfileDirectory: "Default",
+            isEnabled: personal.isEnabled
+        )])
+    }
+
+    @Test("An unavailable profile scan returns the browser to one target")
+    func profileExpansionCollapsesUnavailableProfiles() {
+        let personal = BrowserTarget(
+            id: UUID(),
+            name: "Google Chrome (Personal)",
+            bundleIdentifier: "com.google.Chrome",
+            purpose: "Personal links",
+            chromiumProfileDirectory: "Default",
+            isEnabled: false
+        )
+        let work = BrowserTarget(
+            id: UUID(),
+            name: "Google Chrome (Work)",
+            bundleIdentifier: "com.google.Chrome",
+            purpose: "Work links",
+            chromiumProfileDirectory: "Profile 1",
+            isEnabled: true
+        )
+
+        let result = [personal, work].expandingProfiles(
+            [:],
+            scannedBundleIdentifiers: ["com.google.Chrome"]
+        )
+
+        #expect(result.count == 1)
+        #expect(result[0].id == personal.id)
+        #expect(result[0].name == "Google Chrome")
+        #expect(result[0].purpose == personal.purpose)
+        #expect(result[0].chromiumProfileDirectory == nil)
+        #expect(!result[0].isEnabled)
+    }
+
     @Test("A profile launch passes the original URL as one argument")
     func profileLaunchArguments() throws {
         let url = try #require(URL(string: "https://example.com/a%20b?q=one two;rm -rf /#frag"))
@@ -775,6 +858,100 @@ struct ReflexTests {
 
         #expect(await recorder.targetID == targets[1].id)
         #expect(state.pendingURL == nil)
+    }
+
+    @Test("A Jev decision cannot open a target removed while routing")
+    @MainActor
+    func jevDecisionUsesCurrentTargets() async throws {
+        let suiteName = "ReflexTests.\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let targets = [
+            makeTarget(name: "Chrome", bundleIdentifier: "com.google.Chrome"),
+            makeTarget(name: "Safari", bundleIdentifier: "com.apple.Safari"),
+            makeTarget(name: "Firefox", bundleIdentifier: "org.mozilla.firefox"),
+        ]
+        defaults.set(try JSONEncoder().encode(targets), forKey: "browserTargets")
+        let decider = ControlledJevDecider()
+        let recorder = BrowserOpenRecorder()
+        let state = AppState(
+            keychain: TestKeychainStore(apiKey: "test-key"),
+            launcher: RecordingBrowserLauncher(recorder: recorder),
+            jevClient: decider,
+            defaults: defaults,
+            browserScanner: FixedBrowserScanner(),
+            defaultBrowserService: FixedDefaultBrowserService()
+        )
+
+        state.receive([URL(string: "https://example.com/path")!])
+        for _ in 0..<100 {
+            if await decider.hasRequest(for: "example.com") { break }
+            await Task.yield()
+        }
+        state.removeTarget(id: targets[0].id)
+        await decider.resume(
+            host: "example.com",
+            decision: RouteDecision(targetID: targets[0].id, confidence: 1)
+        )
+        for _ in 0..<20 { await Task.yield() }
+
+        #expect(await recorder.targetID == nil)
+        #expect(state.pendingURL != nil)
+        #expect(state.suggestedTargetID == nil)
+    }
+
+    @Test("Opening Settings pauses the next queued link")
+    @MainActor
+    func settingsPauseQueuedRouting() async throws {
+        let suiteName = "ReflexTests.\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let targets = [
+            makeTarget(name: "Chrome", bundleIdentifier: "com.google.Chrome"),
+            makeTarget(name: "Safari", bundleIdentifier: "com.apple.Safari"),
+        ]
+        defaults.set(try JSONEncoder().encode(targets), forKey: "browserTargets")
+        let decider = ControlledJevDecider()
+        let recorder = BrowserOpenRecorder()
+        let state = AppState(
+            keychain: TestKeychainStore(apiKey: "test-key"),
+            launcher: RecordingBrowserLauncher(recorder: recorder),
+            jevClient: decider,
+            defaults: defaults,
+            browserScanner: FixedBrowserScanner(),
+            defaultBrowserService: FixedDefaultBrowserService()
+        )
+        let firstURL = URL(string: "https://first.example/path")!
+        let secondURL = URL(string: "https://second.example/path")!
+
+        state.receive([firstURL, secondURL])
+        for _ in 0..<100 {
+            if await decider.hasRequest(for: "first.example") { break }
+            await Task.yield()
+        }
+        state.openSettings()
+        await decider.resume(
+            host: "first.example",
+            decision: RouteDecision(targetID: targets[0].id, confidence: 1)
+        )
+        for _ in 0..<20 { await Task.yield() }
+
+        #expect(state.pendingURL == secondURL)
+        #expect(!(await decider.hasRequest(for: "second.example")))
+        #expect(await recorder.targetID == nil)
+
+        state.settingsDidClose()
+        for _ in 0..<100 {
+            if await decider.hasRequest(for: "second.example") { break }
+            await Task.yield()
+        }
+        #expect(await decider.hasRequest(for: "second.example"))
+        await decider.resume(
+            host: "second.example",
+            decision: RouteDecision(targetID: targets[0].id, confidence: 0)
+        )
+        for _ in 0..<20 { await Task.yield() }
+        #expect(state.pendingURL == secondURL)
     }
 
     @Test("An old browser launch cannot advance the next link")
