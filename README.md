@@ -16,7 +16,7 @@ xcodebuild -project Reflex.xcodeproj -scheme Reflex -destination 'platform=macOS
 xcodebuild -project Reflex.xcodeproj -scheme Reflex -destination 'platform=macOS' test
 ```
 
-Local builds use Apple Development signing for team `FA8NWUSJ95` and the hardened runtime. This gives Reflex a stable signing identity for Keychain access. If Keychain asks after a newly signed build replaces an older ad-hoc build, select **Always Allow** once.
+Local builds use Apple Development signing for team `FA8NWUSJ95`. This gives Reflex a stable signing identity for Keychain access. The Release configuration uses the hardened runtime. If Keychain asks after a newly signed build replaces an older ad-hoc build, select **Always Allow** once.
 
 ## Direct distribution
 
@@ -37,7 +37,35 @@ Before the first production release:
    NOTARY_PROFILE=ReflexNotary ./Scripts/distribute.sh
    ```
 
-The script runs all tests, creates a Release archive with Developer ID signing, verifies the signature, submits a ZIP to Apple with `notarytool`, staples and validates the ticket, checks the app with Gatekeeper, and writes the final ZIP and SHA-256 digest under `dist/`. It stops before building if the required certificate or Keychain profile name is missing. It does not store signing secrets in the repository.
+The script runs all tests, creates a Release archive with Developer ID signing, verifies the signature, submits a ZIP to Apple with `notarytool`, staples and validates the ticket, checks the app with Gatekeeper, and writes the final ZIP and SHA-256 digest under `dist/`. It stops before building if the required certificate or notarization credential is missing. It does not store signing secrets in the repository.
+
+### GitHub CI and releases
+
+GitHub Actions runs the tests and an unsigned Release build for each pull request and each push to `main`.
+
+The release workflow starts when a tag such as `v0.1.0` is pushed. The tag version must equal `MARKETING_VERSION`. The workflow imports a temporary Developer ID certificate, runs the distribution script, notarizes and verifies the app, and creates a GitHub release with the ZIP and its SHA-256 file. It does not publish an unsigned or unnotarized app.
+
+Configure these GitHub Actions secrets before a release:
+
+- `DEVELOPER_ID_CERTIFICATE_BASE64`: the exported Developer ID Application `.p12` file, encoded with Base64
+- `DEVELOPER_ID_CERTIFICATE_PASSWORD`: the export password for the `.p12` file
+- `KEYCHAIN_PASSWORD`: a random password for the temporary CI Keychain
+- `APP_STORE_CONNECT_API_KEY_BASE64`: the App Store Connect `.p8` private key, encoded with Base64
+- `APP_STORE_CONNECT_API_KEY_ID`: the API key identifier
+- `APP_STORE_CONNECT_ISSUER_ID`: the API issuer identifier
+
+Create a release only from a clean `main` branch:
+
+```sh
+git tag -s v0.1.0 -m "Reflex 0.1.0"
+git push origin v0.1.0
+```
+
+GitHub secrets contain production signing credentials. Give the release workflow and repository access only to trusted maintainers.
+
+### Homebrew
+
+Reflex can use a Homebrew cask after the first signed and notarized GitHub release exists. The cask must use the immutable release ZIP URL and its SHA-256 value. Keep the cask in a public tap repository such as `Joker666/homebrew-tap`, under `Casks/reflex.rb`. Do not use an unsigned build or `sha256 :no_check` for a stable release.
 
 ## First setup
 

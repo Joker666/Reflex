@@ -1,0 +1,46 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Test and build
+    runs-on: macos-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v6
+
+      - name: Show the Xcode version
+        run: xcodebuild -version
+
+      - name: Run tests
+        run: >-
+          xcodebuild test
+          -project Reflex.xcodeproj
+          -scheme Reflex
+          -destination 'platform=macOS'
+          -derivedDataPath "$RUNNER_TEMP/DerivedData"
+          CODE_SIGNING_ALLOWED=NO
+
+      - name: Build the Release configuration
+        run: >-
+          xcodebuild build
+          -project Reflex.xcodeproj
+          -scheme Reflex
+          -configuration Release
+          -destination 'generic/platform=macOS'
+          -derivedDataPath "$RUNNER_TEMP/ReleaseDerivedData"
+          CODE_SIGNING_ALLOWED=NO
