@@ -1411,24 +1411,6 @@ h1 {
   color: var(--text-tertiary);
 }
 
-.app-badge {
-  align-self: flex-start;
-  font-size: 0.68rem;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  padding: 2px 7px;
-  border-radius: var(--radius-pill);
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid var(--border-medium);
-  color: var(--text-primary);
-}
-
-[data-theme="light"] .app-badge {
-  background: rgba(0, 0, 0, 0.05);
-  border-color: var(--border-medium);
-  color: var(--text-primary);
-}
-
 .feature-cell {
   font-weight: 600;
   color: var(--text-primary);
@@ -1467,79 +1449,18 @@ h1 {
   background: rgba(0, 0, 0, 0.04);
 }
 
-.status-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 3px 9px;
-  border-radius: var(--radius-pill);
-  font-size: 0.8rem;
-  font-weight: 600;
-}
-
-.pill-ai {
-  background: rgba(255, 255, 255, 0.07);
-  border: 1px solid var(--border-highlight);
-  color: var(--text-primary);
-}
-
-[data-theme="light"] .pill-ai {
-  background: rgba(0, 0, 0, 0.04);
-  border-color: var(--border-medium);
-  color: var(--text-primary);
-}
-
-.pill-confidence {
-  background: rgba(48, 209, 88, 0.1);
-  border: 1px solid rgba(48, 209, 88, 0.25);
-  color: var(--accent-cyan);
-}
-
-.badge-free {
-  display: inline-block;
-  font-size: 0.82rem;
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
-.feature-sub {
-  display: block;
-  font-size: 0.78rem;
-  font-weight: 400;
-  color: var(--text-tertiary);
-  margin-top: 2px;
-}
-
-.text-accent {
-  color: var(--text-primary);
-}
-
 .check-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 17px;
-  height: 17px;
-  border-radius: 50%;
-  background: rgba(48, 209, 88, 0.12);
+  display: inline-block;
   color: var(--accent-cyan);
-  font-size: 0.68rem;
   font-weight: 700;
-  margin-right: 5px;
+  margin-right: 6px;
 }
 
 .cross-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 17px;
-  height: 17px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.04);
+  display: inline-block;
   color: var(--text-tertiary);
-  font-size: 0.65rem;
   font-weight: 600;
-  margin-right: 5px;
+  margin-right: 6px;
 }
 
 .muted-dash {

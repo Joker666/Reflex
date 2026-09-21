@@ -481,7 +481,6 @@
                     <th scope="col" class="th-feature">Feature</th>
                     <th scope="col" class="th-app th-reflex">
                       <div class="app-header">
-                        <span class="app-badge">✦ AI Intent</span>
                         <div class="app-title-wrap">
                           <img src="assets/reflex-icon.png" width="22" height="22" alt="" class="app-icon-mini">
                           <span class="app-name">Reflex</span>
@@ -514,9 +513,7 @@
                 <tbody>
                   <tr>
                     <th scope="row" class="feature-cell">Routing Engine</th>
-                    <td class="td-reflex">
-                      <span class="status-pill pill-ai">✦ AI Intent + Chooser</span>
-                    </td>
+                    <td class="td-reflex">AI Intent + Chooser</td>
                     <td>Static domain rules</td>
                     <td>Behavior condition rules</td>
                     <td>Manual picker only</td>
@@ -524,10 +521,7 @@
                   </tr>
                   <tr>
                     <th scope="row" class="feature-cell">Rule Maintenance</th>
-                    <td class="td-reflex">
-                      <strong class="text-accent">Zero rules</strong>
-                      <span class="feature-sub">Plain English purposes</span>
-                    </td>
+                    <td class="td-reflex">Zero rules (plain English)</td>
                     <td>Manual domain &amp; regex lists</td>
                     <td>Complex rule editor</td>
                     <td>None (pick every time)</td>
@@ -535,27 +529,15 @@
                   </tr>
                   <tr>
                     <th scope="row" class="feature-cell">Auto-Discovered Profiles</th>
-                    <td class="td-reflex">
-                      <span class="check-icon" aria-label="Supported">✓</span> Chromium
-                    </td>
-                    <td>
-                      <span class="check-icon" aria-label="Supported">✓</span> Chromium &amp; Firefox
-                    </td>
-                    <td>
-                      <span class="check-icon" aria-label="Supported">✓</span> Chromium
-                    </td>
-                    <td>
-                      <span class="check-icon" aria-label="Supported">✓</span> Safari* &amp; Chromium
-                    </td>
-                    <td>
-                      <span class="cross-icon" aria-label="Not supported">✕</span>
-                    </td>
+                    <td class="td-reflex"><span class="check-icon" aria-hidden="true">✓</span> Chromium</td>
+                    <td><span class="check-icon" aria-hidden="true">✓</span> Chromium &amp; Firefox</td>
+                    <td><span class="check-icon" aria-hidden="true">✓</span> Chromium</td>
+                    <td><span class="check-icon" aria-hidden="true">✓</span> Safari* &amp; Chromium</td>
+                    <td><span class="cross-icon" aria-hidden="true">✕</span> None</td>
                   </tr>
                   <tr>
                     <th scope="row" class="feature-cell">Auto-Routing Flow</th>
-                    <td class="td-reflex">
-                      <span class="status-pill pill-confidence">≥85% Confidence</span>
-                    </td>
+                    <td class="td-reflex">Automatic at ≥85% confidence</td>
                     <td>Regex / URL match</td>
                     <td>Rule condition match</td>
                     <td>None (prompts every click)</td>
@@ -563,39 +545,31 @@
                   </tr>
                   <tr>
                     <th scope="row" class="feature-cell">Keyboard Chooser</th>
-                    <td class="td-reflex">
-                      <span class="check-icon" aria-label="Supported">✓</span> <kbd>1</kbd>–<kbd>9</kbd>, Arrows, <kbd>↵</kbd>
-                    </td>
-                    <td><span class="check-icon" aria-label="Supported">✓</span> Custom keys</td>
-                    <td><span class="check-icon" aria-label="Supported">✓</span> Custom keys</td>
-                    <td><span class="check-icon" aria-label="Supported">✓</span> Radial hotkeys</td>
-                    <td><span class="check-icon" aria-label="Supported">✓</span> Letter keys</td>
+                    <td class="td-reflex"><span class="check-icon" aria-hidden="true">✓</span> <kbd>1</kbd>–<kbd>9</kbd>, Arrows, <kbd>↵</kbd></td>
+                    <td><span class="check-icon" aria-hidden="true">✓</span> Custom keys</td>
+                    <td><span class="check-icon" aria-hidden="true">✓</span> Custom keys</td>
+                    <td><span class="check-icon" aria-hidden="true">✓</span> Radial hotkeys</td>
+                    <td><span class="check-icon" aria-hidden="true">✓</span> Letter keys</td>
                   </tr>
                   <tr>
                     <th scope="row" class="feature-cell">Modifier Bypass</th>
-                    <td class="td-reflex">
-                      <span class="check-icon" aria-label="Supported">✓</span> Configurable (⌥ Option)
-                    </td>
-                    <td><span class="check-icon" aria-label="Supported">✓</span> Configurable (fn)</td>
-                    <td><span class="check-icon" aria-label="Supported">✓</span> Supported</td>
-                    <td><span class="check-icon" aria-label="Supported">✓</span> Configurable (⌥ Option)</td>
+                    <td class="td-reflex"><span class="check-icon" aria-hidden="true">✓</span> Configurable (⌥ Option)</td>
+                    <td><span class="check-icon" aria-hidden="true">✓</span> Configurable (fn)</td>
+                    <td><span class="check-icon" aria-hidden="true">✓</span> Supported</td>
+                    <td><span class="check-icon" aria-hidden="true">✓</span> Configurable (⌥ Option)</td>
                     <td><span class="muted-dash">—</span></td>
                   </tr>
                   <tr>
                     <th scope="row" class="feature-cell">Native Architecture</th>
-                    <td class="td-reflex">
-                      <span class="check-icon" aria-label="Supported">✓</span> Swift &amp; SwiftUI (~15 MB)
-                    </td>
-                    <td><span class="check-icon" aria-label="Supported">✓</span> Swift (~15 MB)</td>
-                    <td><span class="check-icon" aria-label="Supported">✓</span> Native macOS</td>
-                    <td><span class="check-icon" aria-label="Supported">✓</span> Swift</td>
-                    <td><span class="cross-icon" aria-label="Electron">✕</span> Electron (~150+ MB)</td>
+                    <td class="td-reflex"><span class="check-icon" aria-hidden="true">✓</span> Swift &amp; SwiftUI (~15 MB)</td>
+                    <td><span class="check-icon" aria-hidden="true">✓</span> Swift (~15 MB)</td>
+                    <td><span class="check-icon" aria-hidden="true">✓</span> Native macOS</td>
+                    <td><span class="check-icon" aria-hidden="true">✓</span> Swift</td>
+                    <td><span class="cross-icon" aria-hidden="true">✕</span> Electron (~150+ MB)</td>
                   </tr>
                   <tr>
                     <th scope="row" class="feature-cell">License &amp; Price</th>
-                    <td class="td-reflex">
-                      <span class="badge-free">Free &amp; Open Source (MIT)</span>
-                    </td>
+                    <td class="td-reflex">Free &amp; Open Source (MIT)</td>
                     <td>Paid / App Store</td>
                     <td>Paid ($10 License)</td>
                     <td>Free (Closed Source)</td>
@@ -603,10 +577,7 @@
                   </tr>
                   <tr>
                     <th scope="row" class="feature-cell">Privacy Model</th>
-                    <td class="td-reflex">
-                      Zero link history by default<br>
-                      <small class="feature-sub">Sanitized AI context · Local log</small>
-                    </td>
+                    <td class="td-reflex">Zero link history by default</td>
                     <td>Local rules only</td>
                     <td>Local rules only</td>
                     <td>Local only</td>
