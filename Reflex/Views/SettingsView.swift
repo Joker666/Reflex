@@ -55,7 +55,6 @@ struct SettingsView: View {
                 }
                 .tag(SettingsTab.routing)
         }
-        .padding()
         .frame(minWidth: 540, idealWidth: 580, minHeight: 420, idealHeight: 480)
     }
 
