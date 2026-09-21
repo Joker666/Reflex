@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="Docs/reflex-icon-master.png" alt="Reflex icon" width="128" height="128">
+</p>
+
 # Reflex
 
 Reflex is a small native macOS app that opens each web link in the browser or browser profile that fits it best.
