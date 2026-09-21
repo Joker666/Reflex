@@ -49,6 +49,7 @@
         <nav aria-label="Main navigation">
           <a href="#demo">Try it</a>
           <a href="#install">Install</a>
+          <a href="#compare">Compare</a>
           <a href="#privacy">Privacy</a>
           <a class="nav-github" href="https://github.com/Joker666/Reflex" target="_blank" rel="noopener noreferrer">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -460,6 +461,194 @@
           </div>
           <h2 class="override-title">Hold Option, then click</h2>
           <p class="override-desc">Want to bypass automatic AI selection for a specific link? Hold the <kbd>⌥ Option</kbd> key when clicking to open the chooser directly. You can configure this modifier to Control, Shift, Command, or Fn in Settings.</p>
+        </div>
+      </section>
+
+      <!-- Comparison Section -->
+      <section class="compare-section" id="compare">
+        <div class="container">
+          <div class="section-head">
+            <h2>How Reflex Compares</h2>
+            <p>See how Reflex's intent-driven routing compares to traditional rule engines and manual browser pickers on macOS.</p>
+          </div>
+
+          <div class="compare-table-container">
+            <div class="compare-table-wrap" tabindex="0" role="region" aria-label="Feature comparison table">
+              <table class="compare-table">
+                <caption class="sr-only">Comparison of macOS link routers and browser pickers</caption>
+                <thead>
+                  <tr>
+                    <th scope="col" class="th-feature">Feature</th>
+                    <th scope="col" class="th-app th-reflex">
+                      <div class="app-header">
+                        <span class="app-badge">Featured</span>
+                        <div class="app-title-wrap">
+                          <img src="assets/reflex-icon.png" width="22" height="22" alt="" class="app-icon-mini">
+                          <span class="app-name">Reflex</span>
+                        </div>
+                      </div>
+                    </th>
+                    <th scope="col" class="th-app">
+                      <div class="app-header">
+                        <span class="app-name">Velja</span>
+                      </div>
+                    </th>
+                    <th scope="col" class="th-app">
+                      <div class="app-header">
+                        <span class="app-name">Choosy</span>
+                      </div>
+                    </th>
+                    <th scope="col" class="th-app">
+                      <div class="app-header">
+                        <span class="app-name">Burly</span>
+                      </div>
+                    </th>
+                    <th scope="col" class="th-app">
+                      <div class="app-header">
+                        <span class="app-name">Browserosaurus</span>
+                        <span class="app-meta">Archived</span>
+                      </div>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <th scope="row" class="feature-cell">Routing Engine</th>
+                    <td class="td-reflex">
+                      <span class="status-pill pill-ai">✦ AI Intent + Chooser</span>
+                    </td>
+                    <td>Static domain rules</td>
+                    <td>Behavior condition rules</td>
+                    <td>Manual picker only</td>
+                    <td>Manual menu only</td>
+                  </tr>
+                  <tr>
+                    <th scope="row" class="feature-cell">Rule Maintenance</th>
+                    <td class="td-reflex">
+                      <strong class="text-accent">Zero rules</strong>
+                      <span class="feature-sub">Plain English purposes</span>
+                    </td>
+                    <td>Manual domain &amp; regex lists</td>
+                    <td>Complex rule editor</td>
+                    <td>None (pick every time)</td>
+                    <td>None (pick every time)</td>
+                  </tr>
+                  <tr>
+                    <th scope="row" class="feature-cell">Auto-Discovered Profiles</th>
+                    <td class="td-reflex">
+                      <span class="check-icon" aria-label="Supported">✓</span> Chromium
+                    </td>
+                    <td>
+                      <span class="check-icon" aria-label="Supported">✓</span> Chromium &amp; Firefox
+                    </td>
+                    <td>
+                      <span class="check-icon" aria-label="Supported">✓</span> Chromium
+                    </td>
+                    <td>
+                      <span class="check-icon" aria-label="Supported">✓</span> Safari* &amp; Chromium
+                    </td>
+                    <td>
+                      <span class="cross-icon" aria-label="Not supported">✕</span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <th scope="row" class="feature-cell">Auto-Routing Flow</th>
+                    <td class="td-reflex">
+                      <span class="status-pill pill-confidence">≥85% Confidence</span>
+                    </td>
+                    <td>Regex / URL match</td>
+                    <td>Rule condition match</td>
+                    <td>None (prompts every click)</td>
+                    <td>None (prompts every click)</td>
+                  </tr>
+                  <tr>
+                    <th scope="row" class="feature-cell">Keyboard Chooser</th>
+                    <td class="td-reflex">
+                      <span class="check-icon" aria-label="Supported">✓</span> <kbd>1</kbd>–<kbd>9</kbd>, Arrows, <kbd>↵</kbd>
+                    </td>
+                    <td><span class="check-icon" aria-label="Supported">✓</span> Custom keys</td>
+                    <td><span class="check-icon" aria-label="Supported">✓</span> Custom keys</td>
+                    <td><span class="check-icon" aria-label="Supported">✓</span> Radial hotkeys</td>
+                    <td><span class="check-icon" aria-label="Supported">✓</span> Letter keys</td>
+                  </tr>
+                  <tr>
+                    <th scope="row" class="feature-cell">Modifier Bypass</th>
+                    <td class="td-reflex">
+                      <span class="check-icon" aria-label="Supported">✓</span> Configurable (⌥ Option)
+                    </td>
+                    <td><span class="check-icon" aria-label="Supported">✓</span> Configurable (fn)</td>
+                    <td><span class="check-icon" aria-label="Supported">✓</span> Supported</td>
+                    <td><span class="check-icon" aria-label="Supported">✓</span> Configurable (⌥ Option)</td>
+                    <td><span class="muted-dash">—</span></td>
+                  </tr>
+                  <tr>
+                    <th scope="row" class="feature-cell">Native Architecture</th>
+                    <td class="td-reflex">
+                      <span class="check-icon" aria-label="Supported">✓</span> Swift &amp; SwiftUI (~15 MB)
+                    </td>
+                    <td><span class="check-icon" aria-label="Supported">✓</span> Swift (~15 MB)</td>
+                    <td><span class="check-icon" aria-label="Supported">✓</span> Native macOS</td>
+                    <td><span class="check-icon" aria-label="Supported">✓</span> Swift</td>
+                    <td><span class="cross-icon" aria-label="Electron">✕</span> Electron (~150+ MB)</td>
+                  </tr>
+                  <tr>
+                    <th scope="row" class="feature-cell">License &amp; Price</th>
+                    <td class="td-reflex">
+                      <span class="badge-free">Free &amp; Open Source (MIT)</span>
+                    </td>
+                    <td>Paid / App Store</td>
+                    <td>Paid ($10 License)</td>
+                    <td>Free (Closed Source)</td>
+                    <td>Open Source (GPLv3, Archived)</td>
+                  </tr>
+                  <tr>
+                    <th scope="row" class="feature-cell">Privacy Model</th>
+                    <td class="td-reflex">
+                      Zero link history by default<br>
+                      <small class="feature-sub">Sanitized AI context · Local log</small>
+                    </td>
+                    <td>Local rules only</td>
+                    <td>Local rules only</td>
+                    <td>Local only</td>
+                    <td>Local only</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="table-scroll-hint" aria-hidden="true">
+              <span>Scroll horizontally to view all apps →</span>
+            </div>
+          </div>
+
+          <div class="compare-takeaways">
+            <div class="takeaway-card">
+              <div class="takeaway-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path>
+                </svg>
+              </div>
+              <h3>No Rule Maintenance</h3>
+              <p>Stop crafting brittle regex and maintaining domain lists for every new project. Just give each browser target a plain English purpose, and Reflex handles the rest.</p>
+            </div>
+            <div class="takeaway-card">
+              <div class="takeaway-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                </svg>
+              </div>
+              <h3>Never Breaks Your Flow</h3>
+              <p>High-confidence links open immediately without prompting. When a link is ambiguous, Reflex instantly displays a compact chooser with the AI suggestion highlighted.</p>
+            </div>
+            <div class="takeaway-card">
+              <div class="takeaway-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                </svg>
+              </div>
+              <h3>100% Native &amp; Open Source</h3>
+              <p>Built with pure Swift and SwiftUI. Zero third-party frameworks, zero Electron bloat, zero tracking, and fully open source under the permissive MIT license.</p>
+            </div>
+          </div>
         </div>
       </section>
 

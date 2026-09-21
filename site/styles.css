@@ -1312,6 +1312,287 @@ h1 {
 }
 
 /* ==========================================================================
+   Comparison Section
+   ========================================================================== */
+
+.compare-section {
+  padding-block: 80px 96px;
+  border-top: 1px solid var(--border-subtle);
+  background: var(--section-gradient);
+}
+
+.compare-table-container {
+  margin-bottom: 48px;
+}
+
+.compare-table-wrap {
+  position: relative;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-lg);
+  background: var(--bg-surface);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+.compare-table {
+  width: 100%;
+  min-width: 820px;
+  border-collapse: separate;
+  border-spacing: 0;
+  text-align: left;
+  font-size: 0.92rem;
+}
+
+.compare-table th,
+.compare-table td {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-subtle);
+  vertical-align: middle;
+}
+
+.compare-table thead th {
+  background: var(--bg-surface-elevated);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  border-bottom: 2px solid var(--border-medium);
+  padding-top: 20px;
+  padding-bottom: 20px;
+}
+
+.compare-table .th-feature {
+  width: 22%;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 0.78rem;
+}
+
+.compare-table .th-app {
+  width: 19.5%;
+}
+
+.compare-table .th-reflex {
+  background: rgba(0, 122, 255, 0.08);
+  border-left: 2px solid var(--accent-blue);
+  border-right: 2px solid var(--accent-blue);
+  border-top: 2px solid var(--accent-blue);
+  border-top-left-radius: var(--radius-lg);
+  border-top-right-radius: var(--radius-lg);
+  position: relative;
+}
+
+[data-theme="light"] .compare-table .th-reflex {
+  background: rgba(0, 122, 255, 0.06);
+}
+
+.app-header {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.app-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.app-icon-mini {
+  border-radius: 5px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+}
+
+.app-name {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+}
+
+.app-meta {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-tertiary);
+}
+
+.app-badge {
+  align-self: flex-start;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  background: var(--accent-blue);
+  color: #ffffff;
+}
+
+.feature-cell {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 0.92rem;
+}
+
+.compare-table tbody tr:last-child th,
+.compare-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.td-reflex {
+  background: rgba(0, 122, 255, 0.04);
+  border-left: 2px solid var(--accent-blue);
+  border-right: 2px solid var(--accent-blue);
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.compare-table tbody tr:last-child .td-reflex {
+  border-bottom: 2px solid var(--accent-blue);
+  border-bottom-left-radius: var(--radius-lg);
+  border-bottom-right-radius: var(--radius-lg);
+}
+
+[data-theme="light"] .td-reflex {
+  background: rgba(0, 122, 255, 0.03);
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.pill-ai {
+  background: rgba(0, 122, 255, 0.15);
+  border: 1px solid rgba(0, 122, 255, 0.35);
+  color: var(--status-active-color);
+}
+
+[data-theme="light"] .pill-ai {
+  background: rgba(0, 122, 255, 0.1);
+  border-color: rgba(0, 122, 255, 0.25);
+  color: var(--accent-blue);
+}
+
+.pill-confidence {
+  background: rgba(48, 209, 88, 0.12);
+  border: 1px solid rgba(48, 209, 88, 0.3);
+  color: var(--accent-cyan);
+}
+
+.badge-free {
+  display: inline-block;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--accent-cyan);
+}
+
+.feature-sub {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 400;
+  color: var(--text-tertiary);
+  margin-top: 2px;
+}
+
+.text-accent {
+  color: var(--text-primary);
+}
+
+.check-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: rgba(48, 209, 88, 0.18);
+  color: var(--accent-cyan);
+  font-size: 0.72rem;
+  font-weight: 700;
+  margin-right: 4px;
+}
+
+.cross-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: rgba(255, 69, 58, 0.15);
+  color: #ff453a;
+  font-size: 0.72rem;
+  font-weight: 700;
+  margin-right: 4px;
+}
+
+.muted-dash {
+  color: var(--text-tertiary);
+  font-weight: 600;
+}
+
+.table-scroll-hint {
+  display: none;
+  text-align: center;
+  font-size: 0.8rem;
+  color: var(--text-tertiary);
+  margin-top: 10px;
+}
+
+/* Takeaway Cards */
+.compare-takeaways {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+.takeaway-card {
+  padding: 28px;
+  background: var(--card-bg);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  transition: all 0.18s ease;
+}
+
+.takeaway-card:hover {
+  background: var(--card-hover-bg);
+  border-color: var(--border-medium);
+}
+
+.takeaway-icon {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  background: var(--card-icon-bg);
+  color: var(--accent-blue);
+  margin-bottom: 18px;
+}
+
+.takeaway-card h3 {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 10px;
+  letter-spacing: -0.015em;
+}
+
+.takeaway-card p {
+  font-size: 0.92rem;
+  line-height: 1.55;
+  color: var(--text-secondary);
+}
+
+/* ==========================================================================
    Privacy & Architecture Section (3 Cards)
    ========================================================================== */
 
@@ -1584,6 +1865,14 @@ h1 {
   .privacy-grid {
     grid-template-columns: 1fr;
   }
+
+  .compare-takeaways {
+    grid-template-columns: 1fr;
+  }
+
+  .table-scroll-hint {
+    display: block;
+  }
   
   .mac-menubar .menu-item {
     display: none;
@@ -1593,6 +1882,12 @@ h1 {
 @media (max-width: 640px) {
   nav a:not(.nav-github) {
     display: none;
+  }
+
+  .compare-table th,
+  .compare-table td {
+    padding: 12px 14px;
+    font-size: 0.85rem;
   }
   
   .mac-menubar-left .menu-item {
