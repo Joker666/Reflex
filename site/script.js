@@ -303,6 +303,24 @@ function init() {
       closeModal();
     }
   });
+
+  // Dynamically resolve latest release DMG asset if GitHub API is reachable
+  async function resolveLatestDmg() {
+    try {
+      const res = await fetch("https://api.github.com/repos/Joker666/Reflex/releases/latest");
+      if (!res.ok) return;
+      const data = await res.json();
+      const dmgAsset = data.assets?.find((a) => a.name.endsWith(".dmg"));
+      if (dmgAsset?.browser_download_url) {
+        document.querySelectorAll(".btn-download").forEach((btn) => {
+          btn.href = dmgAsset.browser_download_url;
+        });
+      }
+    } catch {
+      // Fallback already points directly to https://github.com/Joker666/Reflex/releases/latest/download/Reflex.dmg
+    }
+  }
+  resolveLatestDmg();
 }
 
 if (document.readyState === "loading") {
