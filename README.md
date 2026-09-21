@@ -65,7 +65,13 @@ GitHub secrets contain production signing credentials. Give the release workflow
 
 ### Homebrew
 
-Reflex can use a Homebrew cask after the first signed and notarized GitHub release exists. The cask must use the immutable release DMG URL and its SHA-256 value. Keep the cask in a public tap repository such as `Joker666/homebrew-tap`, under `Casks/reflex.rb`. Do not use an unsigned build or `sha256 :no_check` for a stable release.
+Install the signed and notarized release from the public Homebrew tap:
+
+```sh
+brew install --cask Joker666/tap/reflex
+```
+
+The cask uses the immutable GitHub release DMG URL and its SHA-256 value. It does not install an unsigned build.
 
 ## First setup
 
