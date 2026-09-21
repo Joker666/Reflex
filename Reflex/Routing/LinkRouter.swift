@@ -102,6 +102,15 @@ final class LinkRouter: ObservableObject {
         cancelPending()
     }
 
+    func pausePendingForOnboarding() {
+        isPausedForSettings = true
+        cancelPendingTasks()
+        suggestedTargetID = nil
+        isJevUnavailable = false
+        skipsAutomaticSelection = false
+        chooserPresenter?.dismissChooser()
+    }
+
     func resumePendingAfterSettings() {
         guard isPausedForSettings else { return }
         isPausedForSettings = false

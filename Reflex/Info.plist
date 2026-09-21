@@ -51,5 +51,7 @@
     <true/>
     <key>LSMinimumSystemVersion</key>
     <string>14.0</string>
+    <key>NSAppleEventsUsageDescription</key>
+    <string>Reflex uses Automation to focus the browser profile you selected in Dia and open the link there.</string>
 </dict>
 </plist>

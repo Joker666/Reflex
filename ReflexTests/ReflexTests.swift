@@ -1005,6 +1005,47 @@ struct ReflexTests {
         #expect(state.pendingURL == secondURL)
     }
 
+    @Test("Onboarding keeps an incoming link queued")
+    @MainActor
+    func onboardingKeepsIncomingLinkQueued() async throws {
+        let suiteName = "ReflexTests.\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let targets = [
+            makeTarget(name: "Chrome", bundleIdentifier: "com.google.Chrome"),
+            makeTarget(name: "Safari", bundleIdentifier: "com.apple.Safari"),
+        ]
+        defaults.set(try JSONEncoder().encode(targets), forKey: "browserTargets")
+        let decider = ControlledJevDecider()
+        let url = URL(string: "https://setup.example/path")!
+        let state = AppState(
+            keychain: TestKeychainStore(apiKey: "test-key"),
+            launcher: RecordingBrowserLauncher(recorder: BrowserOpenRecorder()),
+            jevClient: decider,
+            defaults: defaults,
+            browserScanner: FixedBrowserScanner(),
+            defaultBrowserService: FixedDefaultBrowserService()
+        )
+
+        state.onboardingDidOpen()
+        state.receive([url])
+        for _ in 0..<20 { await Task.yield() }
+
+        #expect(state.pendingURL == url)
+        #expect(!(await decider.hasRequest(for: "setup.example")))
+
+        state.completeOnboarding()
+        for _ in 0..<100 {
+            if await decider.hasRequest(for: "setup.example") { break }
+            await Task.yield()
+        }
+        #expect(await decider.hasRequest(for: "setup.example"))
+        await decider.resume(
+            host: "setup.example",
+            decision: RouteDecision(targetID: targets[0].id, confidence: 0)
+        )
+    }
+
     @Test("An old browser launch cannot advance the next link")
     @MainActor
     func staleBrowserLaunchCannotAdvanceNextLink() async throws {
@@ -1192,6 +1233,45 @@ struct ReflexTests {
         #expect(AppVersion.formatted(shortVersion: "", buildVersion: "42") == "Version 42")
         #expect(AppVersion.formatted(shortVersion: nil, buildVersion: nil) == nil)
         #expect(AppVersion.formatted(shortVersion: "", buildVersion: "") == nil)
+    }
+
+    @Test("Onboarding completion is saved")
+    @MainActor
+    func onboardingCompletionIsSaved() {
+        let suiteName = "test-onboarding-\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suiteName)!
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+
+        let state = AppState(
+            keychain: TestKeychainStore(),
+            launcher: RecordingBrowserLauncher(recorder: BrowserOpenRecorder()),
+            jevClient: FirstTargetJevDecider(),
+            defaults: defaults,
+            browserScanner: FixedBrowserScanner(),
+            defaultBrowserService: FixedDefaultBrowserService()
+        )
+        #expect(!state.hasCompletedOnboarding)
+
+        state.completeOnboarding()
+        #expect(state.hasCompletedOnboarding)
+
+        let restoredState = AppState(
+            keychain: TestKeychainStore(),
+            launcher: RecordingBrowserLauncher(recorder: BrowserOpenRecorder()),
+            jevClient: FirstTargetJevDecider(),
+            defaults: defaults,
+            browserScanner: FixedBrowserScanner(),
+            defaultBrowserService: FixedDefaultBrowserService()
+        )
+        #expect(restoredState.hasCompletedOnboarding)
+    }
+
+    @Test("Purpose suggestions put a matching profile first")
+    func onboardingPurposeSuggestions() {
+        #expect(OnboardingPurposeSuggestion.ordered(for: "Chrome (Work)").first?.title == "Work")
+        #expect(OnboardingPurposeSuggestion.ordered(for: "Safari Personal").first?.title == "Personal")
+        #expect(OnboardingPurposeSuggestion.ordered(for: "Chrome Dev").first?.title == "Development")
+        #expect(OnboardingPurposeSuggestion.ordered(for: "Firefox") == OnboardingPurposeSuggestion.all)
     }
 
     private func makeApplication(at root: URL, name: String, identifier: String) throws -> URL {

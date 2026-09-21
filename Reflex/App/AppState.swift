@@ -22,6 +22,8 @@ final class AppState: ObservableObject {
     @Published private(set) var hasAPIKey = false
     @Published private(set) var profileAccessDeniedBrowsers: [String] = []
     @Published private(set) var missingProfileDataBrowsers: [String] = []
+    @Published private(set) var isBrowserScanInProgress = false
+    @Published private(set) var hasCompletedOnboarding = false
     @Published var setupMessage: String?
     @Published var chooserModifier = ChooserModifier.option {
         didSet { defaults.set(chooserModifier.rawValue, forKey: chooserModifierKey) }
@@ -73,6 +75,7 @@ final class AppState: ObservableObject {
     private let chooserModifierKey = "chooserModifier"
     private let usesJevKey = "usesJev"
     private let autoRouteConfidenceThresholdKey = "autoRouteConfidenceThreshold"
+    private let hasCompletedOnboardingKey = "hasCompletedOnboarding"
     private var iconCache: [String: NSImage] = [:]
     private var availabilityCache: [TargetProfileKey: Bool] = [:]
     private var storedShowsMenuBarItem = true
@@ -121,6 +124,7 @@ final class AppState: ObservableObject {
         storedShowsMenuBarItem = defaults.object(forKey: menuBarItemKey) as? Bool ?? true
         chooserModifier = ChooserModifier.fromStoredValue(defaults.string(forKey: chooserModifierKey))
         usesJev = defaults.object(forKey: usesJevKey) as? Bool ?? true
+        hasCompletedOnboarding = defaults.bool(forKey: hasCompletedOnboardingKey)
         if let storedThreshold = defaults.object(forKey: autoRouteConfidenceThresholdKey) as? Double {
             autoRouteConfidenceThreshold = RoutingPolicy.clampedThreshold(storedThreshold)
         } else {
@@ -199,6 +203,7 @@ final class AppState: ObservableObject {
         browserScanGeneration += 1
         let generation = browserScanGeneration
         browserScanTask?.cancel()
+        isBrowserScanInProgress = true
         let scanner = browserScanner
         let existingTargets = targets
         browserScanTask = Task { [weak self] in
@@ -207,6 +212,7 @@ final class AppState: ObservableObject {
                   let self,
                   generation == self.browserScanGeneration else { return }
             self.applyBrowserScan(scan)
+            self.isBrowserScanInProgress = false
             self.browserScanTask = nil
         }
     }
@@ -283,6 +289,11 @@ final class AppState: ObservableObject {
         linkRouter.resumePendingAfterSettings()
     }
 
+    func onboardingDidOpen() {
+        linkRouter.pausePendingForOnboarding()
+        chooserPresenter?.dismissChooser()
+    }
+
     func openFullDiskAccessSettings() {
         let addresses = [
             "x-apple.systempreferences:com.apple.settings.PrivacySecurity.extension?Privacy_AllFiles",
@@ -327,6 +338,12 @@ final class AppState: ObservableObject {
     func removeAPIKey() throws {
         try keychain.removeAPIKey()
         hasAPIKey = false
+    }
+
+    func completeOnboarding() {
+        hasCompletedOnboarding = true
+        defaults.set(true, forKey: hasCompletedOnboardingKey)
+        linkRouter.resumePendingAfterSettings()
     }
 
     private func persistTargets() {

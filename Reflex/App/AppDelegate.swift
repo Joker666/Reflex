@@ -5,18 +5,22 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     let state: AppState
     private let chooserController: ChooserPanelController
     private let settingsController: SettingsWindowController
+    private let onboardingController: OnboardingWindowController
+    private let isTesting: Bool
     private var didReceiveURL = false
 
     override init() {
         let isTesting = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
+        self.isTesting = isTesting
         let state = isTesting ? AppState(keychain: DisabledKeychainStore()) : AppState()
         self.state = state
         chooserController = ChooserPanelController(state: state)
         settingsController = SettingsWindowController(state: state)
+        onboardingController = OnboardingWindowController(state: state)
         super.init()
         state.chooserPresenter = chooserController
-        state.settingsAction = { [weak settingsController] rescan in
-            settingsController?.show(rescanBrowsers: rescan)
+        state.settingsAction = { [weak self] rescan in
+            self?.openSettings(rescanBrowsers: rescan)
         }
     }
 
@@ -26,8 +30,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             NSApplication.shared.applicationIconImage = icon
         }
         state.rescanBrowsers()
-        // macOS delivers a link before this call, so a launch without one opens Settings.
-        if !didReceiveURL {
+        guard !isTesting else { return }
+        if !state.hasCompletedOnboarding {
+            onboardingController.show()
+        // macOS delivers a link before this call, so a later launch without one opens Settings.
+        } else if !didReceiveURL {
             openSettings(rescanBrowsers: false)
         }
     }
@@ -58,6 +65,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func openSettings(rescanBrowsers: Bool) {
+        guard state.hasCompletedOnboarding else {
+            onboardingController.show()
+            return
+        }
         settingsController.show(rescanBrowsers: rescanBrowsers)
     }
 }
