@@ -96,17 +96,18 @@ struct SettingsView: View {
                                 .monospacedDigit()
                                 .foregroundStyle(.secondary)
                         }
-                        Slider(
-                            value: $state.autoRouteConfidenceThreshold,
-                            in: 0.50...1.0,
-                            step: 0.05
-                        ) {
-                            Text("Auto-route confidence")
-                        } minimumValueLabel: {
+                        HStack(spacing: 8) {
                             Text("50%")
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
-                        } maximumValueLabel: {
+                            Slider(
+                                value: $state.autoRouteConfidenceThreshold,
+                                in: 0.50...1.0,
+                                step: 0.05
+                            ) {
+                                Text("Auto-route confidence")
+                            }
+                            .labelsHidden()
                             Text("100%")
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
