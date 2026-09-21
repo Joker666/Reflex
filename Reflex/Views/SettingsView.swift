@@ -502,23 +502,6 @@ struct SettingsView: View {
                         .textFieldStyle(.roundedBorder)
                         .accessibilityLabel("Purpose")
                 }
-                if target.chromiumProfileDirectory != nil || !(targetBinding.wrappedValue.chromiumProfileDirectory ?? "").isEmpty {
-                    HStack(spacing: 6) {
-                        Text("Profile:")
-                            .font(.system(size: 11))
-                            .foregroundStyle(.secondary)
-                            .frame(width: 48, alignment: .trailing)
-                        TextField(
-                            "Chromium profile directory (optional)",
-                            text: Binding(
-                                get: { targetBinding.wrappedValue.chromiumProfileDirectory ?? "" },
-                                set: { targetBinding.wrappedValue.chromiumProfileDirectory = $0.isEmpty ? nil : $0 }
-                            )
-                        )
-                        .textFieldStyle(.roundedBorder)
-                        .font(.caption)
-                    }
-                }
             }
             .padding(.leading, 12)
             .opacity(draggingTargetID == target.id ? 0.4 : 1)
