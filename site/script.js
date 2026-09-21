@@ -140,7 +140,8 @@ function init() {
         statusMsg.classList.remove("flash-active");
       } else if (options.isAI) {
         if (statusBolt) statusBolt.innerHTML = boltSvg;
-        statusMsg.textContent = `Suggested ${targetName} • ${options.confidence}%`;
+        const displayName = targetName.replace(/^Google Chrome/, "Chrome");
+        statusMsg.textContent = `Suggested ${displayName} • ${options.confidence}%`;
         statusMsg.classList.add("flash-active");
       } else {
         if (statusBolt) statusBolt.innerHTML = boltSvg;
@@ -176,11 +177,12 @@ function init() {
   // --------------------------------------------------------------------------
   const scenarios = {
     dia: { index: 1, name: "Dia", confidence: 99, reason: "Research paper" },
-    chrome: { index: 3, name: "Google Chrome", confidence: 98, reason: "GitHub pull request" },
     comet: { index: 2, name: "Comet", confidence: 96, reason: "Linear issue" },
-    helium: { index: 4, name: "Helium", confidence: 95, reason: "Swift documentation" },
-    edge: { index: 5, name: "Microsoft Edge", confidence: 97, reason: "Azure client portal" },
-    phi: { index: 6, name: "Phi", confidence: 92, reason: "Hacker News reader" },
+    "chrome-work": { index: 3, name: "Google Chrome (Work)", confidence: 98, reason: "GitHub pull request" },
+    chrome: { index: 3, name: "Google Chrome (Work)", confidence: 98, reason: "GitHub pull request" },
+    "chrome-personal": { index: 4, name: "Google Chrome (Personal)", confidence: 99, reason: "YouTube personal link" },
+    helium: { index: 5, name: "Helium", confidence: 95, reason: "Swift documentation" },
+    edge: { index: 6, name: "Microsoft Edge", confidence: 97, reason: "Azure client portal" },
   };
 
   scenarioChips.forEach((chip) => {
