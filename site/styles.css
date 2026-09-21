@@ -584,8 +584,10 @@ h1 {
 .reflex-chooser-panel {
   position: relative;
   z-index: 10;
-  width: 100%;
+  width: 312px;
+  min-width: 312px;
   max-width: 312px;
+  flex-shrink: 0;
   background: rgba(30, 30, 34, 0.88);
   backdrop-filter: blur(40px) saturate(190%);
   -webkit-backdrop-filter: blur(40px) saturate(190%);
@@ -1319,10 +1321,6 @@ h1 {
     padding: 24px 12px;
   }
   
-  .reflex-chooser-panel {
-    max-width: 100%;
-  }
-  
   .scenarios-bar {
     justify-content: flex-start;
   }
@@ -1358,15 +1356,6 @@ h1 {
   .keycap-mouse {
     width: 50px;
     height: 80px;
-  }
-  
-  .reflex-chooser-panel {
-    max-width: 270px;
-  }
-  
-  .chooser-row {
-    height: 44px;
-    padding-inline: 8px;
   }
 }
 
