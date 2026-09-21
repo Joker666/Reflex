@@ -474,8 +474,8 @@
           <div class="privacy-grid">
             <div class="privacy-card">
               <div class="privacy-num">01</div>
-              <h3>Zero Link History</h3>
-              <p>Reflex never writes clicked links to disk, databases, logs, or analytics. URLs live in memory only for the fraction of a second required to dispatch them.</p>
+              <h3>Zero Link History by Default</h3>
+              <p>Reflex never writes clicked links to disk, databases, or analytics. If you opt into the local Activity Log for AI score transparency, only sanitized domains and paths are stored strictly on your Mac with rolling 7–30 day retention. Query values, tokens, and fragments are never saved.</p>
             </div>
 
             <div class="privacy-card">
@@ -554,6 +554,13 @@
               <span>Threshold for bypassing the chooser (Default: 85%)</span>
             </div>
             <span class="setting-value">85%</span>
+          </div>
+          <div class="setting-item">
+            <div class="setting-label">
+              <strong>Activity Logging</strong>
+              <span>Local score transparency (Default: Off)</span>
+            </div>
+            <input type="checkbox" id="setting-activity" class="setting-toggle">
           </div>
         </div>
         <div class="modal-footer">
