@@ -20,11 +20,14 @@ final class LinkRouter: ObservableObject {
     private let sourceApplicationName: (String?) -> String?
     private let usesJev: () -> Bool
     private let confidenceThreshold: () -> Double
+    private weak var activityLogger: (any ActivityLogging)?
     private var routingTask: Task<Void, Never>?
     private var routingLinkID: UUID?
     private var launchTask: Task<Void, Never>?
     private var launchingLinkID: UUID?
     private var isPausedForSettings = false
+    private var activeDecision: RouteDecision?
+    private var isAutoRouting = false
 
     init(
         launcher: any BrowserLaunching,
@@ -33,7 +36,8 @@ final class LinkRouter: ObservableObject {
         availableTargets: @escaping () -> [BrowserTarget],
         sourceApplicationName: @escaping (String?) -> String?,
         usesJev: @escaping () -> Bool = { true },
-        confidenceThreshold: @escaping () -> Double = { RoutingPolicy.defaultThreshold }
+        confidenceThreshold: @escaping () -> Double = { RoutingPolicy.defaultThreshold },
+        activityLogger: (any ActivityLogging)? = nil
     ) {
         self.launcher = launcher
         self.keychain = keychain
@@ -42,6 +46,7 @@ final class LinkRouter: ObservableObject {
         self.sourceApplicationName = sourceApplicationName
         self.usesJev = usesJev
         self.confidenceThreshold = confidenceThreshold
+        self.activityLogger = activityLogger
     }
 
     func receive(
@@ -81,6 +86,7 @@ final class LinkRouter: ObservableObject {
             do {
                 try await self.launcher.open(link.url, in: target)
                 guard !Task.isCancelled, self.queue.current?.id == linkID else { return }
+                self.recordActivityLog(link: link, chosenTarget: target)
                 self.advancePending(expectedLinkID: linkID)
             } catch {
                 guard !Task.isCancelled, self.queue.current?.id == linkID else { return }
@@ -123,6 +129,8 @@ final class LinkRouter: ObservableObject {
         routingLinkID = nil
         isRouting = false
         suggestedTargetID = nil
+        activeDecision = nil
+        isAutoRouting = false
         isJevUnavailable = false
         if pendingURL != nil {
             chooserPresenter?.presentChooser()
@@ -145,6 +153,8 @@ final class LinkRouter: ObservableObject {
         suggestedTargetID = nil
         isJevUnavailable = false
         skipsAutomaticSelection = false
+        activeDecision = nil
+        isAutoRouting = false
         if pendingURL == nil {
             chooserPresenter?.dismissChooser()
         } else {
@@ -160,12 +170,15 @@ final class LinkRouter: ObservableObject {
         launchTask = nil
         launchingLinkID = nil
         isRouting = false
+        isAutoRouting = false
     }
 
     private func routePending() {
         guard let link = queue.current, !isRouting, !isPausedForSettings else { return }
         let linkID = link.id
         let targets = availableTargets()
+        activeDecision = nil
+        isAutoRouting = false
         skipsAutomaticSelection = link.asksForChooser
         if skipsAutomaticSelection, !targets.isEmpty {
             ReflexLog.routing.info("Chooser modifier held; skipping automatic selection")
@@ -233,6 +246,7 @@ final class LinkRouter: ObservableObject {
                     apiKey: apiKey
                 )
                 guard !Task.isCancelled, self.queue.current?.id == linkID, self.usesJev() else { return }
+                self.activeDecision = decision
                 let currentTargets = self.availableTargets()
                 ReflexLog.jev.info("Jev decision returned with confidence: \(decision.confidence, privacy: .public)")
                 self.apply(
@@ -258,16 +272,78 @@ final class LinkRouter: ObservableObject {
         switch action {
         case .setup:
             suggestedTargetID = nil
+            isAutoRouting = false
         case let .open(targetID):
             guard usesJev() else {
                 suggestedTargetID = nil
+                isAutoRouting = false
                 return
             }
             if let target = targets.first(where: { $0.id == targetID }) {
+                isAutoRouting = true
                 openPending(in: target)
             }
         case let .choose(targetID):
+            isAutoRouting = false
             suggestedTargetID = targetID
         }
+    }
+
+    private func recordActivityLog(link: PendingLink, chosenTarget: BrowserTarget) {
+        guard let activityLogger, activityLogger.isLoggingEnabled else { return }
+        let sourceBundleIdentifier = link.sourceApplicationBundleIdentifier
+        let sourceAppName = sourceApplicationName(sourceBundleIdentifier)
+        let sanitized = URLSanitizer.sanitize(
+            link.url,
+            sourceApplicationBundleIdentifier: sourceBundleIdentifier,
+            sourceApplicationName: sourceAppName
+        )
+        let scheme = sanitized?.scheme ?? (link.url.scheme ?? "https")
+        let host = sanitized?.host ?? (link.url.host() ?? "")
+        let path = sanitized?.path ?? link.url.path()
+        let queryParameterNames = sanitized?.queryParameterNames ?? []
+
+        let outcome: RoutingOutcome
+        if link.asksForChooser {
+            outcome = .modifierBypass
+        } else if isAutoRouting {
+            outcome = .autoRouted
+        } else if activeDecision != nil {
+            outcome = .manualChoice
+        } else if availableTargets().count == 1 {
+            outcome = .singleTargetBypass
+        } else {
+            outcome = .fallback
+        }
+
+        var targetScores: [TargetScore] = []
+        if let decision = activeDecision {
+            let targets = availableTargets()
+            for t in targets {
+                if let score = decision.probabilities[t.id] {
+                    targetScores.append(TargetScore(targetID: t.id, targetName: t.name, score: score))
+                }
+            }
+            targetScores.sort { $0.score > $1.score }
+        }
+
+        let entry = ActivityLogEntry(
+            scheme: scheme,
+            host: host,
+            path: path,
+            queryParameterNames: queryParameterNames,
+            sourceApplicationBundleIdentifier: sourceBundleIdentifier,
+            sourceApplicationName: sourceAppName,
+            targetID: chosenTarget.id,
+            targetName: chosenTarget.name,
+            targetBundleIdentifier: chosenTarget.bundleIdentifier,
+            targetProfileDirectory: chosenTarget.chromiumProfileDirectory,
+            outcome: outcome,
+            jevConfidence: activeDecision?.confidence,
+            autoRouteThreshold: confidenceThreshold(),
+            suggestedTargetID: suggestedTargetID,
+            targetScores: targetScores
+        )
+        activityLogger.record(entry)
     }
 }

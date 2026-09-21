@@ -702,7 +702,7 @@ struct ReflexTests {
         let missingConfidence = Data(#"{"answers":{"target":{"choice":"target_0","probabilities":{"target_0":1.0}}}}"#.utf8)
         let badConfidence = Data(#"{"answers":{"target":{"choice":"target_0","probabilities":{"target_0":1.0},"confidence":2.0}}}"#.utf8)
 
-        #expect(try client.decodeDecision(valid, mapping: mapping) == RouteDecision(targetID: target.id, confidence: 0.9))
+        #expect(try client.decodeDecision(valid, mapping: mapping) == RouteDecision(targetID: target.id, confidence: 0.9, probabilities: [target.id: 1.0]))
         #expect(throws: JevClientError.invalidResponse) { try client.decodeDecision(unknown, mapping: mapping) }
         #expect(throws: JevClientError.invalidResponse) { try client.decodeDecision(missingConfidence, mapping: mapping) }
         #expect(throws: JevClientError.invalidResponse) { try client.decodeDecision(badConfidence, mapping: mapping) }
@@ -1288,19 +1288,20 @@ struct ReflexTests {
         return applicationURL
     }
 
-    private func makeTarget(
-        name: String = "Browser",
-        bundleIdentifier: String = "com.example.\(UUID().uuidString)"
-    ) -> BrowserTarget {
-        BrowserTarget(
-            id: UUID(),
-            name: name,
-            bundleIdentifier: bundleIdentifier,
-            purpose: "Test browsing",
-            chromiumProfileDirectory: nil,
-            isEnabled: true
-        )
-    }
+}
+
+fileprivate func makeTarget(
+    name: String = "Browser",
+    bundleIdentifier: String = "com.example.\(UUID().uuidString)"
+) -> BrowserTarget {
+    BrowserTarget(
+        id: UUID(),
+        name: name,
+        bundleIdentifier: bundleIdentifier,
+        purpose: "Test browsing",
+        chromiumProfileDirectory: nil,
+        isEnabled: true
+    )
 }
 
 private func makeProfile(directory: String, name: String) -> DiscoveredBrowserProfile {
@@ -1483,5 +1484,399 @@ private final class MockAppleEventDescriptor: NSAppleEventDescriptor {
     var attributes: [AEKeyword: NSAppleEventDescriptor] = [:]
     override func attributeDescriptor(forKeyword keyword: AEKeyword) -> NSAppleEventDescriptor? {
         attributes[keyword]
+    }
+}
+
+@Suite("Activity log and transparency")
+struct ActivityLogTests {
+    @Test("ActivityLogStore saves and loads entries from local file")
+    @MainActor
+    func activityLogStoreSaveAndLoad() throws {
+        let tempDir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: tempDir) }
+        let fileURL = tempDir.appendingPathComponent("test_activity.json")
+        let suiteName = "ReflexTests.\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+
+        let store = ActivityLogStore(defaults: defaults, fileURL: fileURL)
+        store.isLoggingEnabled = true
+
+        let entry = ActivityLogEntry(
+            scheme: "https",
+            host: "github.com",
+            path: "/acme/repo",
+            queryParameterNames: ["tab"],
+            sourceApplicationBundleIdentifier: "com.tinyspeck.slackmacgap",
+            sourceApplicationName: "Slack",
+            targetID: UUID(),
+            targetName: "Chrome Work",
+            targetBundleIdentifier: "com.google.Chrome",
+            outcome: .autoRouted,
+            jevConfidence: 0.94,
+            autoRouteThreshold: 0.85,
+            suggestedTargetID: nil,
+            targetScores: [
+                TargetScore(targetID: UUID(), targetName: "Chrome Work", score: 0.94),
+                TargetScore(targetID: UUID(), targetName: "Safari Personal", score: 0.06)
+            ]
+        )
+
+        store.record(entry)
+        #expect(store.entries.count == 1)
+        #expect(store.entries.first?.host == "github.com")
+        #expect(store.entries.first?.targetScores.count == 2)
+
+        let reloadedStore = ActivityLogStore(defaults: defaults, fileURL: fileURL)
+        #expect(reloadedStore.entries.count == 1)
+        #expect(reloadedStore.entries.first?.id == entry.id)
+        #expect(reloadedStore.entries.first?.outcome == .autoRouted)
+        #expect(reloadedStore.entries.first?.jevConfidence == 0.94)
+        #expect(reloadedStore.entries.first?.targetScores.first?.targetName == "Chrome Work")
+    }
+
+    @Test("ActivityLogStore does not record when disabled")
+    @MainActor
+    func activityLogStoreDisabledDoesNotRecord() throws {
+        let tempDir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: tempDir) }
+        let fileURL = tempDir.appendingPathComponent("test_activity.json")
+        let suiteName = "ReflexTests.\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+
+        let store = ActivityLogStore(defaults: defaults, fileURL: fileURL)
+        store.isLoggingEnabled = false
+
+        let entry = ActivityLogEntry(
+            scheme: "https",
+            host: "example.com",
+            path: "/",
+            targetID: UUID(),
+            targetName: "Safari",
+            targetBundleIdentifier: "com.apple.Safari",
+            outcome: .autoRouted
+        )
+
+        store.record(entry)
+        #expect(store.entries.isEmpty)
+        #expect(!FileManager.default.fileExists(atPath: fileURL.path))
+    }
+
+    @Test("ActivityLogStore prunes entries based on retention period")
+    @MainActor
+    func activityLogStoreRetentionPruning() throws {
+        let tempDir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: tempDir) }
+        let fileURL = tempDir.appendingPathComponent("test_activity.json")
+        let suiteName = "ReflexTests.\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+
+        let store = ActivityLogStore(defaults: defaults, fileURL: fileURL)
+        store.isLoggingEnabled = true
+
+        let now = Date()
+        let day: TimeInterval = 86_400
+
+        func makeEntry(host: String, daysAgo: Double) -> ActivityLogEntry {
+            ActivityLogEntry(
+                timestamp: now.addingTimeInterval(-daysAgo * day),
+                scheme: "https",
+                host: host,
+                path: "/",
+                targetID: UUID(),
+                targetName: "Safari",
+                targetBundleIdentifier: "com.apple.Safari",
+                outcome: .autoRouted
+            )
+        }
+
+        let entry2Days = makeEntry(host: "2days.com", daysAgo: 2)
+        let entry10Days = makeEntry(host: "10days.com", daysAgo: 10)
+        let entry25Days = makeEntry(host: "25days.com", daysAgo: 25)
+        let entry40Days = makeEntry(host: "40days.com", daysAgo: 40)
+
+        // 7 days retention
+        store.retentionPeriod = .sevenDays
+        store.record(entry2Days)
+        store.record(entry10Days)
+        store.record(entry25Days)
+        store.record(entry40Days)
+        store.prune(now: now)
+        #expect(store.entries.map(\.host) == ["2days.com"])
+
+        // 14 days retention
+        store.clear()
+        store.retentionPeriod = .fourteenDays
+        store.record(entry2Days)
+        store.record(entry10Days)
+        store.record(entry25Days)
+        store.record(entry40Days)
+        store.prune(now: now)
+        #expect(store.entries.map(\.host) == ["10days.com", "2days.com"])
+
+        // 30 days retention
+        store.clear()
+        store.retentionPeriod = .thirtyDays
+        store.record(entry2Days)
+        store.record(entry10Days)
+        store.record(entry25Days)
+        store.record(entry40Days)
+        store.prune(now: now)
+        #expect(store.entries.map(\.host) == ["25days.com", "10days.com", "2days.com"])
+    }
+
+    @Test("ActivityLogStore clear removes all entries")
+    @MainActor
+    func activityLogStoreClear() throws {
+        let tempDir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: tempDir) }
+        let fileURL = tempDir.appendingPathComponent("test_activity.json")
+        let suiteName = "ReflexTests.\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+
+        let store = ActivityLogStore(defaults: defaults, fileURL: fileURL)
+        store.isLoggingEnabled = true
+        store.record(ActivityLogEntry(scheme: "https", host: "example.com", path: "/", targetID: UUID(), targetName: "Safari", targetBundleIdentifier: "com.apple.Safari", outcome: .autoRouted))
+        #expect(!store.entries.isEmpty)
+
+        store.clear()
+        #expect(store.entries.isEmpty)
+
+        let reloaded = ActivityLogStore(defaults: defaults, fileURL: fileURL)
+        #expect(reloaded.entries.isEmpty)
+    }
+
+    @Test("ActivityLogEntry preserves privacy boundaries")
+    func activityLogPrivacyBoundary() {
+        let sensitiveURL = URL(string: "https://auth.company.com/oauth/callback?code=super_secret_token_12345&state=xyz#access_token=secret_hash")!
+        let sanitized = URLSanitizer.sanitize(sensitiveURL)
+        #expect(sanitized != nil)
+
+        let entry = ActivityLogEntry(
+            scheme: sanitized!.scheme,
+            host: sanitized!.host,
+            path: sanitized!.path,
+            queryParameterNames: sanitized!.queryParameterNames,
+            targetID: UUID(),
+            targetName: "Safari",
+            targetBundleIdentifier: "com.apple.Safari",
+            outcome: .autoRouted
+        )
+
+        let encoded = try? JSONEncoder().encode(entry)
+        let jsonString = String(data: encoded ?? Data(), encoding: .utf8) ?? ""
+
+        #expect(!jsonString.contains("super_secret_token_12345"))
+        #expect(!jsonString.contains("secret_hash"))
+        #expect(!jsonString.contains("xyz"))
+        #expect(jsonString.contains("code"))
+        #expect(jsonString.contains("state"))
+        #expect(entry.host == "auth.company.com")
+        #expect(entry.path == "/oauth/callback")
+    }
+
+    @Test("AppState logs auto-routed links with Jev confidence and target scores")
+    @MainActor
+    func appStateLogsAutoRoutedLinks() async throws {
+        let suiteName = "ReflexTests.\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+
+        let tempDir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: tempDir) }
+        let fileURL = tempDir.appendingPathComponent("appstate_activity.json")
+
+        let targets = [
+            makeTarget(name: "Chrome Work", bundleIdentifier: "com.google.Chrome"),
+            makeTarget(name: "Safari Personal", bundleIdentifier: "com.apple.Safari"),
+        ]
+        defaults.set(try JSONEncoder().encode(targets), forKey: "browserTargets")
+
+        let decider = ControlledJevDecider()
+        let recorder = BrowserOpenRecorder()
+        let logStore = ActivityLogStore(defaults: defaults, fileURL: fileURL)
+        logStore.isLoggingEnabled = true
+
+        let state = AppState(
+            keychain: TestKeychainStore(apiKey: "test-key"),
+            launcher: RecordingBrowserLauncher(recorder: recorder),
+            jevClient: decider,
+            defaults: defaults,
+            browserScanner: FixedBrowserScanner(),
+            defaultBrowserService: FixedDefaultBrowserService(),
+            activityLogStore: logStore
+        )
+
+        let url = URL(string: "https://github.com/apple/swift")!
+        state.receive([url], sourceApplicationBundleIdentifier: "com.tinyspeck.slackmacgap")
+
+        for _ in 0..<100 {
+            if await decider.hasRequest(for: "github.com") { break }
+            await Task.yield()
+        }
+
+        await decider.resume(
+            host: "github.com",
+            decision: RouteDecision(
+                targetID: targets[0].id,
+                confidence: 0.95,
+                probabilities: [targets[0].id: 0.95, targets[1].id: 0.05]
+            )
+        )
+
+        for _ in 0..<100 {
+            if state.pendingURL == nil { break }
+            await Task.yield()
+        }
+
+        #expect(await recorder.targetID == targets[0].id)
+        #expect(state.activityLogEntries.count == 1)
+
+        let log = try #require(state.activityLogEntries.first)
+        #expect(log.host == "github.com")
+        #expect(log.path == "/apple/swift")
+        #expect(log.outcome == .autoRouted)
+        #expect(log.jevConfidence == 0.95)
+        #expect(log.targetName == "Chrome Work")
+        #expect(log.targetScores.count == 2)
+        #expect(log.targetScores.first?.score == 0.95)
+        #expect(log.targetScores.first?.targetName == "Chrome Work")
+    }
+
+    @Test("AppState logs manual chooser choice with override and scores")
+    @MainActor
+    func appStateLogsManualChooserOverride() async throws {
+        let suiteName = "ReflexTests.\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+
+        let tempDir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: tempDir) }
+        let fileURL = tempDir.appendingPathComponent("override_activity.json")
+
+        let targets = [
+            makeTarget(name: "Chrome Work", bundleIdentifier: "com.google.Chrome"),
+            makeTarget(name: "Safari Personal", bundleIdentifier: "com.apple.Safari"),
+        ]
+        defaults.set(try JSONEncoder().encode(targets), forKey: "browserTargets")
+
+        let decider = ControlledJevDecider()
+        let recorder = BrowserOpenRecorder()
+        let logStore = ActivityLogStore(defaults: defaults, fileURL: fileURL)
+        logStore.isLoggingEnabled = true
+
+        let state = AppState(
+            keychain: TestKeychainStore(apiKey: "test-key"),
+            launcher: RecordingBrowserLauncher(recorder: recorder),
+            jevClient: decider,
+            defaults: defaults,
+            browserScanner: FixedBrowserScanner(),
+            defaultBrowserService: FixedDefaultBrowserService(),
+            activityLogStore: logStore
+        )
+
+        let url = URL(string: "https://news.ycombinator.com/")!
+        state.receive([url])
+
+        for _ in 0..<100 {
+            if await decider.hasRequest(for: "news.ycombinator.com") { break }
+            await Task.yield()
+        }
+
+        await decider.resume(
+            host: "news.ycombinator.com",
+            decision: RouteDecision(
+                targetID: targets[0].id,
+                confidence: 0.60,
+                probabilities: [targets[0].id: 0.60, targets[1].id: 0.40]
+            )
+        )
+
+        for _ in 0..<100 {
+            if state.suggestedTargetID != nil { break }
+            await Task.yield()
+        }
+
+        #expect(state.suggestedTargetID == targets[0].id)
+        #expect(state.pendingURL != nil)
+
+        state.openPending(in: targets[1])
+
+        for _ in 0..<100 {
+            if state.pendingURL == nil { break }
+            await Task.yield()
+        }
+
+        #expect(await recorder.targetID == targets[1].id)
+        #expect(state.activityLogEntries.count == 1)
+
+        let log = try #require(state.activityLogEntries.first)
+        #expect(log.host == "news.ycombinator.com")
+        #expect(log.outcome == .manualChoice)
+        #expect(log.targetName == "Safari Personal")
+        #expect(log.suggestedTargetID == targets[0].id)
+        #expect(log.jevConfidence == 0.60)
+        #expect(log.targetScores.count == 2)
+    }
+
+    @Test("AppState logs shortcut modifier bypass")
+    @MainActor
+    func appStateLogsModifierBypass() async throws {
+        let suiteName = "ReflexTests.\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+
+        let tempDir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: tempDir) }
+        let fileURL = tempDir.appendingPathComponent("modifier_activity.json")
+
+        let targets = [
+            makeTarget(name: "Chrome", bundleIdentifier: "com.google.Chrome"),
+            makeTarget(name: "Safari", bundleIdentifier: "com.apple.Safari"),
+        ]
+        defaults.set(try JSONEncoder().encode(targets), forKey: "browserTargets")
+
+        let decider = ControlledJevDecider()
+        let recorder = BrowserOpenRecorder()
+        let logStore = ActivityLogStore(defaults: defaults, fileURL: fileURL)
+        logStore.isLoggingEnabled = true
+
+        let state = AppState(
+            keychain: TestKeychainStore(apiKey: "test-key"),
+            launcher: RecordingBrowserLauncher(recorder: recorder),
+            jevClient: decider,
+            defaults: defaults,
+            browserScanner: FixedBrowserScanner(),
+            defaultBrowserService: FixedDefaultBrowserService(),
+            activityLogStore: logStore
+        )
+
+        let url = URL(string: "https://example.com")!
+        state.receive([url], asksForChooser: true)
+
+        #expect(state.skipsAutomaticSelection)
+        #expect(state.pendingURL != nil)
+
+        state.openPending(in: targets[0])
+
+        for _ in 0..<100 {
+            if state.pendingURL == nil { break }
+            await Task.yield()
+        }
+
+        #expect(state.activityLogEntries.count == 1)
+        let log = try #require(state.activityLogEntries.first)
+        #expect(log.outcome == .modifierBypass)
+        #expect(log.targetName == "Chrome")
     }
 }

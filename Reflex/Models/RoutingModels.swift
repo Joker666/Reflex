@@ -61,6 +61,13 @@ struct RoutingContext: Codable, Equatable {
 struct RouteDecision: Equatable {
     var targetID: UUID
     var confidence: Double
+    var probabilities: [UUID: Double]
+
+    init(targetID: UUID, confidence: Double, probabilities: [UUID: Double] = [:]) {
+        self.targetID = targetID
+        self.confidence = confidence
+        self.probabilities = probabilities
+    }
 }
 
 enum RoutingAction: Equatable {

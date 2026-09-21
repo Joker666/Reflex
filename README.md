@@ -38,7 +38,7 @@ You can use Reflex without an API key. In this mode, Reflex shows the chooser fo
 - Opens the chooser when automatic selection is unavailable or uncertain.
 - Configurable auto-route confidence threshold (default 85%) in Settings.
 - Lets you hold Option while you click a link to open the chooser directly. You can change this modifier in Settings.
-- Keeps incoming links in memory only. Reflex does not keep a link history.
+- Keeps incoming links in memory only by default. An optional, local-only Activity Log provides full transparency into TypeSafe Jev decision scores and target evaluations with configurable 7 to 30 days retention.
 
 ## Current limitations
 
@@ -46,4 +46,6 @@ You can use Reflex without an API key. In this mode, Reflex shows the chooser fo
 
 ## Privacy
 
-Reflex does not save the links that you open. For automatic selection, it removes query values and fragments before it sends the reduced link information, source application, target names, and target purposes to OpenRouter. The selected browser always receives the original link.
+By default, Reflex does not save the links that you open. When you opt into the local Activity Log in Settings, Reflex stores only sanitized link context (host, path, query parameter names, and source app) and AI evaluation scores locally on your Mac. Full query values, tracking tokens, fragments, clipboard contents, and page contents are never saved. Logs are automatically pruned after your chosen retention period (7, 14, or 30 days) and can be cleared at any time.
+
+For automatic selection, Reflex removes query values and fragments before it sends the reduced link information, source application, target names, and target purposes to OpenRouter. The selected browser always receives the original link.

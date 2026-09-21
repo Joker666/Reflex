@@ -27,12 +27,12 @@ final class SettingsWindowController: NSObject, NSWindowDelegate, NSToolbarDeleg
     }
 
     private func makeWindow() -> NSWindow {
-        let contentFrame = NSRect(x: 0, y: 0, width: 620, height: 500)
+        let contentFrame = NSRect(x: 0, y: 0, width: 640, height: 520)
         let hostingView = NSHostingView(rootView: SettingsView(state: state, navigation: navigation))
         hostingView.frame = contentFrame
         let window = NSWindow(
             contentRect: contentFrame,
-            styleMask: [.titled, .closable, .miniaturizable],
+            styleMask: [.titled, .closable, .miniaturizable, .resizable],
             backing: .buffered,
             defer: false
         )
@@ -53,19 +53,11 @@ final class SettingsWindowController: NSObject, NSWindowDelegate, NSToolbarDeleg
     }
 
     func toolbarDefaultItemIdentifiers(_ toolbar: NSToolbar) -> [NSToolbarItem.Identifier] {
-        [
-            SettingsTab.general.identifier,
-            SettingsTab.targets.identifier,
-            SettingsTab.routing.identifier
-        ]
+        SettingsTab.allCases.map(\.identifier)
     }
 
     func toolbarAllowedItemIdentifiers(_ toolbar: NSToolbar) -> [NSToolbarItem.Identifier] {
-        [
-            SettingsTab.general.identifier,
-            SettingsTab.targets.identifier,
-            SettingsTab.routing.identifier
-        ]
+        SettingsTab.allCases.map(\.identifier)
     }
 
     func toolbarSelectableItemIdentifiers(_ toolbar: NSToolbar) -> [NSToolbarItem.Identifier] {

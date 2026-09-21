@@ -179,6 +179,12 @@ struct JevClient: JevDeciding {
               answer.probabilities.values.allSatisfy({ $0.isFinite }) else {
             throw JevClientError.invalidResponse
         }
-        return RouteDecision(targetID: targetID, confidence: confidence)
+        var probabilities: [UUID: Double] = [:]
+        for (key, prob) in answer.probabilities {
+            if let id = mapping.keyToTargetID[key] {
+                probabilities[id] = prob
+            }
+        }
+        return RouteDecision(targetID: targetID, confidence: confidence, probabilities: probabilities)
     }
 }

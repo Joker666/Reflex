@@ -76,6 +76,7 @@ final class AppState: ObservableObject {
     private let usesJevKey = "usesJev"
     private let autoRouteConfidenceThresholdKey = "autoRouteConfidenceThreshold"
     private let hasCompletedOnboardingKey = "hasCompletedOnboarding"
+    let activityLogStore: ActivityLogStore
     private var iconCache: [String: NSImage] = [:]
     private var availabilityCache: [TargetProfileKey: Bool] = [:]
     private var storedShowsMenuBarItem = true
@@ -84,6 +85,7 @@ final class AppState: ObservableObject {
     private var browserScanTask: Task<Void, Never>?
     private var browserScanGeneration = 0
     private var routingChangeSubscription: AnyCancellable?
+    private var activityLogSubscription: AnyCancellable?
     private lazy var linkRouter = LinkRouter(
         launcher: launcher,
         keychain: keychain,
@@ -91,7 +93,8 @@ final class AppState: ObservableObject {
         availableTargets: { [weak self] in self?.availableTargets ?? [] },
         sourceApplicationName: { [weak self] in self?.applicationName(for: $0) },
         usesJev: { [weak self] in self?.usesJev ?? true },
-        confidenceThreshold: { [weak self] in self?.autoRouteConfidenceThreshold ?? RoutingPolicy.defaultThreshold }
+        confidenceThreshold: { [weak self] in self?.autoRouteConfidenceThreshold ?? RoutingPolicy.defaultThreshold },
+        activityLogger: activityLogStore
     )
 
     var pendingURL: URL? { linkRouter.pendingURL }
@@ -101,13 +104,30 @@ final class AppState: ObservableObject {
     var skipsAutomaticSelection: Bool { linkRouter.skipsAutomaticSelection }
     var launchError: String? { linkRouter.launchError }
 
+    var isActivityLoggingEnabled: Bool {
+        get { activityLogStore.isLoggingEnabled }
+        set { activityLogStore.isLoggingEnabled = newValue }
+    }
+    var activityRetentionPeriod: ActivityRetentionPeriod {
+        get { activityLogStore.retentionPeriod }
+        set { activityLogStore.retentionPeriod = newValue }
+    }
+    var activityLogEntries: [ActivityLogEntry] {
+        activityLogStore.entries
+    }
+
+    func clearActivityLog() {
+        activityLogStore.clear()
+    }
+
     init(
         keychain: any APIKeyStoring = KeychainStore(),
         launcher: any BrowserLaunching = BrowserLauncher(),
         jevClient: any JevDeciding = JevClient(),
         defaults: UserDefaults = .standard,
         browserScanner: any BrowserScanning = BrowserScanner(),
-        defaultBrowserService: any DefaultBrowserServicing = DefaultBrowserService()
+        defaultBrowserService: any DefaultBrowserServicing = DefaultBrowserService(),
+        activityLogStore: ActivityLogStore? = nil
     ) {
         self.keychain = keychain
         self.launcher = launcher
@@ -115,6 +135,7 @@ final class AppState: ObservableObject {
         self.defaults = defaults
         self.browserScanner = browserScanner
         self.defaultBrowserService = defaultBrowserService
+        self.activityLogStore = activityLogStore ?? ActivityLogStore(defaults: defaults)
         if let data = defaults.data(forKey: targetsKey),
            let storedTargets = try? JSONDecoder().decode([BrowserTarget].self, from: data) {
             targets = storedTargets
@@ -134,6 +155,9 @@ final class AppState: ObservableObject {
         hasAPIKey = (try? keychain.readAPIKey()) != nil
         updateAvailableTargets()
         routingChangeSubscription = linkRouter.objectWillChange.sink { [weak self] _ in
+            self?.objectWillChange.send()
+        }
+        activityLogSubscription = self.activityLogStore.objectWillChange.sink { [weak self] _ in
             self?.objectWillChange.send()
         }
     }
