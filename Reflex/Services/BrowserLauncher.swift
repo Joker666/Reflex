@@ -42,6 +42,42 @@ struct BrowserLauncher: BrowserLaunching {
         ["-na", applicationPath, "--args", "--profile-directory=\(profileDirectory)", url.absoluteString]
     }
 
+    /// Dia enforces a single running instance and displays an error alert if launched with `open -n`.
+    /// Dia's native AppleScript suite supports focusing profiles and creating tabs in that profile.
+    static func openInDia(url: URL, profileName: String) -> Bool {
+        let escapedURL = url.absoluteString
+            .replacingOccurrences(of: "\\", with: "\\\\")
+            .replacingOccurrences(of: "\"", with: "\\\"")
+        let escapedProfile = profileName
+            .replacingOccurrences(of: "\\", with: "\\\\")
+            .replacingOccurrences(of: "\"", with: "\\\"")
+
+        let script = """
+        tell application "Dia"
+            activate
+            if (count of windows) > 0 then
+                try
+                    set targetProfile to (first profile of front window whose name is "\(escapedProfile)")
+                    tell targetProfile to focus
+                    tell targetProfile to make new tab with properties {URL:"\(escapedURL)"}
+                    return true
+                on error
+                    make new tab at front window with properties {URL:"\(escapedURL)"}
+                    return true
+                end try
+            else
+                open location "\(escapedURL)"
+                return true
+            end if
+        end tell
+        """
+
+        var error: NSDictionary?
+        guard let appleScript = NSAppleScript(source: script) else { return false }
+        appleScript.executeAndReturnError(&error)
+        return error == nil
+    }
+
     func isAvailable(_ target: BrowserTarget) -> Bool {
         applicationURL(for: target) != nil
     }
@@ -55,7 +91,27 @@ struct BrowserLauncher: BrowserLaunching {
             throw BrowserLaunchError.applicationUnavailable
         }
 
-        if let profile = target.chromiumProfileDirectory, !profile.isEmpty {
+        if target.bundleIdentifier == "company.thebrowser.dia" {
+            if let profile = BrowserTarget.profilePart(of: target.name), !profile.isEmpty {
+                if Self.openInDia(url: originalURL, profileName: profile) {
+                    return
+                }
+            }
+            let configuration = NSWorkspace.OpenConfiguration()
+            do {
+                _ = try await NSWorkspace.shared.open(
+                    [originalURL],
+                    withApplicationAt: applicationURL,
+                    configuration: configuration
+                )
+                return
+            } catch {
+                throw BrowserLaunchError.launchFailed(error.localizedDescription)
+            }
+        }
+
+        let supportsChromiumProfiles = SupportedBrowser.chromiumProfileDataDirectory(for: target.bundleIdentifier) != nil
+        if supportsChromiumProfiles, let profile = target.chromiumProfileDirectory, !profile.isEmpty {
             guard Self.isValidProfileDirectory(profile) else {
                 throw BrowserLaunchError.invalidProfileDirectory
             }

@@ -221,7 +221,7 @@ Keep the threshold in preferences, but a settings UI for changing it is optional
 
 - Verify that a configured bundle identifier resolves to an installed application before presenting it as available
 - For a target without a profile, use `NSWorkspace` APIs to open the original URL with that application
-- For a Chromium target with `chromiumProfileDirectory`, launch a new app instance through `/usr/bin/open` with an argument array equivalent to `-na <application> --args --profile-directory=<profile> <url>`
+- For a Chromium target with `chromiumProfileDirectory`, launch a new app instance through `/usr/bin/open` with an argument array equivalent to `-na <application> --args --profile-directory=<profile> <url>`. Dia enforces a single running instance and rejects `-n`, so Dia profile targets are focused via AppleScript and opened via `NSWorkspace`
 - Never build a shell command string. Use `Process` with explicit executable URL and arguments so URL contents cannot become shell syntax
 - Validate profile directory values as plain profile identifiers and reject control characters
 - If launching the chosen target fails, keep the original URL available and show the chooser with a visible, non-blocking error

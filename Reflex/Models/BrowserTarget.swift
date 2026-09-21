@@ -105,7 +105,15 @@ extension Array where Element == BrowserTarget {
 
             var group = filter { $0.bundleIdentifier == bundleIdentifier }
             guard scannedBundleIdentifiers.contains(bundleIdentifier) else {
-                result.append(contentsOf: group)
+                if SupportedBrowser.chromiumProfileDataDirectory(for: bundleIdentifier) == nil {
+                    result.append(contentsOf: group.map {
+                        var target = $0
+                        target.chromiumProfileDirectory = nil
+                        return target
+                    })
+                } else {
+                    result.append(contentsOf: group)
+                }
                 continue
             }
             let profiles = profilesByBundleIdentifier[bundleIdentifier] ?? []
@@ -220,5 +228,18 @@ extension Array where Element == BrowserTarget {
             )
         }
         return result
+    }
+
+    /// Clear profile directory from browsers that do not support Chromium profiles (e.g. Safari, Firefox, Zen, Dia).
+    func sanitizingUnsupportedProfileDirectories() -> [BrowserTarget] {
+        map { target in
+            guard target.chromiumProfileDirectory != nil,
+                  SupportedBrowser.chromiumProfileDataDirectory(for: target.bundleIdentifier) == nil else {
+                return target
+            }
+            var sanitized = target
+            sanitized.chromiumProfileDirectory = nil
+            return sanitized
+        }
     }
 }
