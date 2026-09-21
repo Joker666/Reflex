@@ -28,7 +28,7 @@ You can use Reflex without an API key. In this mode, Reflex shows the chooser fo
 
 ## Main features
 
-- Routes links to Safari, Chrome, Dia, Comet, Helium, Edge, Phi, Zen, or Firefox.
+- Routes links to Safari, Chrome, Dia, Comet, Helium, Edge, Phi, Zen, Firefox, or Brave.
 - Supports profiles for recognized Chromium-based browsers.
 - Opens the chooser when automatic selection is unavailable or uncertain.
 - Configurable auto-route confidence threshold (default 85%) in Settings.
@@ -37,7 +37,7 @@ You can use Reflex without an API key. In this mode, Reflex shows the chooser fo
 
 ## Current limitations
 
-- Profile discovery supports recognized Chromium-based browsers (Chrome, Edge, Comet, Dia, and Helium). Safari, Firefox, Zen, and Phi profiles are not available.
+- Profile discovery supports recognized Chromium-based browsers (Chrome, Edge, Comet, Dia, Helium, and Brave). Safari, Firefox, Zen, and Phi profiles are not available.
 
 ## Privacy
 
