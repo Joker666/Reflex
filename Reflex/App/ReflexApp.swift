@@ -21,6 +21,10 @@ private struct ReflexMenuBar: Scene {
     @ObservedObject var state: AppState
     let openSettings: () -> Void
 
+    private var versionText: String? {
+        AppVersion.formatted()
+    }
+
     var body: some Scene {
         MenuBarExtra(
             "Reflex",
@@ -28,9 +32,28 @@ private struct ReflexMenuBar: Scene {
             isInserted: $state.showsMenuBarItem
         ) {
             Button("Settings…") { openSettings() }
+            if let versionText {
+                Text(versionText)
+                    .disabled(true)
+            }
             Divider()
             Button("Quit Reflex") { NSApplication.shared.terminate(nil) }
         }
+    }
+}
+
+enum AppVersion {
+    static func formatted(
+        shortVersion: String? = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String,
+        buildVersion: String? = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String
+    ) -> String? {
+        if let shortVersion, !shortVersion.isEmpty {
+            return "Version \(shortVersion)"
+        }
+        if let buildVersion, !buildVersion.isEmpty {
+            return "Version \(buildVersion)"
+        }
+        return nil
     }
 }
 

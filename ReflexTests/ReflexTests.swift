@@ -1096,6 +1096,16 @@ struct ReflexTests {
         )
     }
 
+    @Test("AppVersion formats short version and build number")
+    func appVersionFormatting() {
+        #expect(AppVersion.formatted(shortVersion: "0.1.0", buildVersion: "3") == "Version 0.1.0")
+        #expect(AppVersion.formatted(shortVersion: "1.2", buildVersion: nil) == "Version 1.2")
+        #expect(AppVersion.formatted(shortVersion: nil, buildVersion: "42") == "Version 42")
+        #expect(AppVersion.formatted(shortVersion: "", buildVersion: "42") == "Version 42")
+        #expect(AppVersion.formatted(shortVersion: nil, buildVersion: nil) == nil)
+        #expect(AppVersion.formatted(shortVersion: "", buildVersion: "") == nil)
+    }
+
     private func makeApplication(at root: URL, name: String, identifier: String) throws -> URL {
         let applicationURL = root.appending(path: "\(name).app")
         let contentsURL = applicationURL.appending(path: "Contents")
