@@ -48,7 +48,7 @@ The release workflow starts when a tag such as `v0.1.0` is pushed. The tag versi
 Configure these GitHub Actions secrets before a release:
 
 - `DEVELOPER_ID_CERTIFICATE_BASE64`: the exported Developer ID Application `.p12` file, encoded with Base64
-- `DEVELOPER_ID_CERTIFICATE_PASSWORD`: the export password for the `.p12` file
+- `DEVELOPER_ID_CERTIFICATE_PASSWORD`: the export password for the `.p12` file; omit it when the file has no password
 - `KEYCHAIN_PASSWORD`: a random password for the temporary CI Keychain
 - `APP_STORE_CONNECT_API_KEY_BASE64`: the App Store Connect `.p8` private key, encoded with Base64
 - `APP_STORE_CONNECT_API_KEY_ID`: the API key identifier

@@ -39,7 +39,7 @@ jobs:
           CERTIFICATE_PASSWORD: ${{ secrets.DEVELOPER_ID_CERTIFICATE_PASSWORD }}
           KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
         run: |
-          if [[ -z "$CERTIFICATE_BASE64" || -z "$CERTIFICATE_PASSWORD" || -z "$KEYCHAIN_PASSWORD" ]]; then
+          if [[ -z "$CERTIFICATE_BASE64" || -z "$KEYCHAIN_PASSWORD" ]]; then
             echo "Developer ID certificate secrets are not configured." >&2
             exit 1
           fi
