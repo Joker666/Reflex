@@ -29,7 +29,7 @@ fail() {
 command -v xcodebuild >/dev/null || fail "Xcode command-line tools are not available."
 command -v xcrun >/dev/null || fail "xcrun is not available."
 
-if ! security find-identity -v -p codesigning | rg -Fq "\"${developer_id_identity}"; then
+if ! security find-identity -v -p codesigning | grep -Fq "\"${developer_id_identity}"; then
     fail "No '${developer_id_identity}' certificate with a private key is available. Create a Developer ID Application certificate in the Apple Developer account and install it in Keychain."
 fi
 
