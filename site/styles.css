@@ -1405,12 +1405,6 @@ h1 {
   letter-spacing: -0.01em;
 }
 
-.app-meta {
-  font-size: 0.75rem;
-  font-weight: 500;
-  color: var(--text-tertiary);
-}
-
 .feature-cell {
   font-weight: 600;
   color: var(--text-primary);
