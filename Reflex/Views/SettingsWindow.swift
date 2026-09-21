@@ -26,7 +26,7 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
     }
 
     private func makeWindow() -> NSWindow {
-        let contentFrame = NSRect(x: 0, y: 0, width: 620, height: 520)
+        let contentFrame = NSRect(x: 0, y: 0, width: 580, height: 480)
         let hostingView = NSHostingView(rootView: SettingsView(state: state))
         hostingView.frame = contentFrame
         let window = NSWindow(

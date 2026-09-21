@@ -1,6 +1,22 @@
 import SwiftUI
 import UniformTypeIdentifiers
 
+enum SettingsTab: String, CaseIterable, Identifiable {
+    case general = "General"
+    case targets = "Targets"
+    case routing = "AI Routing"
+
+    var id: String { rawValue }
+
+    var symbolName: String {
+        switch self {
+        case .general: return "gearshape"
+        case .targets: return "globe"
+        case .routing: return "sparkles"
+        }
+    }
+}
+
 struct SettingsView: View {
     @ObservedObject var state: AppState
     @FocusState private var isFieldFocused: Bool
@@ -17,7 +33,151 @@ struct SettingsView: View {
         !apiKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
+    @State private var selectedTab: SettingsTab = .general
+
     var body: some View {
+        TabView(selection: $selectedTab) {
+            generalTab
+                .tabItem {
+                    Label(SettingsTab.general.rawValue, systemImage: SettingsTab.general.symbolName)
+                }
+                .tag(SettingsTab.general)
+
+            targetsTab
+                .tabItem {
+                    Label(SettingsTab.targets.rawValue, systemImage: SettingsTab.targets.symbolName)
+                }
+                .tag(SettingsTab.targets)
+
+            routingTab
+                .tabItem {
+                    Label(SettingsTab.routing.rawValue, systemImage: SettingsTab.routing.symbolName)
+                }
+                .tag(SettingsTab.routing)
+        }
+        .padding()
+        .frame(minWidth: 540, idealWidth: 580, minHeight: 420, idealHeight: 480)
+    }
+
+    private var generalTab: some View {
+        Form {
+            Section("Default browser") {
+                HStack {
+                    Label(
+                        state.defaultBrowserStatus.ownsHTTP ? "HTTP: Reflex" : "HTTP: Other browser",
+                        systemImage: state.defaultBrowserStatus.ownsHTTP ? "checkmark.circle.fill" : "exclamationmark.circle"
+                    )
+                    Spacer()
+                    Label(
+                        state.defaultBrowserStatus.ownsHTTPS ? "HTTPS: Reflex" : "HTTPS: Other browser",
+                        systemImage: state.defaultBrowserStatus.ownsHTTPS ? "checkmark.circle.fill" : "exclamationmark.circle"
+                    )
+                }
+                Button("Make Reflex Default Browser") { state.makeDefaultBrowser() }
+                    .disabled(state.defaultBrowserStatus.isComplete)
+                if let message = state.setupMessage {
+                    Text(message).font(.caption).foregroundStyle(.secondary)
+                }
+                Text("Links from other applications normally reach Reflex only when it is the default browser. Links inside a browser or an embedded web view can bypass Reflex.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            Section("Menu bar") {
+                Toggle("Show Reflex in the menu bar", isOn: $state.showsMenuBarItem)
+                Text("When the menu bar item is on, closing this window removes the Dock icon and keeps Reflex in the menu bar. When it is off, closing this window quits Reflex.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            Section("Chooser shortcut") {
+                Picker("Modifier key", selection: $state.chooserModifier) {
+                    ForEach(ChooserModifier.allCases) { modifier in
+                        Label(
+                            "\(modifier.name) + click",
+                            systemImage: modifier.symbolName
+                        )
+                        .tag(modifier)
+                    }
+                }
+                Text("Hold \(state.chooserModifier.name) while you click a link to skip automatic selection and show the chooser. The chooser also gives access to Settings. The source application can use some modified clicks itself, so the link might not reach Reflex.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .formStyle(.grouped)
+    }
+
+    private var targetsTab: some View {
+        Form {
+            Section("Browser targets") {
+                if state.targets.isEmpty {
+                    Text("No registered web browser was found.")
+                }
+                Text("The purpose is what Jev reads. Write the accounts, sites, and work you use a target for, for example \"Slumber work: GitHub, Linear, company mail\". A target with no purpose is hard for Jev to choose, so Reflex shows the chooser instead.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                if state.targets.count > 1 {
+                    Text("Drag a row by its handle to set the chooser order. The number is the key that opens that target.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                let shortcutNumbers = shortcutNumbers()
+                ForEach(browserGroups(), id: \.first) { targetIDs in
+                    VStack(alignment: .leading, spacing: 8) {
+                        browserHeader(for: targetIDs)
+                        ForEach(targetIDs, id: \.self) { targetID in
+                            targetRow(targetID: targetID, shortcutNumbers: shortcutNumbers)
+                        }
+                    }
+                    .padding(.vertical, 4)
+                }
+                HStack {
+                    Button("Add Browser…") { addBrowser() }
+                    Button("Rescan Browsers") { state.rescanBrowsers() }
+                }
+                Text("A browser with more than one profile becomes one target for each profile. A browser with a single profile stays one target.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            Section("Profile access") {
+                if state.profileAccessDeniedBrowsers.isEmpty,
+                   state.missingProfileDataBrowsers.isEmpty {
+                    Label(
+                        "No profile access problem was found.",
+                        systemImage: "checkmark.circle.fill"
+                    )
+                    .foregroundStyle(.secondary)
+                }
+                if !state.profileAccessDeniedBrowsers.isEmpty {
+                    Label(
+                        "macOS blocks the profiles of \(state.profileAccessDeniedBrowsers.joined(separator: ", ")).",
+                        systemImage: "lock.circle"
+                    )
+                    Button("Open Full Disk Access") { state.openFullDiskAccessSettings() }
+                    Text("Add Reflex to the list and switch it on. Then start Reflex again and select Rescan Browsers. Reflex works without this access, but it shows one target for each of these browsers.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                if !state.missingProfileDataBrowsers.isEmpty {
+                    Label(
+                        "No profile data was found for \(state.missingProfileDataBrowsers.joined(separator: ", ")).",
+                        systemImage: "questionmark.circle"
+                    )
+                    Text("Start each browser once, then select Rescan Browsers. Invalid profile data also appears in this state.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                Text("Reflex reads profile directories and profile names. When Edge stores a placeholder profile name, Reflex can read account-name fields from that profile record. The value can become a target name and can be sent to OpenRouter when automatic selection is active. Reflex reads no history, cookies, or page data.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .formStyle(.grouped)
+    }
+
+    private var routingTab: some View {
         Form {
             Section("OpenRouter") {
                 SecureField("API key", text: $apiKey)
@@ -116,117 +276,8 @@ struct SettingsView: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
-
-            Section("Default browser") {
-                HStack {
-                    Label(
-                        state.defaultBrowserStatus.ownsHTTP ? "HTTP: Reflex" : "HTTP: Other browser",
-                        systemImage: state.defaultBrowserStatus.ownsHTTP ? "checkmark.circle.fill" : "exclamationmark.circle"
-                    )
-                    Spacer()
-                    Label(
-                        state.defaultBrowserStatus.ownsHTTPS ? "HTTPS: Reflex" : "HTTPS: Other browser",
-                        systemImage: state.defaultBrowserStatus.ownsHTTPS ? "checkmark.circle.fill" : "exclamationmark.circle"
-                    )
-                }
-                Button("Make Reflex Default Browser") { state.makeDefaultBrowser() }
-                    .disabled(state.defaultBrowserStatus.isComplete)
-                if let message = state.setupMessage {
-                    Text(message).font(.caption).foregroundStyle(.secondary)
-                }
-                Text("Links from other applications normally reach Reflex only when it is the default browser. Links inside a browser or an embedded web view can bypass Reflex.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-
-            Section("Menu bar") {
-                Toggle("Show Reflex in the menu bar", isOn: $state.showsMenuBarItem)
-                Text("When the menu bar item is on, closing this window removes the Dock icon and keeps Reflex in the menu bar. When it is off, closing this window quits Reflex.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-
-            Section("Chooser shortcut") {
-                Picker("Modifier key", selection: $state.chooserModifier) {
-                    ForEach(ChooserModifier.allCases) { modifier in
-                        Label(
-                            "\(modifier.name) + click",
-                            systemImage: modifier.symbolName
-                        )
-                        .tag(modifier)
-                    }
-                }
-                Text("Hold \(state.chooserModifier.name) while you click a link to skip automatic selection and show the chooser. The chooser also gives access to Settings. The source application can use some modified clicks itself, so the link might not reach Reflex.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-
-            Section("Profile access") {
-                if state.profileAccessDeniedBrowsers.isEmpty,
-                   state.missingProfileDataBrowsers.isEmpty {
-                    Label(
-                        "No profile access problem was found.",
-                        systemImage: "checkmark.circle.fill"
-                    )
-                    .foregroundStyle(.secondary)
-                }
-                if !state.profileAccessDeniedBrowsers.isEmpty {
-                    Label(
-                        "macOS blocks the profiles of \(state.profileAccessDeniedBrowsers.joined(separator: ", ")).",
-                        systemImage: "lock.circle"
-                    )
-                    Button("Open Full Disk Access") { state.openFullDiskAccessSettings() }
-                    Text("Add Reflex to the list and switch it on. Then start Reflex again and select Rescan Browsers. Reflex works without this access, but it shows one target for each of these browsers.")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-                if !state.missingProfileDataBrowsers.isEmpty {
-                    Label(
-                        "No profile data was found for \(state.missingProfileDataBrowsers.joined(separator: ", ")).",
-                        systemImage: "questionmark.circle"
-                    )
-                    Text("Start each browser once, then select Rescan Browsers. Invalid profile data also appears in this state.")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-                Text("Reflex reads profile directories and profile names. When Edge stores a placeholder profile name, Reflex can read account-name fields from that profile record. The value can become a target name and can be sent to OpenRouter when automatic selection is active. Reflex reads no history, cookies, or page data.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-
-            Section("Browser targets") {
-                if state.targets.isEmpty {
-                    Text("No registered web browser was found.")
-                }
-                Text("The purpose is what Jev reads. Write the accounts, sites, and work you use a target for, for example \"Slumber work: GitHub, Linear, company mail\". A target with no purpose is hard for Jev to choose, so Reflex shows the chooser instead.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                if state.targets.count > 1 {
-                    Text("Drag a row by its handle to set the chooser order. The number is the key that opens that target.")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-                let shortcutNumbers = shortcutNumbers()
-                ForEach(browserGroups(), id: \.first) { targetIDs in
-                    VStack(alignment: .leading, spacing: 8) {
-                        browserHeader(for: targetIDs)
-                        ForEach(targetIDs, id: \.self) { targetID in
-                            targetRow(targetID: targetID, shortcutNumbers: shortcutNumbers)
-                        }
-                    }
-                    .padding(.vertical, 4)
-                }
-                HStack {
-                    Button("Add Browser…") { addBrowser() }
-                    Button("Rescan Browsers") { state.rescanBrowsers() }
-                }
-                Text("A browser with more than one profile becomes one target for each profile. A browser with a single profile stays one target.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
         }
         .formStyle(.grouped)
-        .padding()
     }
 
     /// Targets of one browser sit next to each other, so a run of them is one group.
