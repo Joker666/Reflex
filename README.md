@@ -36,7 +36,7 @@ You can use Reflex without an API key. In this mode, Reflex shows the chooser fo
 
 ## Current limitations
 
-- Profile discovery supports recognized Chromium-based browsers (Chrome, Edge, Comet, Dia, Helium, and Phi). Safari, Firefox, and Zen profiles are not available.
+- Profile discovery supports recognized Chromium-based browsers (Chrome, Edge, Comet, Dia, and Helium). Safari, Firefox, Zen, and Phi profiles are not available.
 
 ## Privacy
 

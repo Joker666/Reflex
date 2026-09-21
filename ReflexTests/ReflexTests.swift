@@ -1089,6 +1089,7 @@ struct ReflexTests {
         #expect(SupportedBrowser.chromiumProfileDataDirectory(for: "com.google.Chrome.canary") == nil)
         #expect(SupportedBrowser.chromiumProfileDataDirectory(for: "com.apple.Safari") == nil)
         #expect(SupportedBrowser.chromiumProfileDataDirectory(for: "company.thebrowser.dia") == "Dia/User Data")
+        #expect(SupportedBrowser.chromiumProfileDataDirectory(for: "com.phibrowser.Mac") == nil)
         #expect(SupportedBrowser.matching(name: "Zen Browser", bundleIdentifier: "unknown") == .zen)
         #expect(SupportedBrowser.matching(name: "Random Browser", bundleIdentifier: "com.unknown.browser") == nil)
         #expect(
@@ -1099,6 +1100,14 @@ struct ReflexTests {
 
     @Test("Unsupported profile directories are sanitized")
     func sanitizingUnsupportedProfileDirectories() {
+        let phi = BrowserTarget(
+            id: UUID(),
+            name: "Phi",
+            bundleIdentifier: "com.phibrowser.Mac",
+            purpose: "Research",
+            chromiumProfileDirectory: "Default",
+            isEnabled: true
+        )
         let safari = BrowserTarget(
             id: UUID(),
             name: "Safari",
@@ -1116,9 +1125,10 @@ struct ReflexTests {
             isEnabled: true
         )
 
-        let sanitized = [safari, chrome].sanitizingUnsupportedProfileDirectories()
+        let sanitized = [phi, safari, chrome].sanitizingUnsupportedProfileDirectories()
         #expect(sanitized[0].chromiumProfileDirectory == nil)
-        #expect(sanitized[1].chromiumProfileDirectory == "Profile 1")
+        #expect(sanitized[1].chromiumProfileDirectory == nil)
+        #expect(sanitized[2].chromiumProfileDirectory == "Profile 1")
     }
 
     @Test("AppVersion formats short version and build number")

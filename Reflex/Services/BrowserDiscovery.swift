@@ -88,7 +88,6 @@ enum SupportedBrowser: CaseIterable {
         case "ai.perplexity.comet": "Comet"
         case "company.thebrowser.dia": "Dia/User Data"
         case "net.imput.helium": "net.imput.helium"
-        case "com.phibrowser.Mac": "com.phibrowser.Mac"
         default: nil
         }
     }
