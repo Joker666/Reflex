@@ -9,10 +9,13 @@ copyButton?.addEventListener("click", async () => {
       label.textContent = "Copy";
     }, 1600);
   } catch {
-    const range = document.createRange();
-    range.selectNode(document.querySelector(".install-block code"));
-    const selection = window.getSelection();
-    selection.removeAllRanges();
-    selection.addRange(range);
+    const codeEl = document.querySelector(".install-command code");
+    if (codeEl) {
+      const range = document.createRange();
+      range.selectNode(codeEl);
+      const selection = window.getSelection();
+      selection?.removeAllRanges();
+      selection?.addRange(range);
+    }
   }
 });
