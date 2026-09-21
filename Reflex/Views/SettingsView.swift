@@ -8,6 +8,10 @@ enum SettingsTab: String, CaseIterable, Identifiable {
 
     var id: String { rawValue }
 
+    var identifier: NSToolbarItem.Identifier {
+        NSToolbarItem.Identifier(rawValue)
+    }
+
     var symbolName: String {
         switch self {
         case .general: return "gearshape"
@@ -17,8 +21,14 @@ enum SettingsTab: String, CaseIterable, Identifiable {
     }
 }
 
+@MainActor
+final class SettingsNavigationState: ObservableObject {
+    @Published var selectedTab: SettingsTab = .general
+}
+
 struct SettingsView: View {
     @ObservedObject var state: AppState
+    @ObservedObject var navigation: SettingsNavigationState = SettingsNavigationState()
     @FocusState private var isFieldFocused: Bool
     @State private var apiKey = ""
     @State private var isShowingSavedPlaceholder = false
@@ -33,27 +43,16 @@ struct SettingsView: View {
         !apiKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
-    @State private var selectedTab: SettingsTab = .general
-
     var body: some View {
-        TabView(selection: $selectedTab) {
-            generalTab
-                .tabItem {
-                    Label(SettingsTab.general.rawValue, systemImage: SettingsTab.general.symbolName)
-                }
-                .tag(SettingsTab.general)
-
-            targetsTab
-                .tabItem {
-                    Label(SettingsTab.targets.rawValue, systemImage: SettingsTab.targets.symbolName)
-                }
-                .tag(SettingsTab.targets)
-
-            routingTab
-                .tabItem {
-                    Label(SettingsTab.routing.rawValue, systemImage: SettingsTab.routing.symbolName)
-                }
-                .tag(SettingsTab.routing)
+        Group {
+            switch navigation.selectedTab {
+            case .general:
+                generalTab
+            case .targets:
+                targetsTab
+            case .routing:
+                routingTab
+            }
         }
         .frame(minWidth: 540, idealWidth: 580, minHeight: 420, idealHeight: 480)
     }
