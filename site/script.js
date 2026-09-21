@@ -53,6 +53,61 @@ function init() {
   setInterval(updateClock, 30000);
 
   // --------------------------------------------------------------------------
+  // Theme Toggle (Light / Dark Mode)
+  // --------------------------------------------------------------------------
+  const themeToggle = document.getElementById("theme-toggle");
+
+  function getEffectiveTheme() {
+    const current = document.documentElement.getAttribute("data-theme");
+    if (current === "light" || current === "dark") return current;
+    return window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+  }
+
+  function updateToggleUI(theme) {
+    if (!themeToggle) return;
+    const isLight = theme === "light";
+    const label = isLight ? "Switch to dark theme" : "Switch to light theme";
+    themeToggle.setAttribute("aria-label", label);
+    themeToggle.setAttribute("title", label);
+  }
+
+  function applyTheme(newTheme, persist = true) {
+    document.documentElement.setAttribute("data-theme", newTheme);
+    if (persist) {
+      try {
+        localStorage.setItem("reflex-theme", newTheme);
+      } catch (_) {}
+    }
+    updateToggleUI(newTheme);
+    announce(`Switched to ${newTheme} theme`);
+  }
+
+  // Initialize toggle button state based on active theme
+  updateToggleUI(getEffectiveTheme());
+
+  themeToggle?.addEventListener("click", () => {
+    const current = getEffectiveTheme();
+    const next = current === "light" ? "dark" : "light";
+    applyTheme(next, true);
+  });
+
+  // Listen to OS appearance changes if user hasn't explicitly set a preference
+  if (window.matchMedia) {
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: light)");
+    mediaQuery.addEventListener("change", (e) => {
+      let stored = null;
+      try {
+        stored = localStorage.getItem("reflex-theme");
+      } catch (_) {}
+      if (!stored) {
+        const next = e.matches ? "light" : "dark";
+        document.documentElement.setAttribute("data-theme", next);
+        updateToggleUI(next);
+      }
+    });
+  }
+
+  // --------------------------------------------------------------------------
   // 1. Copy Command to Clipboard
   // --------------------------------------------------------------------------
   copyButton?.addEventListener("click", async () => {
