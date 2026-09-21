@@ -36,12 +36,7 @@ You can use Reflex without an API key. In this mode, Reflex shows the chooser fo
 
 ## Current limitations
 
-- Reflex handles external HTTP and HTTPS links only. Links opened inside a browser or an embedded web view can bypass it.
 - Profile discovery supports recognized Chromium-based browsers only. Safari, Firefox, and Zen profiles are not available.
-- macOS can require Full Disk Access before Reflex can read Chromium profile names.
-- Automatic selection requires an OpenRouter API key and a network connection. Reflex uses the chooser when the service is unavailable.
-- Reflex processes one chooser selection at a time. Additional links wait in memory.
-- Reflex is available for macOS 14 or newer only.
 
 ## Privacy
 
