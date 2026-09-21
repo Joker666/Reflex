@@ -2,170 +2,530 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="theme-color" content="#ff3b22">
-    <meta name="description" content="Reflex routes each macOS web link to the right browser or browser profile.">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="dark">
+    <meta name="theme-color" content="#070709">
+    <meta name="description" content="Reflex routes each macOS web link to the right browser or browser profile. Everything stays on your Mac.">
     <title>Reflex — One click. Right browser.</title>
+    <link rel="canonical" href="https://joker666.github.io/Reflex/">
     <link rel="icon" type="image/png" href="assets/reflex-icon.png">
+    <link rel="apple-touch-icon" href="assets/reflex-icon.png">
     <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Reflex">
     <meta property="og:title" content="Reflex — One click. Right browser.">
-    <meta property="og:description" content="Reflex routes each macOS web link to the right browser or browser profile.">
+    <meta property="og:description" content="Reflex routes each macOS web link to the right browser or browser profile. Everything stays on your Mac.">
     <meta property="og:url" content="https://joker666.github.io/Reflex/">
     <meta property="og:image" content="https://joker666.github.io/Reflex/assets/reflex-icon.png">
+    <meta property="og:image:width" content="256">
+    <meta property="og:image:height" content="256">
+    <meta property="og:image:alt" content="Reflex app icon">
     <meta name="twitter:card" content="summary">
     <meta name="twitter:title" content="Reflex — One click. Right browser.">
-    <meta name="twitter:description" content="Reflex routes each macOS web link to the right browser or browser profile.">
+    <meta name="twitter:description" content="Reflex routes each macOS web link to the right browser or browser profile. Everything stays on your Mac.">
     <meta name="twitter:image" content="https://joker666.github.io/Reflex/assets/reflex-icon.png">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&amp;family=Syncopate:wght@400;700&amp;display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
   </head>
   <body>
-    <div class="ticker" aria-label="Reflex routing sequence">
-      <div>HTTP(S) LINK <b>→</b> REFLEX <b>→</b> RIGHT BROWSER <b>→</b> RIGHT PROFILE <b>→</b> DONE</div>
-    </div>
+    <!-- Live announcer for screen readers -->
+    <div id="sr-announcer" class="sr-only" aria-live="polite" aria-atomic="true"></div>
 
-    <header class="site-header shell">
-      <a class="brand" href="#top" aria-label="Reflex home">
-        <img src="assets/reflex-icon.png" alt="" width="38" height="38">
-        <span>Reflex</span>
-      </a>
-      <nav aria-label="Main navigation">
-        <a href="#route">Route</a>
-        <a href="#privacy">Privacy</a>
-        <a class="boxed-link" href="https://github.com/Joker666/Reflex">GitHub ↗</a>
-      </nav>
+    <header class="site-header">
+      <div class="nav-container">
+        <a class="nav-brand" href="#top" aria-label="Reflex home">
+          <img src="assets/reflex-icon.png" alt="" width="26" height="26">
+          <span>Reflex</span>
+        </a>
+        <nav aria-label="Main navigation">
+          <a href="#demo">Try it</a>
+          <a href="#install">Install</a>
+          <a href="#privacy">Privacy</a>
+          <a class="nav-github" href="https://github.com/Joker666/Reflex" target="_blank" rel="noopener noreferrer">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+            </svg>
+            <span>GitHub</span>
+          </a>
+        </nav>
+      </div>
     </header>
 
     <main id="top">
-      <section class="hero shell">
-        <div class="hero-copy">
-          <p class="label acid">[ MACOS LINK ROUTER // 001 ]</p>
-          <h1>One click.<br><span>Right browser.</span></h1>
-          <p class="lede">Make Reflex your default browser. Every external link goes to the browser and profile that fits it best.</p>
+      <!-- Hero Section -->
+      <section class="hero-section">
+        <div class="hero-glow" aria-hidden="true"></div>
+        <div class="hero-content">
+          <div class="app-icon-wrap">
+            <img src="assets/reflex-icon.png" class="app-icon" width="84" height="84" alt="Reflex app icon" fetchpriority="high">
+          </div>
+          <h1>Reflex</h1>
+          <p class="hero-lede">One click. Right browser.</p>
+          <p class="hero-subtitle">Reflex routes each macOS web link to the right browser or browser profile. Everything stays on your Mac.</p>
 
-          <div class="install-wrap">
-            <span class="install-index">01 / INSTALL</span>
-            <div class="install-command" aria-label="Homebrew installation command">
+          <div class="hero-actions">
+            <a class="btn btn-primary" href="https://github.com/Joker666/Reflex/releases/latest" target="_blank" rel="noopener noreferrer">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+              <span>Download for Mac</span>
+            </a>
+
+            <div class="brew-pill" aria-label="Homebrew installation command">
               <code>brew install --cask Joker666/tap/reflex</code>
-              <button type="button" data-copy="brew install --cask Joker666/tap/reflex" aria-label="Copy Homebrew command">
-                <span class="copy-label">COPY</span>
+              <button type="button" class="btn-copy" data-copy="brew install --cask Joker666/tap/reflex" aria-label="Copy Homebrew command">
+                <svg class="icon-copy" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                </svg>
+                <svg class="icon-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+                <span class="copy-text">Copy</span>
               </button>
             </div>
           </div>
 
-          <div class="system-meta" aria-label="System requirements">
-            <span>MACOS 14+</span>
-            <span>NATIVE SWIFT</span>
-            <span>OPEN SOURCE</span>
+          <div class="hero-meta">
+            <span>macOS 14+</span>
+            <span class="meta-dot" aria-hidden="true">•</span>
+            <span>Swift Native</span>
+            <span class="meta-dot" aria-hidden="true">•</span>
+            <span>Open Source</span>
+            <span class="meta-dot" aria-hidden="true">•</span>
+            <span>Zero Tracking</span>
           </div>
         </div>
+      </section>
 
-        <div class="demo-block" aria-label="Reflex browser chooser">
-          <div class="demo-header">
-            <span>LIVE / ROUTE SELECTOR</span>
-            <span>● ACTIVE</span>
+      <!-- Try It / Interactive Chooser Demo Section -->
+      <section class="demo-section" id="demo">
+        <div class="container">
+          <div class="section-head">
+            <h2>Try it</h2>
+            <p>Click a simulated link or use your keyboard (<code>1</code>–<code>6</code>, <code>↑</code>/<code>↓</code>, <code>Return</code>) to test routing.</p>
           </div>
-          <div class="demo-canvas">
-            <img src="assets/reflex-chooser.png" alt="Reflex chooser with Dia, Comet, Chrome, Helium, Edge, and Phi targets">
-            <div class="demo-note">NO URL<br>ON SCREEN</div>
+
+          <!-- Scenario Link Trigger Buttons -->
+          <div class="scenarios-bar" aria-label="Interactive test scenarios">
+            <span class="scenarios-label">Incoming link:</span>
+            <div class="scenarios-list" role="group" aria-label="Sample links to route">
+              <button type="button" class="scenario-chip is-active" data-scenario="dia" aria-pressed="true">
+                <span class="chip-url">arxiv.org/abs/2401.08</span>
+                <span class="chip-badge">Research</span>
+              </button>
+              <button type="button" class="scenario-chip" data-scenario="chrome" aria-pressed="false">
+                <span class="chip-url">github.com/org/pull/42</span>
+                <span class="chip-badge">Work</span>
+              </button>
+              <button type="button" class="scenario-chip" data-scenario="comet" aria-pressed="false">
+                <span class="chip-url">linear.app/team/issue</span>
+                <span class="chip-badge">Tracker</span>
+              </button>
+              <button type="button" class="scenario-chip" data-scenario="helium" aria-pressed="false">
+                <span class="chip-url">docs.swift.org/guide</span>
+                <span class="chip-badge">Dev</span>
+              </button>
+              <button type="button" class="scenario-chip" data-scenario="edge" aria-pressed="false">
+                <span class="chip-url">portal.azure.com/client</span>
+                <span class="chip-badge">Client</span>
+              </button>
+              <button type="button" class="scenario-chip" data-scenario="phi" aria-pressed="false">
+                <span class="chip-url">news.ycombinator.com</span>
+                <span class="chip-badge">Reading</span>
+              </button>
+              <button type="button" class="scenario-chip chip-override" id="btn-override-toggle" aria-pressed="false">
+                <span class="chip-key">⌥</span>
+                <span>Hold Option</span>
+              </button>
+            </div>
           </div>
-          <div class="demo-footer">OPTION + CLICK = ALWAYS CHOOSE</div>
-        </div>
-      </section>
 
-      <section class="browser-bar" aria-label="Supported browsers">
-        <strong>SUPPORTED:</strong>
-        <span>SAFARI</span><i>/</i><span>CHROME</span><i>/</i><span>DIA</span><i>/</i><span>COMET</span><i>/</i><span>HELIUM</span><i>/</i><span>EDGE</span><i>/</i><span>PHI</span><i>/</i><span>ZEN</span><i>/</i><span>FIREFOX</span>
-      </section>
+          <!-- Simulated macOS Desktop Canvas -->
+          <div class="mac-desktop-frame">
+            <!-- Simulated macOS Menu Bar -->
+            <div class="mac-menubar" aria-hidden="true">
+              <div class="mac-menubar-left">
+                <span class="apple-logo"></span>
+                <span class="app-name">Reflex</span>
+                <span class="menu-item">File</span>
+                <span class="menu-item">Edit</span>
+                <span class="menu-item">View</span>
+                <span class="menu-item">Window</span>
+                <span class="menu-item">Help</span>
+              </div>
+              <div class="mac-menubar-right">
+                <span class="status-icon reflex-status" title="Reflex active">⚡</span>
+                <span class="status-icon">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 3C7.03 3 2.62 5.09.28 8.44a1 1 0 00.22 1.39l10.98 9.87a1 1 0 001.34 0L23.8 9.83a1 1 0 00.22-1.39C21.68 5.09 17.27 3 12 3z"/>
+                  </svg>
+                </span>
+                <span class="status-icon">
+                  <svg width="18" height="11" viewBox="0 0 24 14" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="1" y="1" width="19" height="12" rx="3"></rect>
+                    <path d="M22 5v4"></path>
+                    <rect x="3" y="3" width="11" height="8" fill="currentColor"></rect>
+                  </svg>
+                </span>
+                <span class="clock-display" id="desktop-clock">Sun 11:54 PM</span>
+              </div>
+            </div>
 
-      <section class="route shell" id="route">
-        <div class="section-title">
-          <p class="label">[ THE ROUTE // 002 ]</p>
-          <h2>CLICK → MATCH → OPEN</h2>
-        </div>
+            <!-- macOS Wallpaper & Desktop Workspace -->
+            <div class="mac-workspace">
+              <div class="desktop-bg-gradient" aria-hidden="true"></div>
 
-        <div class="route-grid">
-          <article class="route-card yellow">
-            <span>01</span>
-            <h3>CLICK</h3>
-            <p>Any external HTTP or HTTPS link reaches Reflex.</p>
-          </article>
-          <article class="route-card blue">
-            <span>02</span>
-            <h3>MATCH</h3>
-            <p>Jev uses the source app and the purposes that you wrote.</p>
-          </article>
-          <article class="route-card red">
-            <span>03</span>
-            <h3>OPEN</h3>
-            <p>A strong match opens. An uncertain match shows the chooser.</p>
-          </article>
-        </div>
-      </section>
+              <!-- Interactive Reflex Chooser Popup (Modeled after Docs/reflex-chooser.png) -->
+              <div class="reflex-chooser-panel" id="chooser-panel" role="listbox" aria-label="Browser selection panel" tabindex="0">
+                <!-- Target Row 1: Dia (Active / AI Suggested) -->
+                <div class="chooser-row is-selected" role="option" id="target-dia" aria-selected="true" data-index="1" data-name="Dia">
+                  <div class="target-info">
+                    <span class="target-name">Dia</span>
+                    <span class="target-sparkle" title="AI high-confidence suggestion" aria-hidden="true">✦</span>
+                  </div>
+                  <div class="target-badges">
+                    <span class="key-badge">1</span>
+                    <span class="browser-icon dia-icon" aria-hidden="true">
+                      <!-- Dia Sunset/Rainbow Icon -->
+                      <svg width="24" height="24" viewBox="0 0 32 32">
+                        <rect width="32" height="32" rx="8" fill="#ffffff"/>
+                        <path d="M6 24 C 6 12, 26 12, 26 24 Z" fill="url(#dia-grad)"/>
+                        <defs>
+                          <linearGradient id="dia-grad" x1="0" y1="1" x2="1" y2="0">
+                            <stop offset="0%" stop-color="#ff7e40"/>
+                            <stop offset="35%" stop-color="#ffbe3b"/>
+                            <stop offset="70%" stop-color="#38d9a9"/>
+                            <stop offset="100%" stop-color="#4dabf7"/>
+                          </linearGradient>
+                        </defs>
+                      </svg>
+                    </span>
+                  </div>
+                </div>
 
-      <section class="profile-block shell">
-        <div class="profile-title">
-          <p class="label acid">[ TARGETS // 003 ]</p>
-          <h2>BROWSER<br>× PROFILE</h2>
-        </div>
-        <div class="target-list" aria-label="Example browser targets">
-          <div><b>CHROME</b><span>WORK</span><em>01</em></div>
-          <div><b>SAFARI</b><span>PERSONAL</span><em>02</em></div>
-          <div><b>DIA</b><span>RESEARCH</span><em>03</em></div>
-          <div><b>EDGE</b><span>CLIENT</span><em>04</em></div>
-        </div>
-      </section>
+                <!-- Target Row 2: Comet -->
+                <div class="chooser-row" role="option" id="target-comet" aria-selected="false" data-index="2" data-name="Comet">
+                  <div class="target-info">
+                    <span class="target-name">Comet</span>
+                  </div>
+                  <div class="target-badges">
+                    <span class="key-badge">2</span>
+                    <span class="browser-icon comet-icon" aria-hidden="true">
+                      <!-- Comet Galaxy Spiral Icon -->
+                      <svg width="24" height="24" viewBox="0 0 32 32">
+                        <rect width="32" height="32" rx="8" fill="#0d1117"/>
+                        <path d="M16 7 C 22 7, 26 12, 25 18 C 24 23, 19 26, 14 25 C 10 24, 7 20, 8 15 C 9 11, 13 8, 17 9" fill="none" stroke="#22d3ee" stroke-width="3" stroke-linecap="round"/>
+                        <circle cx="16" cy="16" r="2.5" fill="#38bdf8"/>
+                      </svg>
+                    </span>
+                  </div>
+                </div>
 
-      <section class="override-block">
-        <div class="override-inner shell">
-          <div>
-            <p class="label inverse">[ MANUAL OVERRIDE // 004 ]</p>
-            <h2>HOLD.<br>CLICK.<br>CHOOSE.</h2>
+                <!-- Target Row 3: Google Chrome -->
+                <div class="chooser-row" role="option" id="target-chrome" aria-selected="false" data-index="3" data-name="Google Chrome">
+                  <div class="target-info">
+                    <span class="target-name">Google Chrome</span>
+                  </div>
+                  <div class="target-badges">
+                    <span class="key-badge">3</span>
+                    <span class="browser-icon chrome-icon" aria-hidden="true">
+                      <!-- Chrome Icon -->
+                      <svg width="24" height="24" viewBox="0 0 32 32">
+                        <circle cx="16" cy="16" r="15" fill="#ffffff"/>
+                        <path d="M16 5 L28 12 A15 15 0 0 1 20 29 L14 18 Z" fill="#ffcd00"/>
+                        <path d="M16 5 A15 15 0 0 1 31 16 L18 16 L14 18 L16 5" fill="#ea4335"/>
+                        <path d="M16 5 A15 15 0 0 0 1 16 L14 18 L20 29 A15 15 0 0 1 4 9 L16 5" fill="#34a853"/>
+                        <circle cx="16" cy="16" r="6" fill="#ffffff"/>
+                        <circle cx="16" cy="16" r="4.5" fill="#1a73e8"/>
+                      </svg>
+                    </span>
+                  </div>
+                </div>
+
+                <!-- Target Row 4: Helium -->
+                <div class="chooser-row" role="option" id="target-helium" aria-selected="false" data-index="4" data-name="Helium">
+                  <div class="target-info">
+                    <span class="target-name">Helium</span>
+                  </div>
+                  <div class="target-badges">
+                    <span class="key-badge">4</span>
+                    <span class="browser-icon helium-icon" aria-hidden="true">
+                      <!-- Helium Asterisk Icon -->
+                      <svg width="24" height="24" viewBox="0 0 32 32">
+                        <rect width="32" height="32" rx="8" fill="#3b82f6"/>
+                        <g stroke="#ffffff" stroke-width="3.5" stroke-linecap="round">
+                          <line x1="16" y1="6" x2="16" y2="26"/>
+                          <line x1="7.3" y1="11" x2="24.7" y2="21"/>
+                          <line x1="7.3" y1="21" x2="24.7" y2="11"/>
+                        </g>
+                      </svg>
+                    </span>
+                  </div>
+                </div>
+
+                <!-- Target Row 5: Microsoft Edge -->
+                <div class="chooser-row" role="option" id="target-edge" aria-selected="false" data-index="5" data-name="Microsoft Edge">
+                  <div class="target-info">
+                    <span class="target-name">Microsoft Edge</span>
+                  </div>
+                  <div class="target-badges">
+                    <span class="key-badge">5</span>
+                    <span class="browser-icon edge-icon" aria-hidden="true">
+                      <!-- Edge Wave Icon -->
+                      <svg width="24" height="24" viewBox="0 0 32 32">
+                        <rect width="32" height="32" rx="8" fill="#ffffff"/>
+                        <path d="M16 4 C 8 4, 4 10, 4 16 C 4 23, 9 28, 16 28 C 22 28, 27 24, 27 18 C 27 14, 24 12, 20 12 C 14 12, 11 16, 11 19 C 11 23, 16 24, 21 21 C 20 25, 14 26, 10 23 C 7 21, 6 18, 6 15 C 6 9, 11 6, 17 6 C 24 6, 27 11, 26 16 C 24 10, 20 4, 16 4 Z" fill="url(#edge-grad)"/>
+                        <defs>
+                          <linearGradient id="edge-grad" x1="0" y1="0" x2="1" y2="1">
+                            <stop offset="0%" stop-color="#0078d4"/>
+                            <stop offset="50%" stop-color="#00bcf2"/>
+                            <stop offset="100%" stop-color="#107c41"/>
+                          </linearGradient>
+                        </defs>
+                      </svg>
+                    </span>
+                  </div>
+                </div>
+
+                <!-- Target Row 6: Phi -->
+                <div class="chooser-row" role="option" id="target-phi" aria-selected="false" data-index="6" data-name="Phi">
+                  <div class="target-info">
+                    <span class="target-name">Phi</span>
+                  </div>
+                  <div class="target-badges">
+                    <span class="key-badge">6</span>
+                    <span class="browser-icon phi-icon" aria-hidden="true">
+                      <!-- Phi Nautilus Spiral Icon -->
+                      <svg width="24" height="24" viewBox="0 0 32 32">
+                        <rect width="32" height="32" rx="8" fill="#1c1c1e"/>
+                        <path d="M16 5 C 22 5, 27 10, 27 16 C 27 21, 23 25, 18 25 C 13 25, 9 21, 9 17 C 9 13, 12 10, 15 10 C 18 10, 20 12, 20 14 C 20 16, 19 17, 17.5 17" fill="none" stroke="#d1d5db" stroke-width="2.6" stroke-linecap="round"/>
+                      </svg>
+                    </span>
+                  </div>
+                </div>
+
+                <!-- Footer Status Bar with Lightning Indicator and Settings Gear -->
+                <div class="chooser-footer">
+                  <div class="chooser-status" id="chooser-status-text">
+                    <span class="status-bolt" aria-hidden="true">⚡</span>
+                    <span class="status-msg">Automatic selection is active</span>
+                  </div>
+                  <button type="button" class="btn-settings-gear" id="btn-settings" aria-label="Reflex settings" title="Open Settings">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <circle cx="12" cy="12" r="3"></circle>
+                      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Simulated Link Dispatch Toast -->
+              <div class="launch-toast" id="launch-toast" role="status" aria-hidden="true">
+                <span class="toast-indicator"></span>
+                <span class="toast-text">Opening in Dia...</span>
+              </div>
+            </div>
           </div>
-          <div class="shortcut-demo" aria-label="Option click shortcut">
-            <div class="keycap"><small>OPTION</small><strong>⌥</strong></div>
-            <b>+</b>
-            <div class="mouse" aria-hidden="true"><span></span></div>
+
+          <!-- Quick Keyboard Hints Under Demo -->
+          <div class="demo-hints">
+            <span>Press <kbd>1</kbd>–<kbd>6</kbd> to select</span>
+            <span class="hint-sep" aria-hidden="true">•</span>
+            <span><kbd>↑</kbd> <kbd>↓</kbd> to navigate</span>
+            <span class="hint-sep" aria-hidden="true">•</span>
+            <span><kbd>↵ Enter</kbd> to open</span>
+            <span class="hint-sep" aria-hidden="true">•</span>
+            <span>Hold <kbd>⌥ Option</kbd> to force chooser</span>
           </div>
-          <p class="override-copy">Hold Option while you click to bypass automatic selection. Change the modifier to Control, Shift, Command, or Fn in Settings.</p>
         </div>
       </section>
 
-      <section class="privacy-block shell" id="privacy">
-        <div class="privacy-head">
-          <p class="label">[ PRIVACY // 005 ]</p>
-          <h2>LESS DATA.<br>ZERO HISTORY.</h2>
-        </div>
-        <div class="privacy-list">
-          <p><b>01</b> Query values and fragments are removed before automatic selection.</p>
-          <p><b>02</b> Reflex does not save the links that you open.</p>
-          <p><b>03</b> Your selected browser receives the original link.</p>
+      <!-- Install Section (4 Cards matching Frameclip) -->
+      <section class="install-section" id="install">
+        <div class="container">
+          <div class="section-head">
+            <h2>Install</h2>
+            <p>Ready to streamline your web workflow? Set up takes less than 60 seconds.</p>
+          </div>
+
+          <div class="install-grid">
+            <!-- Card 1: Download & Install -->
+            <div class="install-card">
+              <div class="install-card-icon">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                  <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                  <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                </svg>
+              </div>
+              <div class="install-card-content">
+                <h3>1. Install</h3>
+                <p>Run <code>brew install --cask Joker666/tap/reflex</code> or download the release DMG from GitHub.</p>
+              </div>
+            </div>
+
+            <!-- Card 2: Set as Default Browser -->
+            <div class="install-card">
+              <div class="install-card-icon">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                  <polyline points="9 12 11 14 15 10"></polyline>
+                </svg>
+              </div>
+              <div class="install-card-content">
+                <h3>2. Set Default</h3>
+                <p>Click "Make Reflex Default Browser" so macOS dispatches all clicked HTTP and HTTPS links to Reflex.</p>
+              </div>
+            </div>
+
+            <!-- Card 3: Auto-Discover Targets -->
+            <div class="install-card">
+              <div class="install-card-icon">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+                  <polyline points="2 17 12 22 22 17"></polyline>
+                  <polyline points="2 12 12 17 22 12"></polyline>
+                </svg>
+              </div>
+              <div class="install-card-content">
+                <h3>3. Discover</h3>
+                <p>Reflex automatically scans for Chrome, Safari, Dia, Comet, Helium, Edge, Phi, Zen, and Firefox plus profiles.</p>
+              </div>
+            </div>
+
+            <!-- Card 4: Set Natural-Language Purposes -->
+            <div class="install-card">
+              <div class="install-card-icon">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path>
+                </svg>
+              </div>
+              <div class="install-card-content">
+                <h3>4. Add Purpose</h3>
+                <p>Write brief phrases like <em>"Work accounts and GitHub"</em> or <em>"Personal reading"</em>. Jev handles the rest.</p>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
-      <section class="limit-block shell">
-        <span>KNOWN LIMIT / 001</span>
-        <p>Profile discovery supports recognized Chromium browsers and Dia. Safari, Firefox, Zen, and Phi profiles are not available.</p>
+      <!-- Manual Override Keycap Section (Modeled after Frameclip's keypress section) -->
+      <section class="override-section">
+        <div class="container">
+          <div class="keycap-display" aria-label="Keyboard shortcut representation">
+            <div class="keycap-item">
+              <span class="keycap-label">OPTION</span>
+              <span class="keycap-glyph">⌥</span>
+            </div>
+            <span class="keycap-plus" aria-hidden="true">+</span>
+            <div class="keycap-mouse" aria-hidden="true">
+              <span class="mouse-wheel"></span>
+            </div>
+          </div>
+          <h2 class="override-title">Hold Option, then click</h2>
+          <p class="override-desc">Want to bypass automatic AI selection for a specific link? Hold the <kbd>⌥ Option</kbd> key when clicking to open the chooser directly. You can configure this modifier to Control, Shift, Command, or Fn in Settings.</p>
+        </div>
       </section>
 
-      <section class="final-block">
-        <div class="shell">
-          <img src="assets/reflex-icon.png" alt="" width="88" height="88">
-          <h2>INSTALL.<br>ROUTE.<br>DONE.</h2>
-          <div class="final-actions">
-            <a class="download-link" href="https://github.com/Joker666/Reflex/releases/latest">DOWNLOAD REFLEX ↓</a>
-            <a href="https://github.com/Joker666/Reflex">SOURCE CODE ↗</a>
+      <!-- Privacy & Architecture Section -->
+      <section class="privacy-section" id="privacy">
+        <div class="container">
+          <div class="section-head">
+            <h2>Privacy by Design</h2>
+            <p>Built exclusively for macOS with local-first security principles.</p>
+          </div>
+
+          <div class="privacy-grid">
+            <div class="privacy-card">
+              <div class="privacy-num">01</div>
+              <h3>Zero Link History</h3>
+              <p>Reflex never writes clicked links to disk, databases, logs, or analytics. URLs live in memory only for the fraction of a second required to dispatch them.</p>
+            </div>
+
+            <div class="privacy-card">
+              <div class="privacy-num">02</div>
+              <h3>Privacy-Preserved Routing</h3>
+              <p>All query parameter values and URL fragments are stripped before routing. Only the scheme, host, path, and source app are sent to the AI decision model.</p>
+            </div>
+
+            <div class="privacy-card">
+              <div class="privacy-num">03</div>
+              <h3>Direct Native Launch</h3>
+              <p>Your target browser always receives the full, original link directly via native macOS <code>NSWorkspace</code> and process arguments — never through an unsafe shell.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Bottom Download CTA -->
+      <section class="cta-section">
+        <div class="container">
+          <img src="assets/reflex-icon.png" class="cta-icon" width="68" height="68" alt="" loading="lazy">
+          <h2>Ready for effortless link routing?</h2>
+          <p>Download Reflex for macOS 14+ or inspect the open-source Swift codebase.</p>
+          <div class="hero-actions">
+            <a class="btn btn-primary" href="https://github.com/Joker666/Reflex/releases/latest" target="_blank" rel="noopener noreferrer">Download Reflex ↓</a>
+            <a class="btn btn-secondary" href="https://github.com/Joker666/Reflex" target="_blank" rel="noopener noreferrer">Source Code ↗</a>
           </div>
         </div>
       </section>
     </main>
 
-    <footer class="site-footer shell">
-      <span>REFLEX / MACOS</span>
-      <span>BUILT IN SWIFT</span>
+    <footer class="site-footer">
+      <div class="container footer-content">
+        <div class="footer-left">
+          <span>Reflex is free &amp; open source under the MIT License.</span>
+        </div>
+        <div class="footer-right">
+          <a href="https://github.com/Joker666/Reflex" target="_blank" rel="noopener noreferrer">GitHub</a>
+          <a href="https://github.com/Joker666/Reflex/releases" target="_blank" rel="noopener noreferrer">Releases</a>
+          <a href="https://github.com/Joker666/Reflex/blob/main/README.md" target="_blank" rel="noopener noreferrer">Documentation</a>
+        </div>
+      </div>
     </footer>
+
+    <!-- Settings Modal (Interactive) -->
+    <div class="modal-backdrop" id="settings-modal" aria-hidden="true">
+      <div class="modal-dialog" role="dialog" aria-labelledby="modal-title" aria-modal="true">
+        <div class="modal-header">
+          <h3 id="modal-title">Reflex Settings</h3>
+          <button type="button" class="btn-modal-close" id="btn-close-modal" aria-label="Close settings">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="setting-item">
+            <div class="setting-label">
+              <strong>Modifier Key</strong>
+              <span>Hold while clicking to skip automatic selection</span>
+            </div>
+            <select class="setting-select" id="setting-modifier">
+              <option value="option" selected>Option (⌥) + click</option>
+              <option value="control">Control (⌃) + click</option>
+              <option value="shift">Shift (⇧) + click</option>
+              <option value="command">Command (⌘) + click</option>
+              <option value="function">Function (fn) + click</option>
+            </select>
+          </div>
+          <div class="setting-item">
+            <div class="setting-label">
+              <strong>Show in Menu Bar</strong>
+              <span>Keep Reflex accessible in the macOS status bar</span>
+            </div>
+            <input type="checkbox" id="setting-menubar" class="setting-toggle" checked>
+          </div>
+          <div class="setting-item">
+            <div class="setting-label">
+              <strong>Auto-Route Confidence</strong>
+              <span>Threshold for bypassing the chooser (Default: 85%)</span>
+            </div>
+            <span class="setting-value">85%</span>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" id="btn-save-modal">Done</button>
+        </div>
+      </div>
+    </div>
 
     <script src="script.js"></script>
   </body>
