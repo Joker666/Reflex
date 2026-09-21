@@ -471,6 +471,8 @@ struct SettingsView: View {
                     state.targets[index] = updatedTarget
                 }
             )
+            let isMultiProfile = state.targets.filter { $0.bundleIdentifier == target.bundleIdentifier }.count > 1
+            let placeholder = isMultiProfile ? "What do you use this profile for" : "What do you use this browser for"
             VStack(alignment: .leading, spacing: 6) {
                 HStack(spacing: 8) {
                     DragHandle(target: target, draggingTargetID: $draggingTargetID)
@@ -498,9 +500,9 @@ struct SettingsView: View {
                         .font(.system(size: 11))
                         .foregroundStyle(.secondary)
                         .frame(width: 48, alignment: .trailing)
-                    TextField("What you use this target for", text: targetBinding.purpose)
+                    TextField(placeholder, text: targetBinding.purpose)
                         .textFieldStyle(.roundedBorder)
-                        .accessibilityLabel("Purpose")
+                        .accessibilityLabel(placeholder)
                 }
             }
             .padding(.leading, 12)
