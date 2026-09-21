@@ -54,228 +54,381 @@ struct SettingsView: View {
                 routingTab
             }
         }
-        .frame(minWidth: 540, idealWidth: 580, minHeight: 420, idealHeight: 480)
+        .frame(minWidth: 580, idealWidth: 620, maxWidth: 650, minHeight: 450, idealHeight: 500)
     }
 
     private var generalTab: some View {
-        Form {
-            Section("Default browser") {
-                HStack {
-                    Label(
-                        state.defaultBrowserStatus.ownsHTTP ? "HTTP: Reflex" : "HTTP: Other browser",
-                        systemImage: state.defaultBrowserStatus.ownsHTTP ? "checkmark.circle.fill" : "exclamationmark.circle"
-                    )
-                    Spacer()
-                    Label(
-                        state.defaultBrowserStatus.ownsHTTPS ? "HTTPS: Reflex" : "HTTPS: Other browser",
-                        systemImage: state.defaultBrowserStatus.ownsHTTPS ? "checkmark.circle.fill" : "exclamationmark.circle"
-                    )
-                }
-                Button("Make Reflex Default Browser") { state.makeDefaultBrowser() }
-                    .disabled(state.defaultBrowserStatus.isComplete)
-                if let message = state.setupMessage {
-                    Text(message).font(.caption).foregroundStyle(.secondary)
-                }
-                Text("Links from other applications normally reach Reflex only when it is the default browser. Links inside a browser or an embedded web view can bypass Reflex.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
+        VStack(alignment: .leading, spacing: 0) {
+            Grid(alignment: .topLeading, horizontalSpacing: 16, verticalSpacing: 20) {
+                GridRow {
+                    Text("Default web browser:")
+                        .font(.system(size: 13))
+                        .gridColumnAlignment(.trailing)
+                        .frame(width: 155, alignment: .trailing)
 
-            Section("Menu bar") {
-                Toggle("Show Reflex in the menu bar", isOn: $state.showsMenuBarItem)
-                Text("When the menu bar item is on, closing this window removes the Dock icon and keeps Reflex in the menu bar. When it is off, closing this window quits Reflex.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack(spacing: 16) {
+                            Label(
+                                state.defaultBrowserStatus.ownsHTTP ? "HTTP: Reflex" : "HTTP: Other browser",
+                                systemImage: state.defaultBrowserStatus.ownsHTTP ? "checkmark.circle.fill" : "exclamationmark.circle"
+                            )
+                            .foregroundStyle(state.defaultBrowserStatus.ownsHTTP ? Color.green : Color.orange)
+                            .font(.system(size: 13))
 
-            Section("Chooser shortcut") {
-                Picker("Modifier key", selection: $state.chooserModifier) {
-                    ForEach(ChooserModifier.allCases) { modifier in
-                        Label(
-                            "\(modifier.name) + click",
-                            systemImage: modifier.symbolName
-                        )
-                        .tag(modifier)
+                            Label(
+                                state.defaultBrowserStatus.ownsHTTPS ? "HTTPS: Reflex" : "HTTPS: Other browser",
+                                systemImage: state.defaultBrowserStatus.ownsHTTPS ? "checkmark.circle.fill" : "exclamationmark.circle"
+                            )
+                            .foregroundStyle(state.defaultBrowserStatus.ownsHTTPS ? Color.green : Color.orange)
+                            .font(.system(size: 13))
+                        }
+                        Button("Make Reflex Default Browser") {
+                            state.makeDefaultBrowser()
+                        }
+                        .disabled(state.defaultBrowserStatus.isComplete)
+
+                        if let message = state.setupMessage {
+                            Text(message)
+                                .font(.system(size: 11))
+                                .foregroundStyle(.secondary)
+                        }
+
+                        Text("Links from other applications normally reach Reflex only when it is the default browser. Links inside a browser or an embedded web view can bypass Reflex.")
+                            .font(.system(size: 11))
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                }
+
+                GridRow {
+                    Text("Menu bar:")
+                        .font(.system(size: 13))
+                        .gridColumnAlignment(.trailing)
+                        .frame(width: 155, alignment: .trailing)
+
+                    VStack(alignment: .leading, spacing: 6) {
+                        Toggle("Show Reflex in the menu bar", isOn: $state.showsMenuBarItem)
+                            .toggleStyle(.checkbox)
+                            .font(.system(size: 13))
+
+                        Text("When on, closing this window removes the Dock icon and keeps Reflex in the menu bar. When off, closing this window quits Reflex.")
+                            .font(.system(size: 11))
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
                     }
                 }
-                Text("Hold \(state.chooserModifier.name) while you click a link to skip automatic selection and show the chooser. The chooser also gives access to Settings. The source application can use some modified clicks itself, so the link might not reach Reflex.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+
+                GridRow {
+                    Text("Chooser shortcut:")
+                        .font(.system(size: 13))
+                        .gridColumnAlignment(.trailing)
+                        .frame(width: 155, alignment: .trailing)
+
+                    VStack(alignment: .leading, spacing: 6) {
+                        Picker("", selection: $state.chooserModifier) {
+                            ForEach(ChooserModifier.allCases) { modifier in
+                                Label(
+                                    "\(modifier.name) + click",
+                                    systemImage: modifier.symbolName
+                                )
+                                .tag(modifier)
+                            }
+                        }
+                        .labelsHidden()
+                        .frame(width: 180, alignment: .leading)
+
+                        Text("Hold \(state.chooserModifier.name) while you click a link to skip automatic selection and show the chooser. The chooser also gives access to Settings. The source application can use some modified clicks itself, so the link might not reach Reflex.")
+                            .font(.system(size: 11))
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
             }
+            Spacer()
         }
-        .formStyle(.grouped)
+        .padding(.horizontal, 36)
+        .padding(.top, 24)
+        .padding(.bottom, 20)
     }
 
     private var targetsTab: some View {
-        Form {
-            Section("Browser targets") {
-                if state.targets.isEmpty {
-                    Text("No registered web browser was found.")
-                }
-                Text("The purpose is what Jev reads. Write the accounts, sites, and work you use a target for, for example \"Slumber work: GitHub, Linear, company mail\". A target with no purpose is hard for Jev to choose, so Reflex shows the chooser instead.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                if state.targets.count > 1 {
-                    Text("Drag a row by its handle to set the chooser order. The number is the key that opens that target.")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-                let shortcutNumbers = shortcutNumbers()
-                ForEach(browserGroups(), id: \.first) { targetIDs in
-                    VStack(alignment: .leading, spacing: 8) {
-                        browserHeader(for: targetIDs)
-                        ForEach(targetIDs, id: \.self) { targetID in
-                            targetRow(targetID: targetID, shortcutNumbers: shortcutNumbers)
+        ScrollView(.vertical, showsIndicators: true) {
+            VStack(alignment: .leading, spacing: 18) {
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        Text("Configured targets:")
+                            .font(.system(size: 13, weight: .medium))
+                        Spacer()
+                        if state.targets.count > 1 {
+                            Text("Drag to reorder chooser shortcuts")
+                                .font(.system(size: 11))
+                                .foregroundStyle(.secondary)
                         }
                     }
-                    .padding(.vertical, 4)
-                }
-                HStack {
-                    Button("Add Browser…") { addBrowser() }
-                    Button("Rescan Browsers") { state.rescanBrowsers() }
-                }
-                Text("A browser with more than one profile becomes one target for each profile. A browser with a single profile stays one target.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
 
-            Section("Profile access") {
-                if state.profileAccessDeniedBrowsers.isEmpty,
-                   state.missingProfileDataBrowsers.isEmpty {
-                    Label(
-                        "No profile access problem was found.",
-                        systemImage: "checkmark.circle.fill"
-                    )
-                    .foregroundStyle(.secondary)
-                }
-                if !state.profileAccessDeniedBrowsers.isEmpty {
-                    Label(
-                        "macOS blocks the profiles of \(state.profileAccessDeniedBrowsers.joined(separator: ", ")).",
-                        systemImage: "lock.circle"
-                    )
-                    Button("Open Full Disk Access") { state.openFullDiskAccessSettings() }
-                    Text("Add Reflex to the list and switch it on. Then start Reflex again and select Rescan Browsers. Reflex works without this access, but it shows one target for each of these browsers.")
-                        .font(.caption)
+                    if state.targets.isEmpty {
+                        Text("No registered web browser was found.")
+                            .font(.system(size: 12))
+                            .foregroundStyle(.secondary)
+                            .padding(.vertical, 16)
+                            .frame(maxWidth: .infinity, alignment: .center)
+                    } else {
+                        let shortcutNumbers = shortcutNumbers()
+                        VStack(alignment: .leading, spacing: 12) {
+                            ForEach(browserGroups(), id: \.first) { targetIDs in
+                                VStack(alignment: .leading, spacing: 6) {
+                                    browserHeader(for: targetIDs)
+                                    ForEach(targetIDs, id: \.self) { targetID in
+                                        targetRow(targetID: targetID, shortcutNumbers: shortcutNumbers)
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    HStack(spacing: 12) {
+                        Button("Add Browser…") { addBrowser() }
+                        Button("Rescan Browsers") { state.rescanBrowsers() }
+                        Spacer()
+                    }
+                    .padding(.top, 4)
+
+                    Text("The purpose is what Jev reads. Write the accounts, sites, and work you use a target for, for example \"Work: GitHub, Linear, company mail\". A target with no purpose is hard for Jev to choose, so Reflex shows the chooser instead.")
+                        .font(.system(size: 11))
                         .foregroundStyle(.secondary)
-                }
-                if !state.missingProfileDataBrowsers.isEmpty {
-                    Label(
-                        "No profile data was found for \(state.missingProfileDataBrowsers.joined(separator: ", ")).",
-                        systemImage: "questionmark.circle"
-                    )
-                    Text("Start each browser once, then select Rescan Browsers. Invalid profile data also appears in this state.")
-                        .font(.caption)
+                        .fixedSize(horizontal: false, vertical: true)
+
+                    Text("A browser with more than one profile becomes one target for each profile. A browser with a single profile stays one target.")
+                        .font(.system(size: 11))
                         .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
-                Text("Reflex reads profile directories and profile names. When Edge stores a placeholder profile name, Reflex can read account-name fields from that profile record. The value can become a target name and can be sent to OpenRouter when automatic selection is active. Reflex reads no history, cookies, or page data.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+
+                Divider()
+
+                Grid(alignment: .topLeading, horizontalSpacing: 16, verticalSpacing: 10) {
+                    GridRow {
+                        Text("Profile access:")
+                            .font(.system(size: 13))
+                            .gridColumnAlignment(.trailing)
+                            .frame(width: 120, alignment: .trailing)
+
+                        VStack(alignment: .leading, spacing: 8) {
+                            if state.profileAccessDeniedBrowsers.isEmpty,
+                               state.missingProfileDataBrowsers.isEmpty {
+                                Label(
+                                    "No profile access problem was found.",
+                                    systemImage: "checkmark.circle.fill"
+                                )
+                                .font(.system(size: 12))
+                                .foregroundStyle(.secondary)
+                            }
+                            if !state.profileAccessDeniedBrowsers.isEmpty {
+                                Label(
+                                    "macOS blocks the profiles of \(state.profileAccessDeniedBrowsers.joined(separator: ", ")).",
+                                    systemImage: "lock.circle"
+                                )
+                                .font(.system(size: 12))
+                                .foregroundStyle(.orange)
+                                Button("Open Full Disk Access") { state.openFullDiskAccessSettings() }
+                                Text("Add Reflex to the list and switch it on. Then start Reflex again and select Rescan Browsers. Reflex works without this access, but it shows one target for each of these browsers.")
+                                    .font(.system(size: 11))
+                                    .foregroundStyle(.secondary)
+                                    .fixedSize(horizontal: false, vertical: true)
+                            }
+                            if !state.missingProfileDataBrowsers.isEmpty {
+                                Label(
+                                    "No profile data was found for \(state.missingProfileDataBrowsers.joined(separator: ", ")).",
+                                    systemImage: "questionmark.circle"
+                                )
+                                .font(.system(size: 12))
+                                .foregroundStyle(.secondary)
+                                Text("Start each browser once, then select Rescan Browsers. Invalid profile data also appears in this state.")
+                                    .font(.system(size: 11))
+                                    .foregroundStyle(.secondary)
+                                    .fixedSize(horizontal: false, vertical: true)
+                            }
+                            Text("Reflex reads profile directories and profile names. When Edge stores a placeholder profile name, Reflex can read account-name fields from that profile record. The value can become a target name and can be sent to OpenRouter when automatic selection is active. Reflex reads no history, cookies, or page data.")
+                                .font(.system(size: 11))
+                                .foregroundStyle(.secondary)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                }
             }
+            .padding(.horizontal, 32)
+            .padding(.top, 20)
+            .padding(.bottom, 24)
         }
-        .formStyle(.grouped)
     }
 
     private var routingTab: some View {
-        Form {
-            Section("OpenRouter") {
-                SecureField("API key", text: $apiKey)
-                    .focused($isFieldFocused)
-                    .textContentType(.password)
-                    .accessibilityLabel("OpenRouter API key")
-                    .accessibilityValue(isShowingSavedPlaceholder ? "Saved in Keychain" : (apiKey.isEmpty ? "Not configured" : "Entered API key"))
-                    .onChange(of: isFieldFocused) { _, isFocused in
-                        if isFocused {
-                            if isShowingSavedPlaceholder || apiKey == savedKeyMask {
-                                apiKey = ""
-                                isShowingSavedPlaceholder = false
-                            }
-                        } else {
-                            if apiKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && state.hasAPIKey {
-                                apiKey = savedKeyMask
-                                isShowingSavedPlaceholder = true
-                            }
-                        }
-                    }
-                    .onAppear {
-                        if state.hasAPIKey && apiKey.isEmpty {
-                            apiKey = savedKeyMask
-                            isShowingSavedPlaceholder = true
-                        }
-                    }
-                    .onChange(of: state.hasAPIKey) { _, hasKey in
-                        if !hasKey {
-                            apiKey = ""
-                            isShowingSavedPlaceholder = false
-                        } else if !isFieldFocused && (apiKey.isEmpty || isShowingSavedPlaceholder) {
-                            apiKey = savedKeyMask
-                            isShowingSavedPlaceholder = true
-                        }
-                    }
-                HStack {
-                    Button("Save") {
-                        do {
-                            try state.saveAPIKey(apiKey)
-                            isFieldFocused = false
-                            apiKey = savedKeyMask
-                            isShowingSavedPlaceholder = true
-                            keyMessage = "The API key is saved in Keychain."
-                        } catch {
-                            keyMessage = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
-                        }
-                    }
-                    .disabled(!isKeySaveable)
-                    Button("Remove") {
-                        do {
-                            try state.removeAPIKey()
-                            isFieldFocused = false
-                            apiKey = ""
-                            isShowingSavedPlaceholder = false
-                            keyMessage = "The API key was removed."
-                        } catch {
-                            keyMessage = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
-                        }
-                    }
-                    .disabled(!state.hasAPIKey)
-                    Spacer()
-                    Text(state.hasAPIKey ? "Saved in Keychain" : "Not configured")
-                        .foregroundStyle(.secondary)
-                }
-                if let keyMessage {
-                    Text(keyMessage).font(.caption).foregroundStyle(.secondary)
-                }
-                Toggle("Use Jev for automatic selection", isOn: $state.usesJev)
-                    .disabled(!state.hasAPIKey)
-                if state.usesJev {
-                    VStack(alignment: .leading, spacing: 4) {
-                        HStack(spacing: 12) {
-                            Text("Auto-route confidence")
-                            Slider(
-                                value: $state.autoRouteConfidenceThreshold,
-                                in: 0.50...1.0,
-                                step: 0.05
-                            ) {
-                                Text("Auto-route confidence")
-                            }
-                            .labelsHidden()
-                            Text("\(Int(round(state.autoRouteConfidenceThreshold * 100)))%")
-                                .monospacedDigit()
-                                .foregroundStyle(.secondary)
-                                .frame(width: 38, alignment: .trailing)
-                        }
-                        .disabled(!state.hasAPIKey)
+        VStack(alignment: .leading, spacing: 0) {
+            Grid(alignment: .topLeading, horizontalSpacing: 16, verticalSpacing: 18) {
+                GridRow {
+                    Text("API key:")
+                        .font(.system(size: 13))
+                        .gridColumnAlignment(.trailing)
+                        .frame(width: 155, alignment: .trailing)
 
-                        Text("Reflex opens links automatically only when Jev's confidence is at or above this threshold. Lower confidence shows the chooser with the suggested target highlighted.")
-                            .font(.caption)
+                    VStack(alignment: .leading, spacing: 8) {
+                        SecureField("OpenRouter API key", text: $apiKey)
+                            .textFieldStyle(.roundedBorder)
+                            .frame(width: 280)
+                            .focused($isFieldFocused)
+                            .textContentType(.password)
+                            .accessibilityLabel("OpenRouter API key")
+                            .accessibilityValue(isShowingSavedPlaceholder ? "Saved in Keychain" : (apiKey.isEmpty ? "Not configured" : "Entered API key"))
+                            .onChange(of: isFieldFocused) { _, isFocused in
+                                if isFocused {
+                                    if isShowingSavedPlaceholder || apiKey == savedKeyMask {
+                                        apiKey = ""
+                                        isShowingSavedPlaceholder = false
+                                    }
+                                } else {
+                                    if apiKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && state.hasAPIKey {
+                                        apiKey = savedKeyMask
+                                        isShowingSavedPlaceholder = true
+                                    }
+                                }
+                            }
+                            .onAppear {
+                                if state.hasAPIKey && apiKey.isEmpty {
+                                    apiKey = savedKeyMask
+                                    isShowingSavedPlaceholder = true
+                                }
+                            }
+                            .onChange(of: state.hasAPIKey) { _, hasKey in
+                                if !hasKey {
+                                    apiKey = ""
+                                    isShowingSavedPlaceholder = false
+                                } else if !isFieldFocused && (apiKey.isEmpty || isShowingSavedPlaceholder) {
+                                    apiKey = savedKeyMask
+                                    isShowingSavedPlaceholder = true
+                                }
+                            }
+
+                        HStack(spacing: 8) {
+                            Button("Save") {
+                                do {
+                                    try state.saveAPIKey(apiKey)
+                                    isFieldFocused = false
+                                    apiKey = savedKeyMask
+                                    isShowingSavedPlaceholder = true
+                                    keyMessage = "The API key is saved in Keychain."
+                                } catch {
+                                    keyMessage = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
+                                }
+                            }
+                            .disabled(!isKeySaveable)
+
+                            Button("Remove") {
+                                do {
+                                    try state.removeAPIKey()
+                                    isFieldFocused = false
+                                    apiKey = ""
+                                    isShowingSavedPlaceholder = false
+                                    keyMessage = "The API key was removed."
+                                } catch {
+                                    keyMessage = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
+                                }
+                            }
+                            .disabled(!state.hasAPIKey)
+
+                            Text(state.hasAPIKey ? "Saved in Keychain" : "Not configured")
+                                .font(.system(size: 12))
+                                .foregroundStyle(.secondary)
+                        }
+
+                        if let keyMessage {
+                            Text(keyMessage)
+                                .font(.system(size: 11))
+                                .foregroundStyle(.secondary)
+                        }
+
+                        Text("Reflex stores your OpenRouter API key securely in the macOS Keychain.")
+                            .font(.system(size: 11))
                             .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
                     }
-                    .padding(.vertical, 2)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
-                Text("Reflex sends the link scheme, host, path, query parameter names, source application identifier when available, and enabled target names and purposes. It never sends query values or fragments.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+
+                GridRow {
+                    Text("Automatic selection:")
+                        .font(.system(size: 13))
+                        .gridColumnAlignment(.trailing)
+                        .frame(width: 155, alignment: .trailing)
+
+                    VStack(alignment: .leading, spacing: 6) {
+                        Toggle("Use Jev for automatic selection", isOn: $state.usesJev)
+                            .toggleStyle(.checkbox)
+                            .font(.system(size: 13))
+                            .disabled(!state.hasAPIKey)
+
+                        Text("Reflex sends a privacy-reduced description of the link and enabled targets to TypeSafe Jev to automatically choose the best target.")
+                            .font(.system(size: 11))
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+
+                if state.usesJev {
+                    GridRow {
+                        Text("Auto-route confidence:")
+                            .font(.system(size: 13))
+                            .gridColumnAlignment(.trailing)
+                            .frame(width: 155, alignment: .trailing)
+
+                        VStack(alignment: .leading, spacing: 6) {
+                            HStack(spacing: 12) {
+                                Slider(
+                                    value: $state.autoRouteConfidenceThreshold,
+                                    in: 0.50...1.0,
+                                    step: 0.05
+                                ) {
+                                    Text("Auto-route confidence")
+                                }
+                                .labelsHidden()
+                                .frame(width: 180)
+
+                                Text("\(Int(round(state.autoRouteConfidenceThreshold * 100)))%")
+                                    .monospacedDigit()
+                                    .font(.system(size: 13))
+                                    .foregroundStyle(.secondary)
+                                    .frame(width: 38, alignment: .trailing)
+                            }
+                            .disabled(!state.hasAPIKey)
+
+                            Text("Reflex opens links automatically only when Jev's confidence is at or above this threshold. Lower confidence shows the chooser with the suggested target highlighted.")
+                                .font(.system(size: 11))
+                                .foregroundStyle(.secondary)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                    }
+                }
+
+                GridRow {
+                    Text("Privacy boundary:")
+                        .font(.system(size: 13))
+                        .gridColumnAlignment(.trailing)
+                        .frame(width: 155, alignment: .trailing)
+
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("Reflex sends the link scheme, host, path, query parameter names, source application identifier when available, and enabled target names and purposes. It never sends query values, fragments, clipboard contents, or browser history.")
+                            .font(.system(size: 11))
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
             }
+            Spacer()
         }
-        .formStyle(.grouped)
+        .padding(.horizontal, 36)
+        .padding(.top, 24)
+        .padding(.bottom, 20)
     }
 
     /// Targets of one browser sit next to each other, so a run of them is one group.
@@ -324,11 +477,13 @@ struct SettingsView: View {
                 }
             )
             VStack(alignment: .leading, spacing: 6) {
-                HStack {
+                HStack(spacing: 8) {
                     DragHandle(target: target, draggingTargetID: $draggingTargetID)
-                    Toggle("Enabled", isOn: targetBinding.isEnabled).labelsHidden()
-                    TextField("Name", text: targetBinding.name)
+                    Toggle("Enabled", isOn: targetBinding.isEnabled)
+                        .toggleStyle(.checkbox)
                         .labelsHidden()
+                    TextField("Name", text: targetBinding.name)
+                        .textFieldStyle(.roundedBorder)
                         .accessibilityLabel("Target name")
                     if !state.isAvailable(target) {
                         Text("Unavailable").foregroundStyle(.secondary)
@@ -343,16 +498,32 @@ struct SettingsView: View {
                     .buttonStyle(.borderless)
                     .accessibilityLabel("Remove \(target.name)")
                 }
-                TextField("Purpose: what you use this target for", text: targetBinding.purpose)
-                    .accessibilityLabel("Purpose")
-                TextField(
-                    "Chromium profile directory (optional)",
-                    text: Binding(
-                        get: { targetBinding.wrappedValue.chromiumProfileDirectory ?? "" },
-                        set: { targetBinding.wrappedValue.chromiumProfileDirectory = $0.isEmpty ? nil : $0 }
-                    )
-                )
-                .font(.caption)
+                HStack(spacing: 6) {
+                    Text("Purpose:")
+                        .font(.system(size: 11))
+                        .foregroundStyle(.secondary)
+                        .frame(width: 48, alignment: .trailing)
+                    TextField("What you use this target for", text: targetBinding.purpose)
+                        .textFieldStyle(.roundedBorder)
+                        .accessibilityLabel("Purpose")
+                }
+                if target.chromiumProfileDirectory != nil || !(targetBinding.wrappedValue.chromiumProfileDirectory ?? "").isEmpty {
+                    HStack(spacing: 6) {
+                        Text("Profile:")
+                            .font(.system(size: 11))
+                            .foregroundStyle(.secondary)
+                            .frame(width: 48, alignment: .trailing)
+                        TextField(
+                            "Chromium profile directory (optional)",
+                            text: Binding(
+                                get: { targetBinding.wrappedValue.chromiumProfileDirectory ?? "" },
+                                set: { targetBinding.wrappedValue.chromiumProfileDirectory = $0.isEmpty ? nil : $0 }
+                            )
+                        )
+                        .textFieldStyle(.roundedBorder)
+                        .font(.caption)
+                    }
+                }
             }
             .padding(.leading, 12)
             .opacity(draggingTargetID == target.id ? 0.4 : 1)

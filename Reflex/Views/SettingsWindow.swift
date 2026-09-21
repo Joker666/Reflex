@@ -27,7 +27,7 @@ final class SettingsWindowController: NSObject, NSWindowDelegate, NSToolbarDeleg
     }
 
     private func makeWindow() -> NSWindow {
-        let contentFrame = NSRect(x: 0, y: 0, width: 580, height: 480)
+        let contentFrame = NSRect(x: 0, y: 0, width: 620, height: 500)
         let hostingView = NSHostingView(rootView: SettingsView(state: state, navigation: navigation))
         hostingView.frame = contentFrame
         let window = NSWindow(
@@ -36,8 +36,9 @@ final class SettingsWindowController: NSObject, NSWindowDelegate, NSToolbarDeleg
             backing: .buffered,
             defer: false
         )
+        window.toolbarStyle = .preference
         window.contentView = hostingView
-        window.title = "Reflex Settings"
+        window.title = navigation.selectedTab.rawValue
         window.isReleasedWhenClosed = false
         window.delegate = self
 
@@ -53,17 +54,14 @@ final class SettingsWindowController: NSObject, NSWindowDelegate, NSToolbarDeleg
 
     func toolbarDefaultItemIdentifiers(_ toolbar: NSToolbar) -> [NSToolbarItem.Identifier] {
         [
-            .flexibleSpace,
             SettingsTab.general.identifier,
             SettingsTab.targets.identifier,
-            SettingsTab.routing.identifier,
-            .flexibleSpace
+            SettingsTab.routing.identifier
         ]
     }
 
     func toolbarAllowedItemIdentifiers(_ toolbar: NSToolbar) -> [NSToolbarItem.Identifier] {
         [
-            .flexibleSpace,
             SettingsTab.general.identifier,
             SettingsTab.targets.identifier,
             SettingsTab.routing.identifier
@@ -75,9 +73,6 @@ final class SettingsWindowController: NSObject, NSWindowDelegate, NSToolbarDeleg
     }
 
     func toolbar(_ toolbar: NSToolbar, itemForItemIdentifier itemIdentifier: NSToolbarItem.Identifier, willBeInsertedIntoToolbar flag: Bool) -> NSToolbarItem? {
-        if itemIdentifier == .flexibleSpace {
-            return NSToolbarItem(itemIdentifier: itemIdentifier)
-        }
         guard let tab = SettingsTab.allCases.first(where: { $0.identifier == itemIdentifier }) else {
             return nil
         }
@@ -93,6 +88,7 @@ final class SettingsWindowController: NSObject, NSWindowDelegate, NSToolbarDeleg
         if let tab = SettingsTab.allCases.first(where: { $0.identifier == sender.itemIdentifier }) {
             navigation.selectedTab = tab
             window?.toolbar?.selectedItemIdentifier = tab.identifier
+            window?.title = tab.rawValue
         }
     }
 
