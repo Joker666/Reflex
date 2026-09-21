@@ -58,161 +58,99 @@ struct SettingsView: View {
     }
 
     private var generalTab: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            Grid(alignment: .topLeading, horizontalSpacing: 16, verticalSpacing: 20) {
-                GridRow {
-                    Text("Default web browser:")
-                        .font(.system(size: 13))
-                        .gridColumnAlignment(.trailing)
-                        .frame(width: 155, alignment: .trailing)
-
-                    VStack(alignment: .leading, spacing: 8) {
-                        HStack(spacing: 16) {
-                            Label(
-                                state.defaultBrowserStatus.ownsHTTP ? "HTTP: Reflex" : "HTTP: Other browser",
-                                systemImage: state.defaultBrowserStatus.ownsHTTP ? "checkmark.circle.fill" : "exclamationmark.circle"
-                            )
-                            .foregroundStyle(state.defaultBrowserStatus.ownsHTTP ? Color.green : Color.orange)
-                            .font(.system(size: 13))
-
-                            Label(
-                                state.defaultBrowserStatus.ownsHTTPS ? "HTTPS: Reflex" : "HTTPS: Other browser",
-                                systemImage: state.defaultBrowserStatus.ownsHTTPS ? "checkmark.circle.fill" : "exclamationmark.circle"
-                            )
-                            .foregroundStyle(state.defaultBrowserStatus.ownsHTTPS ? Color.green : Color.orange)
-                            .font(.system(size: 13))
-                        }
-                        Button("Make Reflex Default Browser") {
-                            state.makeDefaultBrowser()
-                        }
-                        .disabled(state.defaultBrowserStatus.isComplete)
-
-                        if let message = state.setupMessage {
-                            Text(message)
-                                .font(.system(size: 11))
-                                .foregroundStyle(.secondary)
-                        }
-
-                        Text("Links from other applications normally reach Reflex only when it is the default browser. Links inside a browser or an embedded web view can bypass Reflex.")
-                            .font(.system(size: 11))
-                            .foregroundStyle(.secondary)
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                }
-
-                GridRow {
-                    Text("Menu bar:")
-                        .font(.system(size: 13))
-                        .gridColumnAlignment(.trailing)
-                        .frame(width: 155, alignment: .trailing)
-
-                    VStack(alignment: .leading, spacing: 6) {
-                        Toggle("Show Reflex in the menu bar", isOn: $state.showsMenuBarItem)
-                            .toggleStyle(.checkbox)
-                            .font(.system(size: 13))
-
-                        Text("When on, closing this window removes the Dock icon and keeps Reflex in the menu bar. When off, closing this window quits Reflex.")
-                            .font(.system(size: 11))
-                            .foregroundStyle(.secondary)
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
-                }
-
-                GridRow {
-                    Text("Chooser shortcut:")
-                        .font(.system(size: 13))
-                        .gridColumnAlignment(.trailing)
-                        .frame(width: 155, alignment: .trailing)
-
-                    VStack(alignment: .leading, spacing: 6) {
-                        Picker("", selection: $state.chooserModifier) {
-                            ForEach(ChooserModifier.allCases) { modifier in
-                                Label(
-                                    "\(modifier.name) + click",
-                                    systemImage: modifier.symbolName
-                                )
-                                .tag(modifier)
-                            }
-                        }
-                        .labelsHidden()
-                        .frame(width: 180, alignment: .leading)
-
-                        Text("Hold \(state.chooserModifier.name) while you click a link to skip automatic selection and show the chooser. The chooser also gives access to Settings. The source application can use some modified clicks itself, so the link might not reach Reflex.")
-                            .font(.system(size: 11))
-                            .foregroundStyle(.secondary)
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
-                }
-            }
-            Spacer()
-        }
-        .padding(.horizontal, 36)
-        .padding(.top, 24)
-        .padding(.bottom, 20)
-    }
-
-    private var targetsTab: some View {
         ScrollView(.vertical, showsIndicators: true) {
-            VStack(alignment: .leading, spacing: 18) {
-                VStack(alignment: .leading, spacing: 8) {
-                    HStack {
-                        Text("Configured targets:")
-                            .font(.system(size: 13, weight: .medium))
-                        Spacer()
-                        if state.targets.count > 1 {
-                            Text("Drag to reorder chooser shortcuts")
+            VStack(alignment: .leading, spacing: 0) {
+                Grid(alignment: .topLeading, horizontalSpacing: 16, verticalSpacing: 20) {
+                    GridRow {
+                        Text("Default web browser:")
+                            .font(.system(size: 13))
+                            .gridColumnAlignment(.trailing)
+                            .frame(width: 155, alignment: .trailing)
+
+                        VStack(alignment: .leading, spacing: 8) {
+                            HStack(spacing: 16) {
+                                Label(
+                                    state.defaultBrowserStatus.ownsHTTP ? "HTTP: Reflex" : "HTTP: Other browser",
+                                    systemImage: state.defaultBrowserStatus.ownsHTTP ? "checkmark.circle.fill" : "exclamationmark.circle"
+                                )
+                                .foregroundStyle(state.defaultBrowserStatus.ownsHTTP ? Color.green : Color.orange)
+                                .font(.system(size: 13))
+
+                                Label(
+                                    state.defaultBrowserStatus.ownsHTTPS ? "HTTPS: Reflex" : "HTTPS: Other browser",
+                                    systemImage: state.defaultBrowserStatus.ownsHTTPS ? "checkmark.circle.fill" : "exclamationmark.circle"
+                                )
+                                .foregroundStyle(state.defaultBrowserStatus.ownsHTTPS ? Color.green : Color.orange)
+                                .font(.system(size: 13))
+                            }
+                            Button("Make Reflex Default Browser") {
+                                state.makeDefaultBrowser()
+                            }
+                            .disabled(state.defaultBrowserStatus.isComplete)
+
+                            if let message = state.setupMessage {
+                                Text(message)
+                                    .font(.system(size: 11))
+                                    .foregroundStyle(.secondary)
+                            }
+
+                            Text("Links from other applications normally reach Reflex only when it is the default browser. Links inside a browser or an embedded web view can bypass Reflex.")
                                 .font(.system(size: 11))
                                 .foregroundStyle(.secondary)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+
+                    GridRow {
+                        Text("Menu bar:")
+                            .font(.system(size: 13))
+                            .gridColumnAlignment(.trailing)
+                            .frame(width: 155, alignment: .trailing)
+
+                        VStack(alignment: .leading, spacing: 6) {
+                            Toggle("Show Reflex in the menu bar", isOn: $state.showsMenuBarItem)
+                                .toggleStyle(.checkbox)
+                                .font(.system(size: 13))
+
+                            Text("When on, closing this window removes the Dock icon and keeps Reflex in the menu bar. When off, closing this window quits Reflex.")
+                                .font(.system(size: 11))
+                                .foregroundStyle(.secondary)
+                                .fixedSize(horizontal: false, vertical: true)
                         }
                     }
 
-                    if state.targets.isEmpty {
-                        Text("No registered web browser was found.")
-                            .font(.system(size: 12))
-                            .foregroundStyle(.secondary)
-                            .padding(.vertical, 16)
-                            .frame(maxWidth: .infinity, alignment: .center)
-                    } else {
-                        let shortcutNumbers = shortcutNumbers()
-                        VStack(alignment: .leading, spacing: 12) {
-                            ForEach(browserGroups(), id: \.first) { targetIDs in
-                                VStack(alignment: .leading, spacing: 6) {
-                                    browserHeader(for: targetIDs)
-                                    ForEach(targetIDs, id: \.self) { targetID in
-                                        targetRow(targetID: targetID, shortcutNumbers: shortcutNumbers)
-                                    }
+                    GridRow {
+                        Text("Chooser shortcut:")
+                            .font(.system(size: 13))
+                            .gridColumnAlignment(.trailing)
+                            .frame(width: 155, alignment: .trailing)
+
+                        VStack(alignment: .leading, spacing: 6) {
+                            Picker("", selection: $state.chooserModifier) {
+                                ForEach(ChooserModifier.allCases) { modifier in
+                                    Label(
+                                        "\(modifier.name) + click",
+                                        systemImage: modifier.symbolName
+                                    )
+                                    .tag(modifier)
                                 }
                             }
+                            .labelsHidden()
+                            .frame(width: 180, alignment: .leading)
+
+                            Text("Hold \(state.chooserModifier.name) while you click a link to skip automatic selection and show the chooser. The chooser also gives access to Settings. The source application can use some modified clicks itself, so the link might not reach Reflex.")
+                                .font(.system(size: 11))
+                                .foregroundStyle(.secondary)
+                                .fixedSize(horizontal: false, vertical: true)
                         }
                     }
 
-                    HStack(spacing: 12) {
-                        Button("Add Browser…") { addBrowser() }
-                        Button("Rescan Browsers") { state.rescanBrowsers() }
-                        Spacer()
-                    }
-                    .padding(.top, 4)
-
-                    Text("The purpose is what Jev reads. Write the accounts, sites, and work you use a target for, for example \"Work: GitHub, Linear, company mail\". A target with no purpose is hard for Jev to choose, so Reflex shows the chooser instead.")
-                        .font(.system(size: 11))
-                        .foregroundStyle(.secondary)
-                        .fixedSize(horizontal: false, vertical: true)
-
-                    Text("A browser with more than one profile becomes one target for each profile. A browser with a single profile stays one target.")
-                        .font(.system(size: 11))
-                        .foregroundStyle(.secondary)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-
-                Divider()
-
-                Grid(alignment: .topLeading, horizontalSpacing: 16, verticalSpacing: 10) {
                     GridRow {
                         Text("Profile access:")
                             .font(.system(size: 13))
                             .gridColumnAlignment(.trailing)
-                            .frame(width: 120, alignment: .trailing)
+                            .frame(width: 155, alignment: .trailing)
 
                         VStack(alignment: .leading, spacing: 8) {
                             if state.profileAccessDeniedBrowsers.isEmpty,
@@ -221,7 +159,7 @@ struct SettingsView: View {
                                     "No profile access problem was found.",
                                     systemImage: "checkmark.circle.fill"
                                 )
-                                .font(.system(size: 12))
+                                .font(.system(size: 13))
                                 .foregroundStyle(.secondary)
                             }
                             if !state.profileAccessDeniedBrowsers.isEmpty {
@@ -229,7 +167,7 @@ struct SettingsView: View {
                                     "macOS blocks the profiles of \(state.profileAccessDeniedBrowsers.joined(separator: ", ")).",
                                     systemImage: "lock.circle"
                                 )
-                                .font(.system(size: 12))
+                                .font(.system(size: 13))
                                 .foregroundStyle(.orange)
                                 Button("Open Full Disk Access") { state.openFullDiskAccessSettings() }
                                 Text("Add Reflex to the list and switch it on. Then start Reflex again and select Rescan Browsers. Reflex works without this access, but it shows one target for each of these browsers.")
@@ -242,7 +180,7 @@ struct SettingsView: View {
                                     "No profile data was found for \(state.missingProfileDataBrowsers.joined(separator: ", ")).",
                                     systemImage: "questionmark.circle"
                                 )
-                                .font(.system(size: 12))
+                                .font(.system(size: 13))
                                 .foregroundStyle(.secondary)
                                 Text("Start each browser once, then select Rescan Browsers. Invalid profile data also appears in this state.")
                                     .font(.system(size: 11))
@@ -257,10 +195,67 @@ struct SettingsView: View {
                         .frame(maxWidth: .infinity, alignment: .leading)
                     }
                 }
+                Spacer()
+            }
+            .padding(.horizontal, 36)
+            .padding(.top, 24)
+            .padding(.bottom, 20)
+        }
+    }
+
+    private var targetsTab: some View {
+        ScrollView(.vertical, showsIndicators: true) {
+            VStack(alignment: .leading, spacing: 14) {
+                HStack {
+                    Text("Configured targets:")
+                        .font(.system(size: 13, weight: .medium))
+                    Spacer()
+                    if state.targets.count > 1 {
+                        Text("Drag to reorder chooser shortcuts")
+                            .font(.system(size: 11))
+                            .foregroundStyle(.secondary)
+                    }
+                }
+
+                if state.targets.isEmpty {
+                    Text("No registered web browser was found.")
+                        .font(.system(size: 12))
+                        .foregroundStyle(.secondary)
+                        .padding(.vertical, 16)
+                        .frame(maxWidth: .infinity, alignment: .center)
+                } else {
+                    let shortcutNumbers = shortcutNumbers()
+                    VStack(alignment: .leading, spacing: 12) {
+                        ForEach(browserGroups(), id: \.first) { targetIDs in
+                            VStack(alignment: .leading, spacing: 6) {
+                                browserHeader(for: targetIDs)
+                                ForEach(targetIDs, id: \.self) { targetID in
+                                    targetRow(targetID: targetID, shortcutNumbers: shortcutNumbers)
+                                }
+                            }
+                        }
+                    }
+                }
+
+                HStack(spacing: 12) {
+                    Button("Add Browser…") { addBrowser() }
+                    Button("Rescan Browsers") { state.rescanBrowsers() }
+                    Spacer()
+                }
+                .padding(.top, 4)
+
+                Text("The purpose is what Jev reads. Write the accounts, sites, and work you use a target for, for example \"Work: GitHub, Linear, company mail\". A target with no purpose is hard for Jev to choose, so Reflex shows the chooser instead.")
+                    .font(.system(size: 11))
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                Text("A browser with more than one profile becomes one target for each profile. A browser with a single profile stays one target.")
+                    .font(.system(size: 11))
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
             }
             .padding(.horizontal, 32)
             .padding(.top, 20)
-            .padding(.bottom, 24)
         }
     }
 
