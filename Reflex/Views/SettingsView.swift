@@ -87,6 +87,37 @@ struct SettingsView: View {
                 }
                 Toggle("Use Jev for automatic selection", isOn: $state.usesJev)
                     .disabled(!state.hasAPIKey)
+                if state.usesJev {
+                    VStack(alignment: .leading, spacing: 6) {
+                        HStack {
+                            Text("Auto-route confidence")
+                            Spacer()
+                            Text("\(Int(round(state.autoRouteConfidenceThreshold * 100)))%")
+                                .monospacedDigit()
+                                .foregroundStyle(.secondary)
+                        }
+                        Slider(
+                            value: $state.autoRouteConfidenceThreshold,
+                            in: 0.50...1.0,
+                            step: 0.05
+                        ) {
+                            Text("Auto-route confidence")
+                        } minimumValueLabel: {
+                            Text("50%")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        } maximumValueLabel: {
+                            Text("100%")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                        .disabled(!state.hasAPIKey)
+                        Text("Reflex opens links automatically only when Jev's confidence is at or above this threshold. Lower confidence shows the chooser with the suggested target highlighted.")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                    .padding(.vertical, 4)
+                }
                 Text("Reflex sends the link scheme, host, path, query parameter names, source application identifier when available, and enabled target names and purposes. It never sends query values or fragments.")
                     .font(.caption)
                     .foregroundStyle(.secondary)

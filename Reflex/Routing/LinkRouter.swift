@@ -19,6 +19,7 @@ final class LinkRouter: ObservableObject {
     private let availableTargets: () -> [BrowserTarget]
     private let sourceApplicationName: (String?) -> String?
     private let usesJev: () -> Bool
+    private let confidenceThreshold: () -> Double
     private var routingTask: Task<Void, Never>?
     private var routingLinkID: UUID?
     private var launchTask: Task<Void, Never>?
@@ -31,7 +32,8 @@ final class LinkRouter: ObservableObject {
         jevClient: any JevDeciding,
         availableTargets: @escaping () -> [BrowserTarget],
         sourceApplicationName: @escaping (String?) -> String?,
-        usesJev: @escaping () -> Bool = { true }
+        usesJev: @escaping () -> Bool = { true },
+        confidenceThreshold: @escaping () -> Double = { RoutingPolicy.defaultThreshold }
     ) {
         self.launcher = launcher
         self.keychain = keychain
@@ -39,6 +41,7 @@ final class LinkRouter: ObservableObject {
         self.availableTargets = availableTargets
         self.sourceApplicationName = sourceApplicationName
         self.usesJev = usesJev
+        self.confidenceThreshold = confidenceThreshold
     }
 
     func receive(
@@ -224,7 +227,11 @@ final class LinkRouter: ObservableObject {
                 let currentTargets = self.availableTargets()
                 ReflexLog.jev.info("Jev decision returned with confidence: \(decision.confidence, privacy: .public)")
                 self.apply(
-                    RoutingPolicy.action(availableTargets: currentTargets, decision: decision),
+                    RoutingPolicy.action(
+                        availableTargets: currentTargets,
+                        decision: decision,
+                        threshold: self.confidenceThreshold()
+                    ),
                     targets: currentTargets,
                     linkID: linkID
                 )

@@ -586,6 +586,57 @@ struct ReflexTests {
             availableTargets: targets,
             decision: RouteDecision(targetID: targets[0].id, confidence: 0.95)
         ) == .open(targets[0].id))
+        #expect(RoutingPolicy.action(
+            availableTargets: targets,
+            decision: RouteDecision(targetID: targets[0].id, confidence: 0.88),
+            threshold: 0.90
+        ) == .choose(suggestedTargetID: targets[0].id))
+        #expect(RoutingPolicy.action(
+            availableTargets: targets,
+            decision: RouteDecision(targetID: targets[0].id, confidence: 0.75),
+            threshold: 0.70
+        ) == .open(targets[0].id))
+    }
+
+    @Test("AppState persists and clamps confidence threshold")
+    @MainActor
+    func appStateConfidenceThreshold() {
+        let suiteName = "test-confidence-\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suiteName)!
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+
+        let state = AppState(
+            keychain: TestKeychainStore(apiKey: "test-key"),
+            launcher: RecordingBrowserLauncher(recorder: BrowserOpenRecorder()),
+            jevClient: FirstTargetJevDecider(),
+            defaults: defaults,
+            browserScanner: FixedBrowserScanner(),
+            defaultBrowserService: FixedDefaultBrowserService()
+        )
+
+        #expect(state.autoRouteConfidenceThreshold == 0.85)
+
+        state.autoRouteConfidenceThreshold = 0.90
+        #expect(defaults.double(forKey: "autoRouteConfidenceThreshold") == 0.90)
+
+        state.autoRouteConfidenceThreshold = 1.5
+        #expect(state.autoRouteConfidenceThreshold == 1.0)
+        #expect(defaults.double(forKey: "autoRouteConfidenceThreshold") == 1.0)
+
+        state.autoRouteConfidenceThreshold = -0.2
+        #expect(state.autoRouteConfidenceThreshold == 0.0)
+        #expect(defaults.double(forKey: "autoRouteConfidenceThreshold") == 0.0)
+
+        defaults.set(0.75, forKey: "autoRouteConfidenceThreshold")
+        let loadedState = AppState(
+            keychain: TestKeychainStore(apiKey: "test-key"),
+            launcher: RecordingBrowserLauncher(recorder: BrowserOpenRecorder()),
+            jevClient: FirstTargetJevDecider(),
+            defaults: defaults,
+            browserScanner: FixedBrowserScanner(),
+            defaultBrowserService: FixedDefaultBrowserService()
+        )
+        #expect(loadedState.autoRouteConfidenceThreshold == 0.75)
     }
 
     @Test("Single and zero target policy does not call Jev")

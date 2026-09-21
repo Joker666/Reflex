@@ -36,6 +36,15 @@ final class AppState: ObservableObject {
             }
         }
     }
+    @Published var autoRouteConfidenceThreshold: Double = RoutingPolicy.defaultThreshold {
+        didSet {
+            let clamped = RoutingPolicy.clampedThreshold(autoRouteConfidenceThreshold)
+            if clamped != autoRouteConfidenceThreshold {
+                autoRouteConfidenceThreshold = clamped
+            }
+            defaults.set(clamped, forKey: autoRouteConfidenceThresholdKey)
+        }
+    }
     /// Not @Published: MenuBarExtra writes this binding on every update, and a publish
     /// for an unchanged value starts an endless view update.
     var showsMenuBarItem: Bool {
@@ -63,6 +72,7 @@ final class AppState: ObservableObject {
     private let menuBarItemKey = "showsMenuBarItem"
     private let chooserModifierKey = "chooserModifier"
     private let usesJevKey = "usesJev"
+    private let autoRouteConfidenceThresholdKey = "autoRouteConfidenceThreshold"
     private var iconCache: [String: NSImage] = [:]
     private var availabilityCache: [TargetProfileKey: Bool] = [:]
     private var storedShowsMenuBarItem = true
@@ -77,7 +87,8 @@ final class AppState: ObservableObject {
         jevClient: jevClient,
         availableTargets: { [weak self] in self?.availableTargets ?? [] },
         sourceApplicationName: { [weak self] in self?.applicationName(for: $0) },
-        usesJev: { [weak self] in self?.usesJev ?? true }
+        usesJev: { [weak self] in self?.usesJev ?? true },
+        confidenceThreshold: { [weak self] in self?.autoRouteConfidenceThreshold ?? RoutingPolicy.defaultThreshold }
     )
 
     var pendingURL: URL? { linkRouter.pendingURL }
@@ -110,6 +121,11 @@ final class AppState: ObservableObject {
         storedShowsMenuBarItem = defaults.object(forKey: menuBarItemKey) as? Bool ?? true
         chooserModifier = ChooserModifier.fromStoredValue(defaults.string(forKey: chooserModifierKey))
         usesJev = defaults.object(forKey: usesJevKey) as? Bool ?? true
+        if let storedThreshold = defaults.object(forKey: autoRouteConfidenceThresholdKey) as? Double {
+            autoRouteConfidenceThreshold = RoutingPolicy.clampedThreshold(storedThreshold)
+        } else {
+            autoRouteConfidenceThreshold = RoutingPolicy.defaultThreshold
+        }
         refreshDefaultBrowserStatus()
         hasAPIKey = (try? keychain.readAPIKey()) != nil
         updateAvailableTargets()

@@ -31,6 +31,7 @@ You can use Reflex without an API key. In this mode, Reflex shows the chooser fo
 - Routes links to Safari, Chrome, Dia, Comet, Helium, Edge, Phi, Zen, or Firefox.
 - Supports profiles for recognized Chromium-based browsers.
 - Opens the chooser when automatic selection is unavailable or uncertain.
+- Configurable auto-route confidence threshold (default 85%) in Settings.
 - Lets you hold Option while you click a link to open the chooser directly. You can change this modifier in Settings.
 - Keeps incoming links in memory only. Reflex does not keep a link history.
 
