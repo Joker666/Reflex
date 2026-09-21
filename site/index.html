@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#ff3b22">
+    <meta name="description" content="Reflex routes each macOS web link to the right browser or browser profile.">
+    <title>Reflex — One click. Right browser.</title>
+    <link rel="icon" type="image/png" href="assets/reflex-icon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&amp;family=Syncopate:wght@400;700&amp;display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <div class="ticker" aria-label="Reflex routing sequence">
+      <div>HTTP(S) LINK <b>→</b> REFLEX <b>→</b> RIGHT BROWSER <b>→</b> RIGHT PROFILE <b>→</b> DONE</div>
+    </div>
+
+    <header class="site-header shell">
+      <a class="brand" href="#top" aria-label="Reflex home">
+        <img src="assets/reflex-icon.png" alt="" width="38" height="38">
+        <span>Reflex</span>
+      </a>
+      <nav aria-label="Main navigation">
+        <a href="#route">Route</a>
+        <a href="#privacy">Privacy</a>
+        <a class="boxed-link" href="https://github.com/Joker666/Reflex">GitHub ↗</a>
+      </nav>
+    </header>
+
+    <main id="top">
+      <section class="hero shell">
+        <div class="hero-copy">
+          <p class="label acid">[ MACOS LINK ROUTER // 001 ]</p>
+          <h1>One click.<br><span>Right browser.</span></h1>
+          <p class="lede">Make Reflex your default browser. Every external link goes to the browser and profile that fits it best.</p>
+
+          <div class="install-wrap">
+            <span class="install-index">01 / INSTALL</span>
+            <div class="install-command" aria-label="Homebrew installation command">
+              <code>brew install --cask Joker666/tap/reflex</code>
+              <button type="button" data-copy="brew install --cask Joker666/tap/reflex" aria-label="Copy Homebrew command">
+                <span class="copy-label">COPY</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="system-meta" aria-label="System requirements">
+            <span>MACOS 14+</span>
+            <span>NATIVE SWIFT</span>
+            <span>OPEN SOURCE</span>
+          </div>
+        </div>
+
+        <div class="demo-block" aria-label="Reflex browser chooser">
+          <div class="demo-header">
+            <span>LIVE / ROUTE SELECTOR</span>
+            <span>● ACTIVE</span>
+          </div>
+          <div class="demo-canvas">
+            <img src="assets/reflex-chooser.png" alt="Reflex chooser with Dia, Comet, Chrome, Helium, Edge, and Phi targets">
+            <div class="demo-note">NO URL<br>ON SCREEN</div>
+          </div>
+          <div class="demo-footer">OPTION + CLICK = ALWAYS CHOOSE</div>
+        </div>
+      </section>
+
+      <section class="browser-bar" aria-label="Supported browsers">
+        <strong>SUPPORTED:</strong>
+        <span>SAFARI</span><i>/</i><span>CHROME</span><i>/</i><span>DIA</span><i>/</i><span>COMET</span><i>/</i><span>HELIUM</span><i>/</i><span>EDGE</span><i>/</i><span>PHI</span><i>/</i><span>ZEN</span><i>/</i><span>FIREFOX</span>
+      </section>
+
+      <section class="route shell" id="route">
+        <div class="section-title">
+          <p class="label">[ THE ROUTE // 002 ]</p>
+          <h2>CLICK → MATCH → OPEN</h2>
+        </div>
+
+        <div class="route-grid">
+          <article class="route-card yellow">
+            <span>01</span>
+            <h3>CLICK</h3>
+            <p>Any external HTTP or HTTPS link reaches Reflex.</p>
+          </article>
+          <article class="route-card blue">
+            <span>02</span>
+            <h3>MATCH</h3>
+            <p>Jev uses the source app and the purposes that you wrote.</p>
+          </article>
+          <article class="route-card red">
+            <span>03</span>
+            <h3>OPEN</h3>
+            <p>A strong match opens. An uncertain match shows the chooser.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="profile-block shell">
+        <div class="profile-title">
+          <p class="label acid">[ TARGETS // 003 ]</p>
+          <h2>BROWSER<br>× PROFILE</h2>
+        </div>
+        <div class="target-list" aria-label="Example browser targets">
+          <div><b>CHROME</b><span>WORK</span><em>01</em></div>
+          <div><b>SAFARI</b><span>PERSONAL</span><em>02</em></div>
+          <div><b>DIA</b><span>RESEARCH</span><em>03</em></div>
+          <div><b>EDGE</b><span>CLIENT</span><em>04</em></div>
+        </div>
+      </section>
+
+      <section class="override-block">
+        <div class="override-inner shell">
+          <div>
+            <p class="label inverse">[ MANUAL OVERRIDE // 004 ]</p>
+            <h2>HOLD.<br>CLICK.<br>CHOOSE.</h2>
+          </div>
+          <div class="shortcut-demo" aria-label="Option click shortcut">
+            <div class="keycap"><small>OPTION</small><strong>⌥</strong></div>
+            <b>+</b>
+            <div class="mouse" aria-hidden="true"><span></span></div>
+          </div>
+          <p class="override-copy">Hold Option while you click to bypass automatic selection. Change the modifier to Control, Shift, Command, or Fn in Settings.</p>
+        </div>
+      </section>
+
+      <section class="privacy-block shell" id="privacy">
+        <div class="privacy-head">
+          <p class="label">[ PRIVACY // 005 ]</p>
+          <h2>LESS DATA.<br>ZERO HISTORY.</h2>
+        </div>
+        <div class="privacy-list">
+          <p><b>01</b> Query values and fragments are removed before automatic selection.</p>
+          <p><b>02</b> Reflex does not save the links that you open.</p>
+          <p><b>03</b> Your selected browser receives the original link.</p>
+        </div>
+      </section>
+
+      <section class="limit-block shell">
+        <span>KNOWN LIMIT / 001</span>
+        <p>Profile discovery is Chromium-first. Safari, Firefox, and Zen profiles are not available.</p>
+      </section>
+
+      <section class="final-block">
+        <div class="shell">
+          <img src="assets/reflex-icon.png" alt="" width="88" height="88">
+          <h2>INSTALL.<br>ROUTE.<br>DONE.</h2>
+          <div class="final-actions">
+            <a class="download-link" href="https://github.com/Joker666/Reflex/releases/latest">DOWNLOAD REFLEX ↓</a>
+            <a href="https://github.com/Joker666/Reflex">SOURCE CODE ↗</a>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer shell">
+      <span>REFLEX / MACOS</span>
+      <span>BUILT IN SWIFT</span>
+    </footer>
+
+    <script src="script.js"></script>
+  </body>
+</html>
