@@ -10,7 +10,10 @@ function init() {
   const chooserRows = document.querySelectorAll(".chooser-row");
   const scenarioChips = document.querySelectorAll(".scenario-chip:not(.chip-override)");
   const overrideToggle = document.getElementById("btn-override-toggle");
+  const statusBolt = document.getElementById("status-bolt") || document.querySelector(".status-bolt");
   const statusMsg = document.querySelector(".status-msg");
+  const boltSvg = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>`;
+  const optionGlyph = `<span style="font-size:12px;font-weight:600;line-height:1;" aria-hidden="true">⌥</span>`;
   const launchToast = document.getElementById("launch-toast");
   const toastText = launchToast?.querySelector(".toast-text");
   const settingsBtn = document.getElementById("btn-settings");
@@ -132,13 +135,16 @@ function init() {
     // Update status text
     if (statusMsg) {
       if (isOptionHeld) {
-        statusMsg.textContent = "⌥ Option held: Manual choice mode";
+        if (statusBolt) statusBolt.innerHTML = optionGlyph;
+        statusMsg.textContent = "Automatic selection skipped";
         statusMsg.classList.remove("flash-active");
       } else if (options.isAI) {
-        statusMsg.textContent = `⚡ Suggested ${targetName} • ${options.confidence}% confidence`;
+        if (statusBolt) statusBolt.innerHTML = boltSvg;
+        statusMsg.textContent = `Suggested ${targetName} • ${options.confidence}%`;
         statusMsg.classList.add("flash-active");
       } else {
-        statusMsg.textContent = `Automatic selection is active`;
+        if (statusBolt) statusBolt.innerHTML = boltSvg;
+        statusMsg.textContent = "Automatic selection is active";
         statusMsg.classList.remove("flash-active");
       }
     }
@@ -192,7 +198,8 @@ function init() {
 
       // Animate AI routing decision
       if (statusMsg) {
-        statusMsg.textContent = "⚡ Evaluating incoming link...";
+        if (statusBolt) statusBolt.innerHTML = boltSvg;
+        statusMsg.textContent = "Evaluating incoming link...";
       }
 
       window.setTimeout(() => {
@@ -209,9 +216,14 @@ function init() {
     overrideToggle.setAttribute("aria-pressed", isOptionHeld ? "true" : "false");
     
     if (isOptionHeld) {
-      if (statusMsg) statusMsg.textContent = "⌥ Option held: Manual choice mode";
+      if (statusBolt) statusBolt.innerHTML = optionGlyph;
+      if (statusMsg) {
+        statusMsg.textContent = "Automatic selection skipped";
+        statusMsg.classList.remove("flash-active");
+      }
       announce("Option modifier active: automatic routing bypassed");
     } else {
+      if (statusBolt) statusBolt.innerHTML = boltSvg;
       selectTarget(currentSelectedIndex, { isAI: false });
     }
   });
@@ -260,7 +272,11 @@ function init() {
       isOptionHeld = true;
       overrideToggle?.classList.add("is-active");
       overrideToggle?.setAttribute("aria-pressed", "true");
-      if (statusMsg) statusMsg.textContent = "⌥ Option held: Manual choice mode";
+      if (statusBolt) statusBolt.innerHTML = optionGlyph;
+      if (statusMsg) {
+        statusMsg.textContent = "Automatic selection skipped";
+        statusMsg.classList.remove("flash-active");
+      }
     }
   });
 
@@ -269,6 +285,7 @@ function init() {
       isOptionHeld = false;
       overrideToggle?.classList.remove("is-active");
       overrideToggle?.setAttribute("aria-pressed", "false");
+      if (statusBolt) statusBolt.innerHTML = boltSvg;
       selectTarget(currentSelectedIndex, { isAI: false });
     }
   });

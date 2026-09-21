@@ -308,7 +308,11 @@
                 <!-- Footer Status Bar with Lightning Indicator and Settings Gear -->
                 <div class="chooser-footer">
                   <div class="chooser-status" id="chooser-status-text">
-                    <span class="status-bolt" aria-hidden="true">⚡</span>
+                    <span class="status-bolt" id="status-bolt" aria-hidden="true">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                      </svg>
+                    </span>
                     <span class="status-msg">Automatic selection is active</span>
                   </div>
                   <button type="button" class="btn-settings-gear" id="btn-settings" aria-label="Reflex settings" title="Open Settings">
