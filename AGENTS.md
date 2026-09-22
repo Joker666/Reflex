@@ -45,7 +45,7 @@ Do not add any of the following unless a later task explicitly asks for it:
 - Use `OSLog` for diagnostics, with privacy annotations. Never log the full incoming URL, query values, API key, authorization header, or API response body
 - Keep networking, routing policy, URL sanitization, and browser launching testable without SwiftUI
 - The app must remain useful when Jev is unavailable
-- Discover browser applications through Launch Services and `NSWorkspace`; keep only Safari, Chrome, Dia, Comet, Helium, Edge, Phi, Zen, and Firefox
+- Discover browser applications through Launch Services and `NSWorkspace`; keep only Safari, Chrome, Dia, Comet, Helium, Edge, Phi, Zen, Firefox, Brave, and Arc
 
 ## Repository working rules
 
@@ -93,7 +93,7 @@ Reflex should configure the initial target list automatically instead of requiri
 - Ask Launch Services for every installed application capable of opening representative `http` and `https` URLs. Prefer public `NSWorkspace` APIs such as `urlsForApplications(toOpen:)` rather than scanning fixed filesystem directories.
 - Take the union of HTTP and HTTPS results, resolve each application bundle, and deduplicate by bundle identifier. If an application has no bundle identifier, deduplicate by standardized application URL.
 - Exclude Reflex itself so it can never appear as a destination and create a routing loop.
-- Limit discovery to Safari, Chrome, Dia, Comet, Helium, Edge, Phi, Zen, and Firefox. Remove other registered handlers from the target list.
+- Limit discovery to Safari, Chrome, Dia, Comet, Helium, Edge, Phi, Zen, Firefox, Brave, and Arc. Remove other registered handlers from the target list.
 - For each new browser, pre-populate its display name, bundle identifier, application icon, enabled state, and a neutral editable purpose such as `General browsing in <browser name>`.
 - Leave the purpose empty for a new target. Boilerplate such as `General browsing in Safari` tells Jev nothing, and an empty field with a prompt asks the user for the words that decide the routing.
 - Enable newly discovered browsers by default. The first-launch setup must let the user disable unwanted targets and edit each purpose before completing setup.

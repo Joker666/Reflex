@@ -33,6 +33,7 @@ enum SupportedBrowser: CaseIterable {
     case zen
     case firefox
     case brave
+    case arc
 
     var displayName: String {
         switch self {
@@ -46,6 +47,7 @@ enum SupportedBrowser: CaseIterable {
         case .zen: "Zen"
         case .firefox: "Firefox"
         case .brave: "Brave"
+        case .arc: "Arc"
         }
     }
 
@@ -67,6 +69,7 @@ enum SupportedBrowser: CaseIterable {
         case .zen: ["app.zen-browser.zen", "io.github.zen-browser.zen"]
         case .firefox: ["org.mozilla.firefox"]
         case .brave: ["com.brave.Browser"]
+        case .arc: ["company.thebrowser.Browser"]
         }
     }
 
@@ -82,6 +85,7 @@ enum SupportedBrowser: CaseIterable {
         case .zen: ["zen", "zen browser"]
         case .firefox: ["firefox"]
         case .brave: ["brave", "brave browser"]
+        case .arc: ["arc", "arc browser"]
         }
     }
 

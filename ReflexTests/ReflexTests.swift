@@ -1185,10 +1185,14 @@ struct ReflexTests {
         #expect(SupportedBrowser.matching(name: "Brave Browser", bundleIdentifier: "unknown") == .brave)
         #expect(SupportedBrowser.chromiumProfileDataDirectory(for: "com.brave.Browser") == "BraveSoftware/Brave-Browser")
         #expect(SupportedBrowser.matching(name: "Zen Browser", bundleIdentifier: "unknown") == .zen)
+        #expect(SupportedBrowser.matching(bundleIdentifier: "company.thebrowser.Browser") == .arc)
+        #expect(SupportedBrowser.matching(name: "Arc", bundleIdentifier: "unknown") == .arc)
+        #expect(SupportedBrowser.matching(name: "Arc Browser", bundleIdentifier: "unknown") == .arc)
+        #expect(SupportedBrowser.chromiumProfileDataDirectory(for: "company.thebrowser.Browser") == nil)
         #expect(SupportedBrowser.matching(name: "Random Browser", bundleIdentifier: "com.unknown.browser") == nil)
         #expect(
             SupportedBrowser.selectionInstruction
-                == "Select Safari, Chrome, Dia, Comet, Helium, Edge, Phi, Zen, Firefox, or Brave."
+                == "Select Safari, Chrome, Dia, Comet, Helium, Edge, Phi, Zen, Firefox, Brave, or Arc."
         )
     }
 
