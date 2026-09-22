@@ -1136,6 +1136,181 @@ h1 {
 }
 
 /* ==========================================================================
+   Supported Browsers Section
+   ========================================================================== */
+
+.browsers-section {
+  padding-block: 60px 80px;
+  position: relative;
+}
+
+.browsers-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 16px;
+  margin-inline: auto;
+  max-width: 1040px;
+}
+
+.browser-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 24px 14px 18px;
+  background: var(--card-bg);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--card-shadow);
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.2s ease,
+              box-shadow 0.22s ease,
+              background-color 0.2s ease;
+  width: 154px;
+  flex: 0 1 154px;
+}
+
+.browser-card:hover {
+  transform: translateY(-4px);
+  background: var(--card-hover-bg);
+  border-color: var(--border-medium);
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.28);
+}
+
+[data-theme="light"] .browser-card:hover {
+  box-shadow: 0 10px 24px rgba(100, 70, 50, 0.12);
+}
+
+.browser-card-icon {
+  width: 68px;
+  height: 68px;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.24));
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.browser-card:hover .browser-card-icon {
+  transform: scale(1.08);
+}
+
+.browser-card-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 15px;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.browser-card-name {
+  font-size: 0.96rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+  letter-spacing: -0.01em;
+}
+
+.browser-card-feature {
+  font-size: 0.74rem;
+  color: var(--text-tertiary);
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-subtle);
+}
+
+.browser-card-feature.has-profiles {
+  color: #5ac8fa;
+  background: rgba(90, 200, 250, 0.1);
+  border-color: rgba(90, 200, 250, 0.24);
+}
+
+[data-theme="light"] .browser-card-feature {
+  background: rgba(160, 135, 115, 0.08);
+  border-color: rgba(160, 135, 115, 0.16);
+  color: #7a6e65;
+}
+
+[data-theme="light"] .browser-card-feature.has-profiles {
+  color: #0070c9;
+  background: rgba(0, 122, 255, 0.08);
+  border-color: rgba(0, 122, 255, 0.22);
+}
+
+.browsers-note {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 32px;
+  text-align: center;
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  max-width: 700px;
+  margin-inline: auto;
+  padding: 10px 20px;
+  background: var(--card-bg);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-pill);
+}
+
+.browsers-note-sparkle {
+  color: var(--accent-yellow);
+  font-size: 0.95rem;
+  flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+  .browsers-grid {
+    gap: 12px;
+  }
+  
+  .browser-card {
+    width: 130px;
+    flex: 0 1 130px;
+    padding: 18px 10px 14px;
+  }
+  
+  .browser-card-icon {
+    width: 56px;
+    height: 56px;
+  }
+  
+  .browser-card-name {
+    font-size: 0.88rem;
+  }
+  
+  .browser-card-feature {
+    font-size: 0.7rem;
+  }
+  
+  .browsers-note {
+    border-radius: var(--radius-md);
+    padding: 12px 16px;
+    font-size: 0.82rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .browsers-grid {
+    grid-template-columns: repeat(2, 1fr);
+    display: grid;
+  }
+  
+  .browser-card {
+    width: auto;
+    flex: initial;
+  }
+}
+
+/* ==========================================================================
    Install Section (4 Cards)
    ========================================================================== */
 
