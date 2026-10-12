@@ -29,7 +29,7 @@ Do not add any of the following unless a later task explicitly asks for it:
 - File, notification, email, calendar, or download routing
 - A natural-language chat interface
 - An LLM fallback
-- A database or link history
+- A database, or a link history other than the optional local Activity Log
 - Automatic rule learning
 - Support for operating systems other than macOS
 
@@ -86,6 +86,8 @@ Strip the fragment completely. Strip query parameter values. Supplying query par
 
 The launcher must always receive the original URL, not the sanitized URL.
 
+The optional Activity Log is off by default. When the user turns it on, Reflex stores only the sanitized link context, the source application, the chosen target, and Jev's scores in a local file. It removes entries after 7, 14, or 30 days, and the user can clear it.
+
 ## First-launch browser discovery
 
 Reflex should configure the initial target list automatically instead of requiring users to type browser bundle identifiers.
@@ -94,11 +96,11 @@ Reflex should configure the initial target list automatically instead of requiri
 - Take the union of HTTP and HTTPS results, resolve each application bundle, and deduplicate by bundle identifier. If an application has no bundle identifier, deduplicate by standardized application URL.
 - Exclude Reflex itself so it can never appear as a destination and create a routing loop.
 - Limit discovery to Safari, Chrome, Dia, Comet, Helium, Edge, Phi, Zen, Firefox, Brave, and Arc. Remove other registered handlers from the target list.
-- For each new browser, pre-populate its display name, bundle identifier, application icon, enabled state, and a neutral editable purpose such as `General browsing in <browser name>`.
+- For each new browser, pre-populate its display name, bundle identifier, application icon, and enabled state.
 - Leave the purpose empty for a new target. Boilerplate such as `General browsing in Safari` tells Jev nothing, and an empty field with a prompt asks the user for the words that decide the routing.
 - Enable newly discovered browsers by default. The first-launch setup must let the user disable unwanted targets and edit each purpose before completing setup.
 - Browser purpose is user intent, not something Reflex can infer reliably. Do not label a browser as work or personal without the user's input.
-- Discover Chromium profile names and directory identifiers for Chrome, Edge, Comet, Dia, and Helium. Read only `profile.info_cache` keys and each entry's `name` from the browser's `Local State` file. Do not read account details, history, cookies, or page data.
+- Discover Chromium profile names and directory identifiers for Chrome, Edge, Comet, Dia, Helium, and Brave. Read only `profile.info_cache` keys and the name fields of each entry from the browser's `Local State` file. Use `name`. When `name` is a placeholder, use the account-name fields (`edge_account_first_name`, `edge_account_last_name`, `gaia_name`, `user_name`). Do not read history, cookies, or page data.
 - A browser with more than one profile becomes one target for each profile, named `Browser (Profile)`. Take the profile name from the user's label. A browser that keeps a placeholder there, such as Edge with `Profile 2`, gives the account name instead. A later scan replaces a name Reflex built from a placeholder, and never a name the user wrote. A browser with a single profile stays one target named `Browser`. A scan gives the plain target the first profile and keeps its purpose.
 - macOS can deny access to a browser's data directory. Settings has a **Profile access** section that reports the state, names the affected browsers, says what Reflex reads, and opens the Full Disk Access list. macOS has no API to ask for this access, so an application can only open that list. Profile targets come from a scan only.
 - Add a **Rescan Browsers** action in Settings. A rescan merges new discoveries into the existing target list without overwriting user-authored names, purposes, enabled states, or profile settings.
@@ -138,11 +140,13 @@ struct RoutingContext: Codable, Equatable {
     var path: String
     var queryParameterNames: [String]
     var sourceApplicationBundleIdentifier: String?
+    var sourceApplicationName: String?
 }
 
 struct RouteDecision: Equatable {
     var targetID: UUID
     var confidence: Double
+    var probabilities: [UUID: Double]
 }
 ```
 
@@ -215,7 +219,7 @@ Use deterministic local policy after Jev responds:
 - If exactly one target is enabled, open it directly without calling Jev
 - If no targets are enabled, show setup instead of discarding the URL
 
-Keep the threshold in preferences, but a settings UI for changing it is optional in the MVP. Clamp persisted values to `0...1` when reading them.
+Keep the threshold in preferences. Settings changes it with a slider from 0.50 to 1.00. Clamp persisted values to `0...1` when reading them.
 
 ## Browser launching
 
@@ -229,8 +233,7 @@ Keep the threshold in preferences, but a settings UI for changing it is optional
 
 ## App shape
 
-Use a menu bar app with two small windows/panels. Reflex runs as an accessory application, so a link shows the chooser and nothing else. It becomes a normal application with a Dock icon only while the settings window is open.
-
+Use a menu bar app with a chooser panel, a settings window, and a first-launch onboarding window. Reflex runs as an accessory application, so a link shows the chooser and nothing else. It becomes a normal application with a Dock icon only while the settings or onboarding window is open.
 
 1. **Chooser**
    - Opens as a compact borderless panel at the pointer, next to the clicked link
@@ -257,6 +260,13 @@ Use a menu bar app with two small windows/panels. Reflex runs as an accessory ap
    - Current HTTP/HTTPS default-handler status and a Make Reflex Default Browser action
    - A short privacy note describing exactly what is sent to TypeSafe
    - Instructions for selecting Reflex as the macOS default web browser if macOS requires manual confirmation in System Settings
+   - A switch for automatic selection and the auto-route threshold slider
+   - An Activity tab for the optional local Activity Log
+
+3. **Onboarding**
+   - Opens on first launch, before Settings
+   - Steps: welcome, default browser, profile access, automatic routing, browser purposes, ready
+   - Lets the user disable targets and write purposes before setup is complete
 
 Keep visual design plain, native, and compact. Correct routing and safe fallback matter more than animation or custom styling.
 
