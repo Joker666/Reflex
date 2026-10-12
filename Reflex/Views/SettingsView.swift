@@ -1,13 +1,11 @@
 import SwiftUI
 import UniformTypeIdentifiers
 
-enum SettingsTab: String, CaseIterable, Identifiable {
+enum SettingsTab: String, CaseIterable {
     case general = "General"
     case targets = "Targets"
     case routing = "AI Routing"
     case activity = "Activity"
-
-    var id: String { rawValue }
 
     var identifier: NSToolbarItem.Identifier {
         NSToolbarItem.Identifier(rawValue)
@@ -30,7 +28,7 @@ final class SettingsNavigationState: ObservableObject {
 
 struct SettingsView: View {
     @ObservedObject var state: AppState
-    @ObservedObject var navigation: SettingsNavigationState = SettingsNavigationState()
+    @ObservedObject var navigation: SettingsNavigationState
     @FocusState private var isFieldFocused: Bool
     @State private var apiKey = ""
     @State private var isShowingSavedPlaceholder = false

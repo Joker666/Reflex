@@ -1,6 +1,6 @@
 import Foundation
 
-enum ActivityRetentionPeriod: Int, CaseIterable, Identifiable, Codable {
+enum ActivityRetentionPeriod: Int, CaseIterable, Identifiable {
     case sevenDays = 7
     case fourteenDays = 14
     case thirtyDays = 30
@@ -16,7 +16,7 @@ enum ActivityRetentionPeriod: Int, CaseIterable, Identifiable, Codable {
     }
 }
 
-enum RoutingOutcome: String, Codable, CaseIterable, Equatable {
+enum RoutingOutcome: String, Codable, Equatable {
     case autoRouted = "Auto-routed"
     case manualChoice = "Chooser selection"
     case modifierBypass = "Shortcut bypass"

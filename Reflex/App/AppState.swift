@@ -62,7 +62,7 @@ final class AppState: ObservableObject {
         get { linkRouter.chooserPresenter }
         set { linkRouter.chooserPresenter = newValue }
     }
-    var settingsAction: ((_ rescanBrowsers: Bool) -> Void)?
+    var settingsAction: (() -> Void)?
 
     private let launcher: any BrowserLaunching
     private let keychain: any APIKeyStoring
@@ -255,16 +255,10 @@ final class AppState: ObservableObject {
         browsersWithReadProfiles = result.readableBundleIdentifiers
         profileAccessDeniedBrowsers = result.accessDeniedBrowserNames
         missingProfileDataBrowsers = result.missingProfileDataBrowserNames
-        let scannedProfileBundleIdentifiers = Set(merged.compactMap { target in
-            SupportedBrowser.chromiumProfileDataDirectory(for: target.bundleIdentifier) == nil
-                ? nil
-                : target.bundleIdentifier
-        })
 
         targets = merged
             .expandingProfiles(
                 Dictionary(grouping: result.profiles, by: \.bundleIdentifier),
-                scannedBundleIdentifiers: scannedProfileBundleIdentifiers,
                 browserNamesByBundleIdentifier: Dictionary(
                     scan.discoveries.map { ($0.bundleIdentifier, $0.name) },
                     uniquingKeysWith: { first, _ in first }
@@ -287,7 +281,7 @@ final class AppState: ObservableObject {
             return
         }
         let name = bundle.displayName(fallbackURL: applicationURL)
-        guard BrowserDiscovery.isSupportedBrowser(name: name, bundleIdentifier: bundleIdentifier) else {
+        guard SupportedBrowser.matching(name: name, bundleIdentifier: bundleIdentifier) != nil else {
             setupMessage = SupportedBrowser.selectionInstruction
             return
         }
@@ -303,10 +297,10 @@ final class AppState: ObservableObject {
         )
     }
 
-    func openSettings(rescanBrowsers: Bool = true) {
+    func openSettings() {
         linkRouter.cancelPendingForSettings()
         chooserPresenter?.dismissChooser()
-        settingsAction?(rescanBrowsers)
+        settingsAction?()
     }
 
     func settingsDidClose() {
@@ -315,7 +309,6 @@ final class AppState: ObservableObject {
 
     func onboardingDidOpen() {
         linkRouter.pausePendingForOnboarding()
-        chooserPresenter?.dismissChooser()
     }
 
     func openFullDiskAccessSettings() {

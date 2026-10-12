@@ -90,13 +90,10 @@ extension Array where Element == BrowserTarget {
     /// single profile stays one plain target, so the chooser shows only the browser name.
     func expandingProfiles(
         _ profilesByBundleIdentifier: [String: [DiscoveredBrowserProfile]],
-        scannedBundleIdentifiers: Set<String>? = nil,
         browserNamesByBundleIdentifier: [String: String] = [:]
     ) -> [BrowserTarget] {
         var result: [BrowserTarget] = []
         var emittedBundleIdentifiers: Set<String> = []
-        let scannedBundleIdentifiers = scannedBundleIdentifiers
-            ?? Set(profilesByBundleIdentifier.keys)
 
         for target in self {
             let bundleIdentifier = target.bundleIdentifier
@@ -104,16 +101,13 @@ extension Array where Element == BrowserTarget {
             emittedBundleIdentifiers.insert(bundleIdentifier)
 
             var group = filter { $0.bundleIdentifier == bundleIdentifier }
-            guard scannedBundleIdentifiers.contains(bundleIdentifier) else {
-                if SupportedBrowser.chromiumProfileDataDirectory(for: bundleIdentifier) == nil {
-                    result.append(contentsOf: group.map {
-                        var target = $0
-                        target.chromiumProfileDirectory = nil
-                        return target
-                    })
-                } else {
-                    result.append(contentsOf: group)
-                }
+            // A scan reads every Chromium browser, so a browser without profiles here has none.
+            guard SupportedBrowser.chromiumProfileDataDirectory(for: bundleIdentifier) != nil else {
+                result.append(contentsOf: group.map {
+                    var target = $0
+                    target.chromiumProfileDirectory = nil
+                    return target
+                })
                 continue
             }
             let profiles = profilesByBundleIdentifier[bundleIdentifier] ?? []

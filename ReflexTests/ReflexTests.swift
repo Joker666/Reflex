@@ -336,10 +336,7 @@ struct ReflexTests {
             isEnabled: true
         )
 
-        let result = [personal, work].expandingProfiles(
-            [:],
-            scannedBundleIdentifiers: ["com.google.Chrome"]
-        )
+        let result = [personal, work].expandingProfiles([:])
 
         #expect(result.count == 1)
         #expect(result[0].id == personal.id)
@@ -446,13 +443,11 @@ struct ReflexTests {
         let discoveries = [
             DiscoveredBrowser(
                 name: "Example Browser",
-                bundleIdentifier: "com.google.Chrome",
-                applicationURL: URL(fileURLWithPath: "/Applications/Example.app")
+                bundleIdentifier: "com.google.Chrome"
             ),
             DiscoveredBrowser(
                 name: "Firefox",
-                bundleIdentifier: "org.mozilla.firefox",
-                applicationURL: URL(fileURLWithPath: "/Applications/Firefox.app")
+                bundleIdentifier: "org.mozilla.firefox"
             ),
         ]
 
@@ -472,8 +467,7 @@ struct ReflexTests {
         let discoveries = [
             DiscoveredBrowser(
                 name: "Chrome",
-                bundleIdentifier: "com.google.Chrome",
-                applicationURL: URL(fileURLWithPath: "/Applications/Google Chrome.app")
+                bundleIdentifier: "com.google.Chrome"
             ),
         ]
 
