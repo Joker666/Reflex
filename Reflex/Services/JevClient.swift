@@ -77,6 +77,8 @@ struct JevClient: JevDeciding {
     static let openRouterEndpoint = URL(string: "https://openrouter.ai/api/alpha/decisions")!
     static let model = "~typesafe/jev-latest"
     static let timeout: TimeInterval = 1.5
+    /// Settings and onboarding show this, so it must match the request body.
+    static let privacyNote = "For each decision, Reflex sends the link scheme, host, path, and query parameter names, the source application name and identifier when available, and the names and purposes of the enabled targets. It never sends query values, fragments, clipboard contents, or browser history."
     /// Jev reads this with the state, so it says what each field means.
     static let instructions = [
         "Choose the browser target where this user would open `link`.",
