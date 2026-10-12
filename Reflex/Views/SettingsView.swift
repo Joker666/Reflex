@@ -84,10 +84,7 @@ struct SettingsView: View {
             VStack(alignment: .leading, spacing: 0) {
                 Grid(alignment: .topLeading, horizontalSpacing: 16, verticalSpacing: 20) {
                     GridRow {
-                        Text("Default web browser:")
-                            .font(.system(size: 13))
-                            .gridColumnAlignment(.trailing)
-                            .frame(width: 155, alignment: .trailing)
+                        gridLabel("Default web browser:")
 
                         VStack(alignment: .leading, spacing: 8) {
                             HStack(spacing: 16) {
@@ -111,42 +108,28 @@ struct SettingsView: View {
                             .disabled(state.defaultBrowserStatus.isComplete)
 
                             if let message = state.setupMessage {
-                                Text(message)
-                                    .font(.system(size: 11))
-                                    .foregroundStyle(.secondary)
+                                footnote(message)
                             }
 
-                            Text("Links from other applications normally reach Reflex only when it is the default browser. Links inside a browser or an embedded web view can bypass Reflex.")
-                                .font(.system(size: 11))
-                                .foregroundStyle(.secondary)
-                                .fixedSize(horizontal: false, vertical: true)
+                            footnote("Links from other applications normally reach Reflex only when it is the default browser. Links inside a browser or an embedded web view can bypass Reflex.")
                         }
                         .frame(maxWidth: .infinity, alignment: .leading)
                     }
 
                     GridRow {
-                        Text("Menu bar:")
-                            .font(.system(size: 13))
-                            .gridColumnAlignment(.trailing)
-                            .frame(width: 155, alignment: .trailing)
+                        gridLabel("Menu bar:")
 
                         VStack(alignment: .leading, spacing: 6) {
                             Toggle("Show Reflex in the menu bar", isOn: $state.showsMenuBarItem)
                                 .toggleStyle(.checkbox)
                                 .font(.system(size: 13))
 
-                            Text("When on, closing this window removes the Dock icon and keeps Reflex in the menu bar. When off, closing this window quits Reflex.")
-                                .font(.system(size: 11))
-                                .foregroundStyle(.secondary)
-                                .fixedSize(horizontal: false, vertical: true)
+                            footnote("When on, closing this window removes the Dock icon and keeps Reflex in the menu bar. When off, closing this window quits Reflex.")
                         }
                     }
 
                     GridRow {
-                        Text("Chooser shortcut:")
-                            .font(.system(size: 13))
-                            .gridColumnAlignment(.trailing)
-                            .frame(width: 155, alignment: .trailing)
+                        gridLabel("Chooser shortcut:")
 
                         VStack(alignment: .leading, spacing: 6) {
                             Picker("", selection: $state.chooserModifier) {
@@ -161,18 +144,12 @@ struct SettingsView: View {
                             .labelsHidden()
                             .frame(width: 180, alignment: .leading)
 
-                            Text("Hold \(state.chooserModifier.name) while you click a link to skip automatic selection and show the chooser. The chooser also gives access to Settings. The source application can use some modified clicks itself, so the link might not reach Reflex.")
-                                .font(.system(size: 11))
-                                .foregroundStyle(.secondary)
-                                .fixedSize(horizontal: false, vertical: true)
+                            footnote("Hold \(state.chooserModifier.name) while you click a link to skip automatic selection and show the chooser. The chooser also gives access to Settings. The source application can use some modified clicks itself, so the link might not reach Reflex.")
                         }
                     }
 
                     GridRow {
-                        Text("Profile access:")
-                            .font(.system(size: 13))
-                            .gridColumnAlignment(.trailing)
-                            .frame(width: 155, alignment: .trailing)
+                        gridLabel("Profile access:")
 
                         VStack(alignment: .leading, spacing: 8) {
                             if state.profileAccessDeniedBrowsers.isEmpty,
@@ -192,10 +169,7 @@ struct SettingsView: View {
                                 .font(.system(size: 13))
                                 .foregroundStyle(.orange)
                                 Button("Open Full Disk Access") { state.openFullDiskAccessSettings() }
-                                Text("Add Reflex to the list and switch it on. Then start Reflex again and select Rescan Browsers. Reflex works without this access, but it shows one target for each of these browsers.")
-                                    .font(.system(size: 11))
-                                    .foregroundStyle(.secondary)
-                                    .fixedSize(horizontal: false, vertical: true)
+                                footnote("Add Reflex to the list and switch it on. Then start Reflex again and select Rescan Browsers. Reflex works without this access, but it shows one target for each of these browsers.")
                             }
                             if !state.missingProfileDataBrowsers.isEmpty {
                                 Label(
@@ -204,15 +178,9 @@ struct SettingsView: View {
                                 )
                                 .font(.system(size: 13))
                                 .foregroundStyle(.secondary)
-                                Text("Start each browser once, then select Rescan Browsers. Invalid profile data also appears in this state.")
-                                    .font(.system(size: 11))
-                                    .foregroundStyle(.secondary)
-                                    .fixedSize(horizontal: false, vertical: true)
+                                footnote("Start each browser once, then select Rescan Browsers. Invalid profile data also appears in this state.")
                             }
-                            Text("Reflex reads profile directories and profile names. When Edge stores a placeholder profile name, Reflex can read account-name fields from that profile record. The value can become a target name and can be sent to OpenRouter when automatic selection is active. Reflex reads no history, cookies, or page data.")
-                                .font(.system(size: 11))
-                                .foregroundStyle(.secondary)
-                                .fixedSize(horizontal: false, vertical: true)
+                            footnote("Reflex reads profile directories and profile names. When Edge stores a placeholder profile name, Reflex can read account-name fields from that profile record. The value can become a target name and can be sent to OpenRouter when automatic selection is active. Reflex reads no history, cookies, or page data.")
                         }
                         .frame(maxWidth: .infinity, alignment: .leading)
                     }
@@ -270,15 +238,9 @@ struct SettingsView: View {
                 }
                 .padding(.top, 4)
 
-                Text("The purpose is what Jev reads. Write the accounts, sites, and work you use a target for, for example \"Work: GitHub, Linear, company mail\". A target with no purpose is hard for Jev to choose, so Reflex shows the chooser instead.")
-                    .font(.system(size: 11))
-                    .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
+                footnote("The purpose is what Jev reads. Write the accounts, sites, and work you use a target for, for example \"Work: GitHub, Linear, company mail\". A target with no purpose is hard for Jev to choose, so Reflex shows the chooser instead.")
 
-                Text("A browser with more than one profile becomes one target for each profile. A browser with a single profile stays one target.")
-                    .font(.system(size: 11))
-                    .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
+                footnote("A browser with more than one profile becomes one target for each profile. A browser with a single profile stays one target.")
             }
             .padding(.horizontal, 32)
             .padding(.top, 20)
@@ -290,10 +252,7 @@ struct SettingsView: View {
         VStack(alignment: .leading, spacing: 0) {
             Grid(alignment: .topLeading, horizontalSpacing: 16, verticalSpacing: 18) {
                 GridRow {
-                    Text("API key:")
-                        .font(.system(size: 13))
-                        .gridColumnAlignment(.trailing)
-                        .frame(width: 155, alignment: .trailing)
+                    gridLabel("API key:")
 
                     VStack(alignment: .leading, spacing: 8) {
                         SecureField("OpenRouter API key", text: $apiKey)
@@ -365,24 +324,16 @@ struct SettingsView: View {
                         }
 
                         if let keyMessage {
-                            Text(keyMessage)
-                                .font(.system(size: 11))
-                                .foregroundStyle(.secondary)
+                            footnote(keyMessage)
                         }
 
-                        Text("Reflex stores your OpenRouter API key securely in the macOS Keychain.")
-                            .font(.system(size: 11))
-                            .foregroundStyle(.secondary)
-                            .fixedSize(horizontal: false, vertical: true)
+                        footnote("Reflex stores your OpenRouter API key securely in the macOS Keychain.")
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                 }
 
                 GridRow {
-                    Text("Automatic selection:")
-                        .font(.system(size: 13))
-                        .gridColumnAlignment(.trailing)
-                        .frame(width: 155, alignment: .trailing)
+                    gridLabel("Automatic selection:")
 
                     VStack(alignment: .leading, spacing: 6) {
                         Toggle("Use Jev for automatic selection", isOn: $state.usesJev)
@@ -390,19 +341,13 @@ struct SettingsView: View {
                             .font(.system(size: 13))
                             .disabled(!state.hasAPIKey)
 
-                        Text("Reflex sends a privacy-reduced description of the link and enabled targets to TypeSafe Jev to automatically choose the best target.")
-                            .font(.system(size: 11))
-                            .foregroundStyle(.secondary)
-                            .fixedSize(horizontal: false, vertical: true)
+                        footnote("Reflex sends a privacy-reduced description of the link and enabled targets to TypeSafe Jev to automatically choose the best target.")
                     }
                 }
 
                 if state.usesJev {
                     GridRow {
-                        Text("Auto-route confidence:")
-                            .font(.system(size: 13))
-                            .gridColumnAlignment(.trailing)
-                            .frame(width: 155, alignment: .trailing)
+                        gridLabel("Auto-route confidence:")
 
                         VStack(alignment: .leading, spacing: 6) {
                             HStack(spacing: 12) {
@@ -416,7 +361,7 @@ struct SettingsView: View {
                                 .labelsHidden()
                                 .frame(width: 180)
 
-                                Text("\(Int(round(state.autoRouteConfidenceThreshold * 100)))%")
+                                Text(percentText(state.autoRouteConfidenceThreshold))
                                     .monospacedDigit()
                                     .font(.system(size: 13))
                                     .foregroundStyle(.secondary)
@@ -424,25 +369,16 @@ struct SettingsView: View {
                             }
                             .disabled(!state.hasAPIKey)
 
-                            Text("Reflex opens links automatically only when Jev's confidence is at or above this threshold. Lower confidence shows the chooser with the suggested target highlighted.")
-                                .font(.system(size: 11))
-                                .foregroundStyle(.secondary)
-                                .fixedSize(horizontal: false, vertical: true)
+                            footnote("Reflex opens links automatically only when Jev's confidence is at or above this threshold. Lower confidence shows the chooser with the suggested target highlighted.")
                         }
                     }
                 }
 
                 GridRow {
-                    Text("Privacy boundary:")
-                        .font(.system(size: 13))
-                        .gridColumnAlignment(.trailing)
-                        .frame(width: 155, alignment: .trailing)
+                    gridLabel("Privacy boundary:")
 
                     VStack(alignment: .leading, spacing: 6) {
-                        Text("Reflex sends the link scheme, host, path, query parameter names, source application identifier when available, and enabled target names and purposes. It never sends query values, fragments, clipboard contents, or browser history.")
-                            .font(.system(size: 11))
-                            .foregroundStyle(.secondary)
-                            .fixedSize(horizontal: false, vertical: true)
+                        footnote("Reflex sends the link scheme, host, path, query parameter names, source application identifier when available, and enabled target names and purposes. It never sends query values, fragments, clipboard contents, or browser history.")
                     }
                 }
             }
@@ -696,10 +632,10 @@ struct SettingsView: View {
                                     .font(.system(size: 11, weight: .semibold))
                                     .foregroundStyle(.secondary)
                                 Spacer()
-                                Text("Confidence: \(Int(round(confidence * 100)))%")
+                                Text("Confidence: \(percentText(confidence))")
                                     .font(.system(size: 11, weight: .semibold))
                                 if let threshold = entry.autoRouteThreshold {
-                                    Text("(Threshold: \(Int(round(threshold * 100)))%)")
+                                    Text("(Threshold: \(percentText(threshold)))")
                                         .font(.system(size: 11))
                                         .foregroundStyle(.secondary)
                                 }
@@ -749,7 +685,6 @@ struct SettingsView: View {
     private func targetScoreBar(score: TargetScore, entry: ActivityLogEntry) -> some View {
         let isChosen = score.targetID == entry.targetID
         let isSuggested = score.targetID == entry.suggestedTargetID
-        let percent = Int(round(score.score * 100))
 
         HStack(spacing: 8) {
             HStack(spacing: 4) {
@@ -783,53 +718,46 @@ struct SettingsView: View {
             }
             .frame(height: 12)
 
-            Text("\(percent)%")
+            Text(percentText(score.score))
                 .font(.system(size: 11, weight: isChosen ? .semibold : .regular, design: .monospaced))
                 .foregroundStyle(isChosen ? .primary : .secondary)
                 .frame(width: 38, alignment: .trailing)
         }
     }
 
-    @ViewBuilder
     private func outcomeBadge(for entry: ActivityLogEntry) -> some View {
-        switch entry.outcome {
+        let (title, systemImage, tint): (String, String, Color) = switch entry.outcome {
         case .autoRouted:
-            let confText = entry.jevConfidence != nil ? " \(Int(round(entry.jevConfidence! * 100)))%" : ""
-            Label("Auto\(confText)", systemImage: "sparkles")
-                .font(.system(size: 10, weight: .semibold))
-                .foregroundStyle(.green)
-                .padding(.horizontal, 6)
-                .padding(.vertical, 3)
-                .background(Color.green.opacity(0.12), in: Capsule())
-        case .manualChoice:
-            Label("Chooser", systemImage: "hand.tap.fill")
-                .font(.system(size: 10, weight: .semibold))
-                .foregroundStyle(.blue)
-                .padding(.horizontal, 6)
-                .padding(.vertical, 3)
-                .background(Color.blue.opacity(0.12), in: Capsule())
-        case .modifierBypass:
-            Label("Shortcut", systemImage: "command")
-                .font(.system(size: 10, weight: .semibold))
-                .foregroundStyle(.secondary)
-                .padding(.horizontal, 6)
-                .padding(.vertical, 3)
-                .background(Color.primary.opacity(0.08), in: Capsule())
-        case .singleTargetBypass:
-            Label("Direct", systemImage: "arrow.right.circle.fill")
-                .font(.system(size: 10, weight: .semibold))
-                .foregroundStyle(.secondary)
-                .padding(.horizontal, 6)
-                .padding(.vertical, 3)
-                .background(Color.primary.opacity(0.08), in: Capsule())
-        case .fallback:
-            Label("Fallback", systemImage: "questionmark.circle.fill")
-                .font(.system(size: 10, weight: .semibold))
-                .foregroundStyle(.orange)
-                .padding(.horizontal, 6)
-                .padding(.vertical, 3)
-                .background(Color.orange.opacity(0.12), in: Capsule())
+            (entry.jevConfidence.map { "Auto \(percentText($0))" } ?? "Auto", "sparkles", .green)
+        case .manualChoice: ("Chooser", "hand.tap.fill", .blue)
+        case .modifierBypass: ("Shortcut", "command", .secondary)
+        case .singleTargetBypass: ("Direct", "arrow.right.circle.fill", .secondary)
+        case .fallback: ("Fallback", "questionmark.circle.fill", .orange)
         }
+        return Label(title, systemImage: systemImage)
+            .font(.system(size: 10, weight: .semibold))
+            .foregroundStyle(tint)
+            .padding(.horizontal, 6)
+            .padding(.vertical, 3)
+            .background(tint == .secondary ? Color.primary.opacity(0.08) : tint.opacity(0.12), in: Capsule())
+    }
+
+    private func gridLabel(_ text: String) -> some View {
+        Text(text)
+            .font(.system(size: 13))
+            .gridColumnAlignment(.trailing)
+            .frame(width: 155, alignment: .trailing)
+    }
+
+    private func footnote(_ text: String) -> some View {
+        Text(text)
+            .font(.system(size: 11))
+            .foregroundStyle(.secondary)
+            .fixedSize(horizontal: false, vertical: true)
+    }
+
+    private func percentText(_ value: Double) -> String {
+        "\(Int(round(value * 100)))%"
     }
 
     private func fallbackExplanation(for outcome: RoutingOutcome) -> String {
