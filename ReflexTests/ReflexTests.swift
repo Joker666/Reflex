@@ -493,15 +493,15 @@ struct ReflexTests {
 
     @Test("Settings close keeps the menu bar process running")
     func settingsClosePolicy() {
-        #expect(!SettingsWindowController.shouldTerminateOnClose(
+        #expect(!AppWindowPresence.shouldTerminateOnClose(
             showsMenuBarItem: true,
             hasPendingURL: false
         ))
-        #expect(!SettingsWindowController.shouldTerminateOnClose(
+        #expect(!AppWindowPresence.shouldTerminateOnClose(
             showsMenuBarItem: false,
             hasPendingURL: true
         ))
-        #expect(SettingsWindowController.shouldTerminateOnClose(
+        #expect(AppWindowPresence.shouldTerminateOnClose(
             showsMenuBarItem: false,
             hasPendingURL: false
         ))

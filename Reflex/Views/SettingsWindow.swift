@@ -1,6 +1,36 @@
 import AppKit
 import SwiftUI
 
+/// Settings and onboarding are normal windows. Reflex has a Dock icon only while one is open.
+@MainActor
+enum AppWindowPresence {
+    static func show(_ window: NSWindow) {
+        NSApplication.shared.setActivationPolicy(.regular)
+        NSApplication.shared.activate(ignoringOtherApps: true)
+        window.makeKeyAndOrderFront(nil)
+    }
+
+    /// Closing the window removes the Dock icon. The menu bar item or a pending link keeps Reflex running.
+    static func windowDidClose(state: AppState) {
+        let shouldTerminate = shouldTerminateOnClose(
+            showsMenuBarItem: state.showsMenuBarItem,
+            hasPendingURL: state.pendingURL != nil
+        )
+        if shouldTerminate {
+            NSApplication.shared.terminate(nil)
+        } else {
+            NSApplication.shared.setActivationPolicy(.accessory)
+        }
+    }
+
+    nonisolated static func shouldTerminateOnClose(
+        showsMenuBarItem: Bool,
+        hasPendingURL: Bool
+    ) -> Bool {
+        !showsMenuBarItem && !hasPendingURL
+    }
+}
+
 /// Reflex owns the settings window so it can manage its Dock and menu bar presence.
 @MainActor
 final class SettingsWindowController: NSObject, NSWindowDelegate, NSToolbarDelegate {
@@ -20,10 +50,7 @@ final class SettingsWindowController: NSObject, NSWindowDelegate, NSToolbarDeleg
 
         let window = window ?? makeWindow()
         self.window = window
-        // Reflex has no Dock icon while it routes links. Settings is a normal window.
-        NSApplication.shared.setActivationPolicy(.regular)
-        NSApplication.shared.activate(ignoringOtherApps: true)
-        window.makeKeyAndOrderFront(nil)
+        AppWindowPresence.show(window)
     }
 
     private func makeWindow() -> NSWindow {
@@ -84,26 +111,10 @@ final class SettingsWindowController: NSObject, NSWindowDelegate, NSToolbarDeleg
         }
     }
 
-    nonisolated static func shouldTerminateOnClose(
-        showsMenuBarItem: Bool,
-        hasPendingURL: Bool
-    ) -> Bool {
-        !showsMenuBarItem && !hasPendingURL
-    }
-
-    /// Closing Settings always removes the Dock icon. The menu bar item can keep Reflex running.
     func windowWillClose(_ notification: Notification) {
         DispatchQueue.main.async {
             self.state.settingsDidClose()
-            let shouldTerminate = Self.shouldTerminateOnClose(
-                showsMenuBarItem: self.state.showsMenuBarItem,
-                hasPendingURL: self.state.pendingURL != nil
-            )
-            guard shouldTerminate else {
-                NSApplication.shared.setActivationPolicy(.accessory)
-                return
-            }
-            NSApplication.shared.terminate(nil)
+            AppWindowPresence.windowDidClose(state: self.state)
         }
     }
 }

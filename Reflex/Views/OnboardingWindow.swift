@@ -15,9 +15,7 @@ final class OnboardingWindowController: NSObject, NSWindowDelegate {
         state.refreshDefaultBrowserStatus()
         let window = window ?? makeWindow()
         self.window = window
-        NSApplication.shared.setActivationPolicy(.regular)
-        NSApplication.shared.activate(ignoringOtherApps: true)
-        window.makeKeyAndOrderFront(nil)
+        AppWindowPresence.show(window)
     }
 
     private func makeWindow() -> NSWindow {
@@ -56,15 +54,7 @@ final class OnboardingWindowController: NSObject, NSWindowDelegate {
             return
         }
         DispatchQueue.main.async {
-            let shouldTerminate = SettingsWindowController.shouldTerminateOnClose(
-                showsMenuBarItem: self.state.showsMenuBarItem,
-                hasPendingURL: self.state.pendingURL != nil
-            )
-            guard shouldTerminate else {
-                NSApplication.shared.setActivationPolicy(.accessory)
-                return
-            }
-            NSApplication.shared.terminate(nil)
+            AppWindowPresence.windowDidClose(state: self.state)
         }
     }
 }
