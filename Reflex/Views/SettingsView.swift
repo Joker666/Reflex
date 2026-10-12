@@ -57,7 +57,8 @@ struct SettingsView: View {
     @State private var apiKey = ""
     @State private var isShowingSavedPlaceholder = false
     @State private var keyMessage: String?
-    @State private var draggingTargetID: UUID?
+    @State private var draggedTargetID: UUID?
+    @State private var dropSlot: DropSlot?
     @State private var activitySearchText = ""
     @State private var isShowingClearConfirmation = false
     @State private var expandedEntryIDs: Set<UUID> = []
@@ -222,10 +223,13 @@ struct SettingsView: View {
                         .frame(maxWidth: .infinity, alignment: .center)
                 } else {
                     let shortcutNumbers = shortcutNumbers()
-                    VStack(alignment: .leading, spacing: 12) {
-                        ForEach(browserGroups(), id: \.first?.id) { group in
-                            VStack(alignment: .leading, spacing: 6) {
+                    let groups = browserGroups()
+                    // Padding replaces stack spacing, so every point of the list accepts a drop.
+                    VStack(alignment: .leading, spacing: 0) {
+                        ForEach(groups, id: \.first?.id) { group in
+                            VStack(alignment: .leading, spacing: 0) {
                                 browserHeader(for: group[0])
+                                    .padding(.bottom, 3)
                                 ForEach(group) { target in
                                     targetRow(
                                         target: target,
@@ -234,6 +238,13 @@ struct SettingsView: View {
                                     )
                                 }
                             }
+                            .padding(.top, group[0].id == groups.first?.first?.id ? 0 : 9)
+                            .contentShape(Rectangle())
+                            // A drop on the header or the space above it goes over the first target.
+                            .onDrop(
+                                of: [.reflexTarget],
+                                delegate: dropDelegate(DropSlot(area: .header, targetID: group[0].id))
+                            )
                         }
                     }
                 }
@@ -821,7 +832,7 @@ struct SettingsView: View {
             : "What do you use this browser for"
         return VStack(alignment: .leading, spacing: 6) {
             HStack(spacing: 10) {
-                DragHandle(target: target, draggingTargetID: $draggingTargetID)
+                DragHandle(target: target, draggedTargetID: $draggedTargetID)
                 Toggle("Enabled", isOn: targetBinding.isEnabled)
                     .toggleStyle(.checkbox)
                     .labelsHidden()
@@ -851,14 +862,29 @@ struct SettingsView: View {
             }
         }
         .padding(.leading, 16)
-        .opacity(draggingTargetID == target.id ? 0.4 : 1)
+        .padding(.vertical, 3)
+        .background(dropHighlight(isShown: dropSlot?.targetID == target.id))
+        .contentShape(Rectangle())
         .onDrop(
             of: [.reflexTarget],
-            delegate: TargetDropDelegate(
-                target: target,
-                targets: $state.targets,
-                draggingTargetID: $draggingTargetID
-            )
+            delegate: dropDelegate(DropSlot(area: .row, targetID: target.id))
+        )
+    }
+
+    /// The row under the pointer shows where the dragged target goes.
+    private func dropHighlight(isShown: Bool) -> some View {
+        RoundedRectangle(cornerRadius: 6, style: .continuous)
+            .fill(Color.accentColor.opacity(isShown ? 0.14 : 0))
+            .strokeBorder(Color.accentColor.opacity(isShown ? 0.6 : 0))
+            .animation(.easeOut(duration: 0.12), value: isShown)
+    }
+
+    private func dropDelegate(_ slot: DropSlot) -> TargetDropDelegate {
+        TargetDropDelegate(
+            slot: slot,
+            targets: $state.targets,
+            draggedTargetID: $draggedTargetID,
+            dropSlot: $dropSlot
         )
     }
 
@@ -1106,7 +1132,7 @@ private final class SingleLineTextView: NSTextView {
 
 private struct DragHandle: View {
     let target: BrowserTarget
-    @Binding var draggingTargetID: UUID?
+    @Binding var draggedTargetID: UUID?
     @State private var showsOpenHand = false
 
     var body: some View {
@@ -1116,7 +1142,7 @@ private struct DragHandle: View {
             .contentShape(Rectangle())
             .accessibilityLabel("Reorder \(target.name)")
             .onDrag {
-                draggingTargetID = target.id
+                draggedTargetID = target.id
                 NSCursor.closedHand.set()
                 let payload = Data(target.id.uuidString.utf8)
                 let provider = NSItemProvider()
@@ -1147,23 +1173,46 @@ private struct DragHandle: View {
     }
 }
 
+/// A place in the target list that accepts a drop. The header of a group and its first
+/// row have the same target, so each needs its own area for enter and exit to match.
+private struct DropSlot: Equatable {
+    enum Area { case header, row }
+
+    let area: Area
+    let targetID: UUID
+}
+
+/// The destination owns the highlight because AppKit always tells it when the pointer
+/// leaves or the drag ends. The dragged row gets no such call when a drop fails.
 private struct TargetDropDelegate: DropDelegate {
-    let target: BrowserTarget
+    let slot: DropSlot
     @Binding var targets: [BrowserTarget]
-    @Binding var draggingTargetID: UUID?
+    @Binding var draggedTargetID: UUID?
+    @Binding var dropSlot: DropSlot?
+
+    func dropEntered(info: DropInfo) {
+        dropSlot = slot
+    }
+
+    func dropExited(info: DropInfo) {
+        if dropSlot == slot {
+            dropSlot = nil
+        }
+    }
 
     func dropUpdated(info: DropInfo) -> DropProposal? {
-        DropProposal(operation: draggingTargetID == nil ? .cancel : .move)
+        DropProposal(operation: .move)
     }
 
     func performDrop(info: DropInfo) -> Bool {
-        guard let draggedID = draggingTargetID else { return false }
+        dropSlot = nil
+        guard let draggedID = draggedTargetID else { return false }
+        draggedTargetID = nil
         // Apply the move on drop. A live row move can put the pointer over a different
         // row and immediately reverse a full browser-group move.
         withAnimation {
-            targets = targets.movingTarget(draggedID, over: target.id)
+            targets = targets.movingTarget(draggedID, over: slot.targetID)
         }
-        draggingTargetID = nil
         return true
     }
 }
