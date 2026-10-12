@@ -109,6 +109,37 @@ struct ReflexTests {
         #expect(result.readableBundleIdentifiers == ["com.google.Chrome"])
     }
 
+    @Test("A Dia profile launch uses the profile name from Dia, not the target name")
+    func diaProfileNameComesFromProfileData() throws {
+        let root = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let diaDirectory = root.appending(path: "Dia/User Data", directoryHint: .isDirectory)
+        for directory in ["Default", "Profile 1"] {
+            try FileManager.default.createDirectory(
+                at: diaDirectory.appending(path: directory, directoryHint: .isDirectory),
+                withIntermediateDirectories: true
+            )
+        }
+        let localState: [String: Any] = [
+            "profile": [
+                "info_cache": [
+                    "Default": ["name": "Personal"],
+                    "Profile 1": ["name": "Work"],
+                ],
+            ],
+        ]
+        try JSONSerialization.data(withJSONObject: localState)
+            .write(to: diaDirectory.appending(path: "Local State"))
+        let discovery = BrowserProfileDiscovery(applicationSupportURL: root)
+
+        #expect(BrowserLauncher.diaProfileName(directory: "Profile 1", discovery: discovery) == "Work")
+        #expect(BrowserLauncher.diaProfileName(directory: "Profile 9", discovery: discovery) == nil)
+
+        try JSONSerialization.data(withJSONObject: ["profile": ["info_cache": ["Default": ["name": "Personal"]]]])
+            .write(to: diaDirectory.appending(path: "Local State"))
+        #expect(BrowserLauncher.diaProfileName(directory: "Default", discovery: discovery) == nil)
+    }
+
     @Test("Profile discovery distinguishes denied access from missing data")
     func profileAccessStates() {
         let target = makeTarget(name: "Chrome", bundleIdentifier: "com.google.Chrome")

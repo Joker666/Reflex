@@ -66,6 +66,10 @@ struct BrowserProfileDiscovery {
         )
     }
 
+    func profiles(for bundleIdentifier: String) -> [DiscoveredBrowserProfile] {
+        discover(browserName: bundleIdentifier, bundleIdentifier: bundleIdentifier).profiles
+    }
+
     /// A target that already carries a profile has the profile in its name, so it is not a base name.
     private func baseBrowserName(for bundleIdentifier: String, in targets: [BrowserTarget]) -> String {
         let group = targets.filter { $0.bundleIdentifier == bundleIdentifier }
