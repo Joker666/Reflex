@@ -595,7 +595,7 @@ struct OnboardingView: View {
             isAPIKeyFocused = false
             apiKeyMessage = "The API key is saved in Keychain."
         } catch {
-            apiKeyMessage = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
+            apiKeyMessage = error.localizedDescription
         }
     }
 
