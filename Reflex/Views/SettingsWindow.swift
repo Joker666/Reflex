@@ -55,7 +55,11 @@ final class SettingsWindowController: NSObject, NSWindowDelegate, NSToolbarDeleg
 
     private func makeWindow() -> NSWindow {
         let contentFrame = NSRect(x: 0, y: 0, width: 640, height: 520)
-        let hostingView = NSHostingView(rootView: SettingsView(state: state, navigation: navigation))
+        let hostingView = NSHostingView(rootView: SettingsView(
+            state: state,
+            navigation: navigation,
+            activityLog: state.activityLogStore
+        ))
         hostingView.frame = contentFrame
         let window = NSWindow(
             contentRect: contentFrame,
