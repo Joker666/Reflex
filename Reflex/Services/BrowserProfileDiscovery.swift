@@ -84,7 +84,7 @@ struct BrowserProfileDiscovery {
         missingProfileDataBrowserName: String?,
         readableBundleIdentifier: String?
     ) {
-        guard let relativeDirectory = Self.relativeDataDirectory(for: bundleIdentifier) else {
+        guard let relativeDirectory = SupportedBrowser.chromiumProfileDataDirectory(for: bundleIdentifier) else {
             return ([], nil, nil, nil)
         }
         let dataDirectory = applicationSupportURL.appending(path: relativeDirectory, directoryHint: .isDirectory)
@@ -154,9 +154,5 @@ struct BrowserProfileDiscovery {
         guard parts.count == 2, Int(parts[1]) != nil else { return false }
         let first = parts[0].lowercased()
         return first == "profile" || first == "person"
-    }
-
-    private static func relativeDataDirectory(for bundleIdentifier: String) -> String? {
-        SupportedBrowser.chromiumProfileDataDirectory(for: bundleIdentifier)
     }
 }

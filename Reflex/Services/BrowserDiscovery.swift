@@ -125,7 +125,6 @@ enum SupportedBrowser: CaseIterable {
 struct DiscoveredBrowser: Equatable, Sendable {
     var name: String
     var bundleIdentifier: String
-    var applicationURL: URL
 }
 
 struct BrowserScanResult: Sendable {
@@ -185,16 +184,12 @@ struct BrowserDiscovery {
             guard isNew else { continue }
 
             let name = bundle.displayName(fallbackURL: standardizedURL)
-            guard Self.isSupportedBrowser(name: name, bundleIdentifier: identifier) else { continue }
+            guard SupportedBrowser.matching(name: name, bundleIdentifier: identifier) != nil else { continue }
             result.append(
-                DiscoveredBrowser(name: name, bundleIdentifier: identifier, applicationURL: standardizedURL)
+                DiscoveredBrowser(name: name, bundleIdentifier: identifier)
             )
         }
         return result.sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
-    }
-
-    static func isSupportedBrowser(name: String, bundleIdentifier: String) -> Bool {
-        SupportedBrowser.matching(name: name, bundleIdentifier: bundleIdentifier) != nil
     }
 
     static func isSupportedTarget(_ target: BrowserTarget) -> Bool {

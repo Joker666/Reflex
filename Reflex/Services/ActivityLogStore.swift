@@ -6,7 +6,6 @@ import OSLog
 protocol ActivityLogging: AnyObject {
     var isLoggingEnabled: Bool { get }
     func record(_ entry: ActivityLogEntry)
-    func clear()
 }
 
 @MainActor

@@ -19,8 +19,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         onboardingController = OnboardingWindowController(state: state)
         super.init()
         state.chooserPresenter = chooserController
-        state.settingsAction = { [weak self] rescan in
-            self?.openSettings(rescanBrowsers: rescan)
+        state.settingsAction = { [weak self] in
+            self?.openSettings()
         }
     }
 
