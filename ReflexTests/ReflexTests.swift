@@ -1151,14 +1151,12 @@ struct ReflexTests {
 
         // Target address attributes must NOT be used as sender fallback
         let target = NSAppleEventDescriptor.null()
-        let targetAddrEvent = try #require(
-            NSAppleEventDescriptor.appleEvent(
-                withEventClass: AEEventClass(kInternetEventClass),
-                eventID: AEEventID(kAEGetURL),
-                targetDescriptor: target,
-                returnID: AEReturnID(kAutoGenerateReturnID),
-                transactionID: AETransactionID(kAnyTransactionID)
-            )
+        let targetAddrEvent = NSAppleEventDescriptor.appleEvent(
+            withEventClass: AEEventClass(kInternetEventClass),
+            eventID: AEEventID(kAEGetURL),
+            targetDescriptor: target,
+            returnID: AEReturnID(kAutoGenerateReturnID),
+            transactionID: AETransactionID(kAnyTransactionID)
         )
         targetAddrEvent.setAttribute(pidDesc, forKeyword: keyAddressAttr)
         let targetAddrResolved = AppleEventSender.bundleIdentifier(from: targetAddrEvent) { _ in
