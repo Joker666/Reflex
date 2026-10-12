@@ -31,7 +31,7 @@ jobs:
           xcodebuild test
           -project Reflex.xcodeproj
           -scheme Reflex
-          -destination 'platform=macOS'
+          -destination "platform=macOS,arch=$(uname -m)"
           -derivedDataPath "$RUNNER_TEMP/DerivedData"
           CODE_SIGNING_ALLOWED=NO
 

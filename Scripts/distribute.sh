@@ -50,7 +50,7 @@ cd "${project_directory}"
 xcodebuild \
     -project Reflex.xcodeproj \
     -scheme Reflex \
-    -destination 'platform=macOS' \
+    -destination "platform=macOS,arch=$(uname -m)" \
     test \
     CODE_SIGNING_ALLOWED=NO \
     -quiet
