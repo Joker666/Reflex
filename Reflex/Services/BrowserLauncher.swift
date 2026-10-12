@@ -45,12 +45,8 @@ struct BrowserLauncher: BrowserLaunching {
     /// Dia enforces a single running instance and displays an error alert if launched with `open -n`.
     /// Dia's native AppleScript suite supports focusing profiles and creating tabs in that profile.
     static func openInDia(url: URL, profileName: String) -> Bool {
-        let escapedURL = url.absoluteString
-            .replacingOccurrences(of: "\\", with: "\\\\")
-            .replacingOccurrences(of: "\"", with: "\\\"")
-        let escapedProfile = profileName
-            .replacingOccurrences(of: "\\", with: "\\\\")
-            .replacingOccurrences(of: "\"", with: "\\\"")
+        let escapedURL = appleScriptEscaped(url.absoluteString)
+        let escapedProfile = appleScriptEscaped(profileName)
 
         let script = """
         tell application "Dia"
@@ -78,6 +74,13 @@ struct BrowserLauncher: BrowserLaunching {
         return error == nil
     }
 
+    /// The value goes inside a quoted AppleScript string, so it can never end that string.
+    static func appleScriptEscaped(_ value: String) -> String {
+        value
+            .replacingOccurrences(of: "\\", with: "\\\\")
+            .replacingOccurrences(of: "\"", with: "\\\"")
+    }
+
     func isAvailable(_ target: BrowserTarget) -> Bool {
         applicationURL(for: target) != nil
     }
@@ -91,27 +94,18 @@ struct BrowserLauncher: BrowserLaunching {
             throw BrowserLaunchError.applicationUnavailable
         }
 
-        if target.bundleIdentifier == "company.thebrowser.dia" {
+        if target.bundleIdentifier == SupportedBrowser.diaBundleIdentifier {
             if let profile = BrowserTarget.profilePart(of: target.name), !profile.isEmpty {
                 if Self.openInDia(url: originalURL, profileName: profile) {
                     return
                 }
             }
-            let configuration = NSWorkspace.OpenConfiguration()
-            do {
-                _ = try await NSWorkspace.shared.open(
-                    [originalURL],
-                    withApplicationAt: applicationURL,
-                    configuration: configuration
-                )
-                return
-            } catch {
-                throw BrowserLaunchError.launchFailed(error.localizedDescription)
-            }
+            try await openWithWorkspace(originalURL, applicationURL: applicationURL)
+            return
         }
 
-        let supportsChromiumProfiles = SupportedBrowser.chromiumProfileDataDirectory(for: target.bundleIdentifier) != nil
-        if supportsChromiumProfiles, let profile = target.chromiumProfileDirectory, !profile.isEmpty {
+        if SupportedBrowser.supportsChromiumProfiles(target.bundleIdentifier),
+           let profile = target.chromiumProfileDirectory, !profile.isEmpty {
             guard Self.isValidProfileDirectory(profile) else {
                 throw BrowserLaunchError.invalidProfileDirectory
             }
@@ -146,12 +140,15 @@ struct BrowserLauncher: BrowserLaunching {
             return
         }
 
-        let configuration = NSWorkspace.OpenConfiguration()
+        try await openWithWorkspace(originalURL, applicationURL: applicationURL)
+    }
+
+    private func openWithWorkspace(_ url: URL, applicationURL: URL) async throws {
         do {
             _ = try await NSWorkspace.shared.open(
-                [originalURL],
+                [url],
                 withApplicationAt: applicationURL,
-                configuration: configuration
+                configuration: NSWorkspace.OpenConfiguration()
             )
         } catch {
             throw BrowserLaunchError.launchFailed(error.localizedDescription)
