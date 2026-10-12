@@ -254,7 +254,7 @@ struct OnboardingView: View {
                 OnboardingFeature(
                     symbol: "lock.shield",
                     title: "Private by design",
-                    detail: "Reflex keeps no link history and removes query values and fragments before an automatic decision."
+                    detail: "Reflex saves no links unless you turn on the Activity Log. It removes query values and fragments before an automatic decision."
                 )
             }
         }
