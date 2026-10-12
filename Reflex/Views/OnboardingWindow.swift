@@ -512,13 +512,7 @@ struct OnboardingView: View {
     }
 
     private func browserPurposeCard(_ target: BrowserTarget) -> some View {
-        let binding = Binding(
-            get: { state.targets.first(where: { $0.id == target.id }) ?? target },
-            set: { updated in
-                guard let index = state.targets.firstIndex(where: { $0.id == target.id }) else { return }
-                state.targets[index] = updated
-            }
-        )
+        let binding = state.binding(for: target)
         return VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 10) {
                 if let icon = state.icon(for: target) {
@@ -529,7 +523,7 @@ struct OnboardingView: View {
                 }
                 VStack(alignment: .leading, spacing: 1) {
                     Text(target.name).font(.headline)
-                    if state.targets.filter({ $0.bundleIdentifier == target.bundleIdentifier }).count > 1 {
+                    if state.isProfileTarget(target) {
                         Text("Browser profile").font(.caption).foregroundStyle(.secondary)
                     }
                 }

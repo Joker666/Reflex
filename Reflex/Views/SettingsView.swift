@@ -26,6 +26,23 @@ final class SettingsNavigationState: ObservableObject {
     @Published var selectedTab: SettingsTab = .general
 }
 
+extension AppState {
+    /// The binding finds the target by ID, so it stays correct after a rescan or a move.
+    func binding(for target: BrowserTarget) -> Binding<BrowserTarget> {
+        Binding(
+            get: { self.targets.first(where: { $0.id == target.id }) ?? target },
+            set: { updatedTarget in
+                guard let index = self.targets.firstIndex(where: { $0.id == target.id }) else { return }
+                self.targets[index] = updatedTarget
+            }
+        )
+    }
+
+    func isProfileTarget(_ target: BrowserTarget) -> Bool {
+        targets.count(where: { $0.bundleIdentifier == target.bundleIdentifier }) > 1
+    }
+}
+
 struct SettingsView: View {
     @ObservedObject var state: AppState
     @ObservedObject var navigation: SettingsNavigationState
@@ -862,15 +879,10 @@ struct SettingsView: View {
     @ViewBuilder
     private func targetRow(targetID: UUID, shortcutNumbers: [UUID: Int]) -> some View {
         if let target = state.targets.first(where: { $0.id == targetID }) {
-            let targetBinding = Binding(
-                get: { state.targets.first(where: { $0.id == targetID }) ?? target },
-                set: { updatedTarget in
-                    guard let index = state.targets.firstIndex(where: { $0.id == targetID }) else { return }
-                    state.targets[index] = updatedTarget
-                }
-            )
-            let isMultiProfile = state.targets.filter { $0.bundleIdentifier == target.bundleIdentifier }.count > 1
-            let placeholder = isMultiProfile ? "What do you use this profile for" : "What do you use this browser for"
+            let targetBinding = state.binding(for: target)
+            let placeholder = state.isProfileTarget(target)
+                ? "What do you use this profile for"
+                : "What do you use this browser for"
             VStack(alignment: .leading, spacing: 6) {
                 HStack(spacing: 10) {
                     DragHandle(target: target, draggingTargetID: $draggingTargetID)
