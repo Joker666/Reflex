@@ -628,7 +628,7 @@ struct OnboardingView: View {
 
     private var needsDiaAutomationAccess: Bool {
         let diaTargets = state.targets.filter {
-            $0.bundleIdentifier == AutomationPermissionService.diaBundleIdentifier
+            $0.bundleIdentifier == SupportedBrowser.diaBundleIdentifier
                 && $0.chromiumProfileDirectory != nil
         }
         return diaTargets.count > 1

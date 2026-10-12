@@ -57,8 +57,12 @@ enum AppVersion {
     }
 }
 
+extension Bundle {
+    static let reflexIdentifier = main.bundleIdentifier ?? "com.rafi.Reflex"
+}
+
 enum ReflexLog {
-    private static let subsystem = Bundle.main.bundleIdentifier ?? "com.rafi.Reflex"
+    private static let subsystem = Bundle.reflexIdentifier
 
     static let routing = Logger(subsystem: subsystem, category: "Routing")
     static let jev = Logger(subsystem: subsystem, category: "Jev")

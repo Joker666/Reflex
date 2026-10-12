@@ -23,6 +23,8 @@ struct WorkspaceBrowserApplicationQuery: BrowserApplicationQuerying {
 }
 
 enum SupportedBrowser: CaseIterable {
+    static let diaBundleIdentifier = "company.thebrowser.dia"
+
     case safari
     case chrome
     case dia
@@ -61,7 +63,7 @@ enum SupportedBrowser: CaseIterable {
         switch self {
         case .safari: ["com.apple.Safari"]
         case .chrome: ["com.google.Chrome"]
-        case .dia: ["company.thebrowser.dia"]
+        case .dia: [Self.diaBundleIdentifier]
         case .comet: ["ai.perplexity.comet"]
         case .helium: ["net.imput.helium"]
         case .edge: ["com.microsoft.edgemac"]
@@ -94,11 +96,15 @@ enum SupportedBrowser: CaseIterable {
         case "com.google.Chrome": "Google/Chrome"
         case "com.microsoft.edgemac": "Microsoft Edge"
         case "ai.perplexity.comet": "Comet"
-        case "company.thebrowser.dia": "Dia/User Data"
+        case diaBundleIdentifier: "Dia/User Data"
         case "net.imput.helium": "net.imput.helium"
         case "com.brave.Browser": "BraveSoftware/Brave-Browser"
         default: nil
         }
+    }
+
+    static func supportsChromiumProfiles(_ bundleIdentifier: String) -> Bool {
+        chromiumProfileDataDirectory(for: bundleIdentifier) != nil
     }
 
     static func matching(bundleIdentifier: String) -> SupportedBrowser? {
@@ -152,10 +158,7 @@ struct BrowserScanner: BrowserScanning {
 }
 
 struct BrowserDiscovery {
-    private static let discoveryURLs = [
-        URL(string: "http://example.com")!,
-        URL(string: "https://example.com")!,
-    ]
+    private static let discoveryURLs = [URL.sampleHTTP, URL.sampleHTTPS]
 
     var query: BrowserApplicationQuerying
     var selfBundleIdentifier: String?

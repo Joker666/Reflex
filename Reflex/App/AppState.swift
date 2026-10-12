@@ -285,16 +285,7 @@ final class AppState: ObservableObject {
             setupMessage = SupportedBrowser.selectionInstruction
             return
         }
-        targets.append(
-            BrowserTarget(
-                id: UUID(),
-                name: name,
-                bundleIdentifier: bundleIdentifier,
-                purpose: "",
-                chromiumProfileDirectory: nil,
-                isEnabled: true
-            )
-        )
+        targets.append(BrowserTarget(name: name, bundleIdentifier: bundleIdentifier))
     }
 
     func openSettings() {
