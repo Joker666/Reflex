@@ -378,7 +378,7 @@ struct SettingsView: View {
                     gridLabel("Privacy boundary:")
 
                     VStack(alignment: .leading, spacing: 6) {
-                        footnote("Reflex sends the link scheme, host, path, query parameter names, source application identifier when available, and enabled target names and purposes. It never sends query values, fragments, clipboard contents, or browser history.")
+                        footnote(JevClient.privacyNote)
                     }
                 }
             }

@@ -401,7 +401,7 @@ struct OnboardingView: View {
                         .font(.caption)
                         .foregroundStyle(state.hasAPIKey ? Color.secondary : Color.red)
                 }
-                Text("For each decision, Reflex sends the link scheme, host, path, query parameter names, source app, and enabled target names and purposes. It does not send query values or fragments.")
+                Text(JevClient.privacyNote)
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
