@@ -320,7 +320,7 @@ struct SettingsView: View {
                                     isShowingSavedPlaceholder = true
                                     keyMessage = "The API key is saved in Keychain."
                                 } catch {
-                                    keyMessage = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
+                                    keyMessage = error.localizedDescription
                                 }
                             }
                             .disabled(!isKeySaveable)
@@ -333,7 +333,7 @@ struct SettingsView: View {
                                     isShowingSavedPlaceholder = false
                                     keyMessage = "The API key was removed."
                                 } catch {
-                                    keyMessage = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
+                                    keyMessage = error.localizedDescription
                                 }
                             }
                             .disabled(!state.hasAPIKey)
