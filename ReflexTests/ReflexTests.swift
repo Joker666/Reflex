@@ -1736,9 +1736,9 @@ struct ActivityLogTests {
         }
 
         #expect(await recorder.targetID == targets[0].id)
-        #expect(state.activityLogEntries.count == 1)
+        #expect(logStore.entries.count == 1)
 
-        let log = try #require(state.activityLogEntries.first)
+        let log = try #require(logStore.entries.first)
         #expect(log.host == "github.com")
         #expect(log.path == "/apple/swift")
         #expect(log.outcome == .autoRouted)
@@ -1815,9 +1815,9 @@ struct ActivityLogTests {
         }
 
         #expect(await recorder.targetID == targets[1].id)
-        #expect(state.activityLogEntries.count == 1)
+        #expect(logStore.entries.count == 1)
 
-        let log = try #require(state.activityLogEntries.first)
+        let log = try #require(logStore.entries.first)
         #expect(log.host == "news.ycombinator.com")
         #expect(log.outcome == .manualChoice)
         #expect(log.targetName == "Safari Personal")
@@ -1872,8 +1872,8 @@ struct ActivityLogTests {
             await Task.yield()
         }
 
-        #expect(state.activityLogEntries.count == 1)
-        let log = try #require(state.activityLogEntries.first)
+        #expect(logStore.entries.count == 1)
+        let log = try #require(logStore.entries.first)
         #expect(log.outcome == .modifierBypass)
         #expect(log.targetName == "Chrome")
     }

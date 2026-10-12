@@ -85,7 +85,6 @@ final class AppState: ObservableObject {
     private var browserScanTask: Task<Void, Never>?
     private var browserScanGeneration = 0
     private var routingChangeSubscription: AnyCancellable?
-    private var activityLogSubscription: AnyCancellable?
     private lazy var linkRouter = LinkRouter(
         launcher: launcher,
         keychain: keychain,
@@ -103,22 +102,6 @@ final class AppState: ObservableObject {
     var isJevUnavailable: Bool { linkRouter.isJevUnavailable }
     var skipsAutomaticSelection: Bool { linkRouter.skipsAutomaticSelection }
     var launchError: String? { linkRouter.launchError }
-
-    var isActivityLoggingEnabled: Bool {
-        get { activityLogStore.isLoggingEnabled }
-        set { activityLogStore.isLoggingEnabled = newValue }
-    }
-    var activityRetentionPeriod: ActivityRetentionPeriod {
-        get { activityLogStore.retentionPeriod }
-        set { activityLogStore.retentionPeriod = newValue }
-    }
-    var activityLogEntries: [ActivityLogEntry] {
-        activityLogStore.entries
-    }
-
-    func clearActivityLog() {
-        activityLogStore.clear()
-    }
 
     init(
         keychain: any APIKeyStoring = KeychainStore(),
@@ -155,9 +138,6 @@ final class AppState: ObservableObject {
         hasAPIKey = (try? keychain.readAPIKey()) != nil
         updateAvailableTargets()
         routingChangeSubscription = linkRouter.objectWillChange.sink { [weak self] _ in
-            self?.objectWillChange.send()
-        }
-        activityLogSubscription = self.activityLogStore.objectWillChange.sink { [weak self] _ in
             self?.objectWillChange.send()
         }
     }

@@ -46,6 +46,7 @@ extension AppState {
 struct SettingsView: View {
     @ObservedObject var state: AppState
     @ObservedObject var navigation: SettingsNavigationState
+    @ObservedObject var activityLog: ActivityLogStore
     @FocusState private var isFieldFocused: Bool
     @State private var apiKey = ""
     @State private var isShowingSavedPlaceholder = false
@@ -391,8 +392,8 @@ struct SettingsView: View {
 
     private var filteredActivityEntries: [ActivityLogEntry] {
         let trimmed = activitySearchText.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-        guard !trimmed.isEmpty else { return state.activityLogEntries }
-        return state.activityLogEntries.filter { entry in
+        guard !trimmed.isEmpty else { return activityLog.entries }
+        return activityLog.entries.filter { entry in
             entry.host.lowercased().contains(trimmed) ||
             entry.path.lowercased().contains(trimmed) ||
             entry.targetName.lowercased().contains(trimmed) ||
@@ -404,14 +405,14 @@ struct SettingsView: View {
     private var activityTab: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(spacing: 16) {
-                Toggle("Record routing activity", isOn: $state.isActivityLoggingEnabled)
+                Toggle("Record routing activity", isOn: $activityLog.isLoggingEnabled)
                     .toggleStyle(.checkbox)
                     .font(.system(size: 13, weight: .medium))
 
-                if state.isActivityLoggingEnabled {
+                if activityLog.isLoggingEnabled {
                     Spacer()
 
-                    Picker("Retention:", selection: $state.activityRetentionPeriod) {
+                    Picker("Retention:", selection: $activityLog.retentionPeriod) {
                         ForEach(ActivityRetentionPeriod.allCases) { period in
                             Text(period.displayName).tag(period)
                         }
@@ -421,7 +422,7 @@ struct SettingsView: View {
                     Button("Clear Log…") {
                         isShowingClearConfirmation = true
                     }
-                    .disabled(state.activityLogEntries.isEmpty)
+                    .disabled(activityLog.entries.isEmpty)
                 }
             }
             .padding(.horizontal, 28)
@@ -430,7 +431,7 @@ struct SettingsView: View {
 
             Divider()
 
-            if !state.isActivityLoggingEnabled {
+            if !activityLog.isLoggingEnabled {
                 VStack(spacing: 14) {
                     Spacer()
                     Image(systemName: "clock.arrow.circlepath")
@@ -444,7 +445,7 @@ struct SettingsView: View {
                         .multilineTextAlignment(.center)
                         .frame(maxWidth: 420)
                     Button("Turn On Activity Logging") {
-                        state.isActivityLoggingEnabled = true
+                        activityLog.isLoggingEnabled = true
                     }
                     .buttonStyle(.borderedProminent)
                     .controlSize(.regular)
@@ -486,7 +487,7 @@ struct SettingsView: View {
 
                     Divider()
 
-                    if state.activityLogEntries.isEmpty {
+                    if activityLog.entries.isEmpty {
                         VStack(spacing: 12) {
                             Spacer()
                             Image(systemName: "tray")
@@ -538,7 +539,7 @@ struct SettingsView: View {
             titleVisibility: .visible
         ) {
             Button("Clear Log", role: .destructive) {
-                state.clearActivityLog()
+                activityLog.clear()
             }
             Button("Cancel", role: .cancel) {}
         } message: {

@@ -29,6 +29,8 @@ final class ActivityLogStore: ObservableObject, ActivityLogging {
     private let maxEntries = 2_000
     private let isLoggingEnabledKey = "isActivityLoggingEnabled"
     private let retentionPeriodKey = "activityLogRetentionDays"
+    /// Writes run in order off the main actor. A load waits for earlier writes.
+    private static let fileQueue = DispatchQueue(label: "com.rafi.Reflex.activity-log")
 
     init(
         defaults: UserDefaults = .standard,
@@ -74,22 +76,34 @@ final class ActivityLogStore: ObservableObject, ActivityLogging {
     }
 
     private func load() {
-        guard FileManager.default.fileExists(atPath: fileURL.path) else { return }
+        let fileURL = fileURL
+        let result: Result<Data, Error>? = Self.fileQueue.sync {
+            guard FileManager.default.fileExists(atPath: fileURL.path) else { return nil }
+            return Result { try Data(contentsOf: fileURL) }
+        }
+        guard let result else { return }
         do {
-            let data = try Data(contentsOf: fileURL)
-            let loaded = try JSONDecoder().decode([ActivityLogEntry].self, from: data)
-            entries = loaded
+            entries = try JSONDecoder().decode([ActivityLogEntry].self, from: result.get())
         } catch {
             ReflexLog.routing.error("Failed to load activity log: \(error.localizedDescription, privacy: .private)")
         }
     }
 
     private func save() {
+        let data: Data
         do {
-            let data = try JSONEncoder().encode(entries)
-            try data.write(to: fileURL, options: [.atomic])
+            data = try JSONEncoder().encode(entries)
         } catch {
-            ReflexLog.routing.error("Failed to save activity log: \(error.localizedDescription, privacy: .private)")
+            ReflexLog.routing.error("Failed to encode activity log: \(error.localizedDescription, privacy: .private)")
+            return
+        }
+        let fileURL = fileURL
+        Self.fileQueue.async {
+            do {
+                try data.write(to: fileURL, options: [.atomic])
+            } catch {
+                ReflexLog.routing.error("Failed to save activity log: \(error.localizedDescription, privacy: .private)")
+            }
         }
     }
 }
