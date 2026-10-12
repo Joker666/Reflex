@@ -10,7 +10,7 @@ enum AutomationPermissionState: Equatable, Sendable {
 }
 
 struct AutomationPermissionService {
-    static let diaBundleIdentifier = "company.thebrowser.dia"
+    private static let diaBundleIdentifier = SupportedBrowser.diaBundleIdentifier
 
     static func requestDiaAccess() async -> AutomationPermissionState {
         guard let applicationURL = NSWorkspace.shared.urlForApplication(

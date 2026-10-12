@@ -76,6 +76,7 @@ private struct JevResponse: Decodable {
 struct JevClient: JevDeciding {
     static let openRouterEndpoint = URL(string: "https://openrouter.ai/api/alpha/decisions")!
     static let model = "~typesafe/jev-latest"
+    static let timeout: TimeInterval = 1.5
     /// Jev reads this with the state, so it says what each field means.
     static let instructions = [
         "Choose the browser target where this user would open `link`.",
@@ -88,7 +89,7 @@ struct JevClient: JevDeciding {
         "Choose one target only when it fits better than the others.",
     ].joined(separator: " ")
 
-    var endpoint = Self.openRouterEndpoint
+    var endpoint: URL
     var transport: any JevTransport
 
     init(endpoint: URL = Self.openRouterEndpoint, transport: (any JevTransport)? = nil) {
@@ -97,8 +98,8 @@ struct JevClient: JevDeciding {
             self.transport = transport
         } else {
             let configuration = URLSessionConfiguration.ephemeral
-            configuration.timeoutIntervalForRequest = 1.5
-            configuration.timeoutIntervalForResource = 1.5
+            configuration.timeoutIntervalForRequest = Self.timeout
+            configuration.timeoutIntervalForResource = Self.timeout
             self.transport = URLSessionJevTransport(session: URLSession(configuration: configuration))
         }
     }
@@ -142,7 +143,7 @@ struct JevClient: JevDeciding {
         )
         var request = URLRequest(url: endpoint)
         request.httpMethod = "POST"
-        request.timeoutInterval = 1.5
+        request.timeoutInterval = Self.timeout
         request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.httpBody = try JSONEncoder().encode(body)

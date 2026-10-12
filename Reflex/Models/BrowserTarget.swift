@@ -7,6 +7,22 @@ struct BrowserTarget: Identifiable, Codable, Equatable, Sendable {
     var purpose: String
     var chromiumProfileDirectory: String?
     var isEnabled: Bool
+
+    init(
+        id: UUID = UUID(),
+        name: String,
+        bundleIdentifier: String,
+        purpose: String = "",
+        chromiumProfileDirectory: String? = nil,
+        isEnabled: Bool = true
+    ) {
+        self.id = id
+        self.name = name
+        self.bundleIdentifier = bundleIdentifier
+        self.purpose = purpose
+        self.chromiumProfileDirectory = chromiumProfileDirectory
+        self.isEnabled = isEnabled
+    }
 }
 
 extension BrowserTarget {
@@ -102,12 +118,8 @@ extension Array where Element == BrowserTarget {
 
             var group = filter { $0.bundleIdentifier == bundleIdentifier }
             // A scan reads every Chromium browser, so a browser without profiles here has none.
-            guard SupportedBrowser.chromiumProfileDataDirectory(for: bundleIdentifier) != nil else {
-                result.append(contentsOf: group.map {
-                    var target = $0
-                    target.chromiumProfileDirectory = nil
-                    return target
-                })
+            guard SupportedBrowser.supportsChromiumProfiles(bundleIdentifier) else {
+                result.append(contentsOf: group.sanitizingUnsupportedProfileDirectories())
                 continue
             }
             let profiles = profilesByBundleIdentifier[bundleIdentifier] ?? []
@@ -177,15 +189,11 @@ extension Array where Element == BrowserTarget {
 
             let configured = Set(group.compactMap(\.chromiumProfileDirectory))
             for profile in profiles where !configured.contains(profile.profileDirectory) {
-                let name = BrowserTarget.profileName(profile.profileName, of: browserName)
                 group.append(
                     BrowserTarget(
-                        id: UUID(),
-                        name: name,
+                        name: BrowserTarget.profileName(profile.profileName, of: browserName),
                         bundleIdentifier: bundleIdentifier,
-                        purpose: "",
-                        chromiumProfileDirectory: profile.profileDirectory,
-                        isEnabled: true
+                        chromiumProfileDirectory: profile.profileDirectory
                     )
                 )
             }
@@ -210,25 +218,16 @@ extension Array where Element == BrowserTarget {
         let configured = Set(result.map(\.bundleIdentifier))
 
         for browser in discoveries where !configured.contains(browser.bundleIdentifier) {
-            result.append(
-                BrowserTarget(
-                    id: UUID(),
-                    name: browser.name,
-                    bundleIdentifier: browser.bundleIdentifier,
-                    purpose: "",
-                    chromiumProfileDirectory: nil,
-                    isEnabled: true
-                )
-            )
+            result.append(BrowserTarget(name: browser.name, bundleIdentifier: browser.bundleIdentifier))
         }
         return result
     }
 
-    /// Clear profile directory from browsers that do not support Chromium profiles (e.g. Safari, Firefox, Zen, Dia).
+    /// Clear the profile directory of a browser without Chromium profiles, for example Safari, Firefox, or Zen.
     func sanitizingUnsupportedProfileDirectories() -> [BrowserTarget] {
         map { target in
             guard target.chromiumProfileDirectory != nil,
-                  SupportedBrowser.chromiumProfileDataDirectory(for: target.bundleIdentifier) == nil else {
+                  !SupportedBrowser.supportsChromiumProfiles(target.bundleIdentifier) else {
                 return target
             }
             var sanitized = target

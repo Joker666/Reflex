@@ -1,6 +1,10 @@
 import Foundation
 
 extension URL {
+    /// Launch Services answers for a scheme through a representative link.
+    static let sampleHTTP = URL(string: "http://example.com")!
+    static let sampleHTTPS = URL(string: "https://example.com")!
+
     var isHTTPOrHTTPS: Bool {
         guard let scheme = scheme?.lowercased() else { return false }
         return scheme == "http" || scheme == "https"
