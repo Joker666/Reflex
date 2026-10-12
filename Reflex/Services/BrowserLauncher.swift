@@ -74,6 +74,18 @@ struct BrowserLauncher: BrowserLaunching {
         return error == nil
     }
 
+    /// Dia's AppleScript finds a profile by its name. The name comes from Dia's profile data,
+    /// because the user can change the target name.
+    static func diaProfileName(
+        directory: String,
+        discovery: BrowserProfileDiscovery = BrowserProfileDiscovery()
+    ) -> String? {
+        let profiles = discovery.profiles(for: SupportedBrowser.diaBundleIdentifier)
+        // With one profile, Dia opens the link there and needs no Automation access.
+        guard profiles.count > 1 else { return nil }
+        return profiles.first { $0.profileDirectory == directory }?.profileName
+    }
+
     /// The value goes inside a quoted AppleScript string, so it can never end that string.
     static func appleScriptEscaped(_ value: String) -> String {
         value
@@ -95,10 +107,10 @@ struct BrowserLauncher: BrowserLaunching {
         }
 
         if target.bundleIdentifier == SupportedBrowser.diaBundleIdentifier {
-            if let profile = BrowserTarget.profilePart(of: target.name), !profile.isEmpty {
-                if Self.openInDia(url: originalURL, profileName: profile) {
-                    return
-                }
+            if let directory = target.chromiumProfileDirectory,
+               let profileName = Self.diaProfileName(directory: directory),
+               Self.openInDia(url: originalURL, profileName: profileName) {
+                return
             }
             try await openWithWorkspace(originalURL, applicationURL: applicationURL)
             return
