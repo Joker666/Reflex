@@ -226,7 +226,8 @@ struct SettingsView: View {
                     let groups = browserGroups()
                     // Padding replaces stack spacing, so every point of the list accepts a drop.
                     VStack(alignment: .leading, spacing: 0) {
-                        ForEach(groups, id: \.first?.id) { group in
+                        // The bundle identifier keeps a group's identity when its first target moves.
+                        ForEach(groups, id: \.first?.bundleIdentifier) { group in
                             VStack(alignment: .leading, spacing: 0) {
                                 browserHeader(for: group[0])
                                     .padding(.bottom, 3)
@@ -832,7 +833,11 @@ struct SettingsView: View {
             : "What do you use this browser for"
         return VStack(alignment: .leading, spacing: 6) {
             HStack(spacing: 10) {
-                DragHandle(target: target, draggedTargetID: $draggedTargetID)
+                DragHandle(
+                    target: target,
+                    icon: state.icon(for: target),
+                    draggedTargetID: $draggedTargetID
+                )
                 Toggle("Enabled", isOn: targetBinding.isEnabled)
                     .toggleStyle(.checkbox)
                     .labelsHidden()
@@ -1132,6 +1137,7 @@ private final class SingleLineTextView: NSTextView {
 
 private struct DragHandle: View {
     let target: BrowserTarget
+    let icon: NSImage?
     @Binding var draggedTargetID: UUID?
     @State private var showsOpenHand = false
 
@@ -1154,6 +1160,8 @@ private struct DragHandle: View {
                     return nil
                 }
                 return provider
+            } preview: {
+                preview
             }
             .onHover { isHovering in
                 if isHovering, !showsOpenHand {
@@ -1170,6 +1178,25 @@ private struct DragHandle: View {
                     showsOpenHand = false
                 }
             }
+    }
+
+    /// The pointer carries the target's icon and name, so the user sees what moves.
+    private var preview: some View {
+        HStack(spacing: 8) {
+            if let icon {
+                Image(nsImage: icon)
+                    .resizable()
+                    .frame(width: 18, height: 18)
+            }
+            Text(target.name)
+                .font(.system(size: 13, weight: .medium))
+                .foregroundStyle(.white)
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 6)
+        .fixedSize()
+        // Fixed colors, because the preview does not always render in the window's appearance.
+        .background(Color.accentColor, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
     }
 }
 
@@ -1209,10 +1236,9 @@ private struct TargetDropDelegate: DropDelegate {
         guard let draggedID = draggedTargetID else { return false }
         draggedTargetID = nil
         // Apply the move on drop. A live row move can put the pointer over a different
-        // row and immediately reverse a full browser-group move.
-        withAnimation {
-            targets = targets.movingTarget(draggedID, over: slot.targetID)
-        }
+        // row and immediately reverse a full browser-group move. The move is not animated,
+        // because the rows have no background and their text would overlap while they slide.
+        targets = targets.movingTarget(draggedID, over: slot.targetID)
         return true
     }
 }
