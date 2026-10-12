@@ -21,6 +21,12 @@ enum SettingsTab: String, CaseIterable {
     }
 }
 
+extension UTType {
+    /// A target that the user drags to reorder. Text views do not accept this type,
+    /// so a drop on the purpose field still reaches the row.
+    static let reflexTarget = UTType(exportedAs: "com.rafi.Reflex.target")
+}
+
 @MainActor
 final class SettingsNavigationState: ObservableObject {
     @Published var selectedTab: SettingsTab = .general
@@ -847,7 +853,7 @@ struct SettingsView: View {
         .padding(.leading, 16)
         .opacity(draggingTargetID == target.id ? 0.4 : 1)
         .onDrop(
-            of: [.text],
+            of: [.reflexTarget],
             delegate: TargetDropDelegate(
                 target: target,
                 targets: $state.targets,
@@ -1065,6 +1071,12 @@ private final class SingleLineTextView: NSTextView {
         return resignedFirstResponder
     }
 
+    /// AppKit gives a drop to the deepest registered view, so a registered field would
+    /// stop a dragged target from reaching its row.
+    override func updateDragTypeRegistration() {
+        unregisterDraggedTypes()
+    }
+
     override func insertNewline(_ sender: Any?) {
         window?.makeFirstResponder(nil)
     }
@@ -1106,7 +1118,16 @@ private struct DragHandle: View {
             .onDrag {
                 draggingTargetID = target.id
                 NSCursor.closedHand.set()
-                return NSItemProvider(object: target.id.uuidString as NSString)
+                let payload = Data(target.id.uuidString.utf8)
+                let provider = NSItemProvider()
+                provider.registerDataRepresentation(
+                    forTypeIdentifier: UTType.reflexTarget.identifier,
+                    visibility: .ownProcess
+                ) { completion in
+                    completion(payload, nil)
+                    return nil
+                }
+                return provider
             }
             .onHover { isHovering in
                 if isHovering, !showsOpenHand {

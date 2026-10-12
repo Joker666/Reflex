@@ -53,5 +53,18 @@
     <string>14.0</string>
     <key>NSAppleEventsUsageDescription</key>
     <string>Reflex uses Automation to focus the browser profile you selected in Dia and open the link there.</string>
+    <key>UTExportedTypeDeclarations</key>
+    <array>
+        <dict>
+            <key>UTTypeIdentifier</key>
+            <string>com.rafi.Reflex.target</string>
+            <key>UTTypeDescription</key>
+            <string>Reflex Target</string>
+            <key>UTTypeConformsTo</key>
+            <array>
+                <string>public.data</string>
+            </array>
+        </dict>
+    </array>
 </dict>
 </plist>
