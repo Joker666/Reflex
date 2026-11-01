@@ -246,7 +246,9 @@ final class AppState: ObservableObject {
                 browserNamesByBundleIdentifier: Dictionary(
                     scan.discoveries.map { ($0.bundleIdentifier, $0.name) },
                     uniquingKeysWith: { first, _ in first }
-                )
+                ),
+                unreadBundleIdentifiers: Set(merged.map(\.bundleIdentifier))
+                    .subtracting(result.readableBundleIdentifiers)
             )
             .clearingGeneratedPurposes()
 

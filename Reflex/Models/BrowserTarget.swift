@@ -104,9 +104,12 @@ extension Array where Element == BrowserTarget {
 
     /// A browser with more than one profile becomes one target per profile. A browser with a
     /// single profile stays one plain target, so the chooser shows only the browser name.
+    /// A browser in `unreadBundleIdentifiers` keeps its targets, because a failed read
+    /// says nothing about its profiles.
     func expandingProfiles(
         _ profilesByBundleIdentifier: [String: [DiscoveredBrowserProfile]],
-        browserNamesByBundleIdentifier: [String: String] = [:]
+        browserNamesByBundleIdentifier: [String: String] = [:],
+        unreadBundleIdentifiers: Set<String> = []
     ) -> [BrowserTarget] {
         var result: [BrowserTarget] = []
         var emittedBundleIdentifiers: Set<String> = []
@@ -120,6 +123,10 @@ extension Array where Element == BrowserTarget {
             // A scan reads every Chromium browser, so a browser without profiles here has none.
             guard SupportedBrowser.supportsChromiumProfiles(bundleIdentifier) else {
                 result.append(contentsOf: group.sanitizingUnsupportedProfileDirectories())
+                continue
+            }
+            guard !unreadBundleIdentifiers.contains(bundleIdentifier) else {
+                result.append(contentsOf: group)
                 continue
             }
             let profiles = profilesByBundleIdentifier[bundleIdentifier] ?? []

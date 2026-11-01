@@ -52,7 +52,16 @@ final class ActivityLogStore: ObservableObject, ActivityLogging {
         }
 
         load()
-        prune()
+        removeExpiredEntries()
+
+        // Reflex can run for days without a new entry, so expired entries leave the file on a timer.
+        Task { [weak self] in
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .seconds(3_600))
+                guard let self else { return }
+                self.removeExpiredEntries()
+            }
+        }
     }
 
     func record(_ entry: ActivityLogEntry) {
@@ -73,6 +82,13 @@ final class ActivityLogStore: ObservableObject, ActivityLogging {
         if entries.count > maxEntries {
             entries = Array(entries.prefix(maxEntries))
         }
+    }
+
+    /// Prune and write the file, so an expired entry leaves the disk and not only memory.
+    func removeExpiredEntries(now: Date = Date()) {
+        let count = entries.count
+        prune(now: now)
+        if entries.count != count { save() }
     }
 
     private func load() {

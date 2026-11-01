@@ -144,7 +144,8 @@ final class LinkRouter: ObservableObject {
         activeDecision = nil
         isAutoRouting = false
         isJevUnavailable = false
-        if pendingURL != nil {
+        // Settings or onboarding owns the screen until it closes and resumes the link.
+        if pendingURL != nil, !isPausedForSettings {
             chooserPresenter?.presentChooser()
         }
     }

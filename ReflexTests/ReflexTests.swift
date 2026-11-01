@@ -509,6 +509,57 @@ struct ReflexTests {
         #expect(!result[0].isEnabled)
     }
 
+    @Test("A profile scan that cannot read the browser keeps its targets")
+    func profileExpansionKeepsUnreadBrowser() {
+        let personal = BrowserTarget(
+            name: "Google Chrome (Personal)",
+            bundleIdentifier: "com.google.Chrome",
+            purpose: "Personal links",
+            chromiumProfileDirectory: "Default",
+            isEnabled: false
+        )
+        let work = BrowserTarget(
+            name: "Google Chrome (Work)",
+            bundleIdentifier: "com.google.Chrome",
+            purpose: "Work links",
+            chromiumProfileDirectory: "Profile 1"
+        )
+
+        let result = [personal, work].expandingProfiles(
+            [:],
+            unreadBundleIdentifiers: ["com.google.Chrome"]
+        )
+
+        #expect(result == [personal, work])
+    }
+
+    @Test("A Settings pause keeps the chooser closed when automatic selection is off")
+    @MainActor
+    func settingsPauseSuppressesChooser() throws {
+        let targets = [makeTarget(), makeTarget()]
+        let presenter = CountingChooserPresenter()
+        let router = LinkRouter(
+            launcher: RecordingBrowserLauncher(recorder: BrowserOpenRecorder()),
+            keychain: TestKeychainStore(apiKey: nil),
+            jevClient: FirstTargetJevDecider(),
+            availableTargets: { targets },
+            sourceApplicationName: { _ in nil },
+            usesJev: { false }
+        )
+        router.chooserPresenter = presenter
+        router.receive([try #require(URL(string: "https://example.com/path"))])
+        #expect(presenter.presentCount == 1)
+
+        router.pausePendingForSetup()
+        router.retryPending()
+        router.cancelRouting()
+        #expect(presenter.presentCount == 1)
+        #expect(router.pendingURL != nil)
+
+        router.resumePendingAfterSettings()
+        #expect(presenter.presentCount == 2)
+    }
+
     @Test("A profile launch passes the original URL as one argument")
     func profileLaunchArguments() throws {
         let url = try #require(URL(string: "https://example.com/a%20b?q=one two;rm -rf /#frag"))
@@ -1618,6 +1669,14 @@ private actor ControllableJevDecider: JevDeciding {
     }
 }
 
+@MainActor
+private final class CountingChooserPresenter: ChooserPresenting {
+    private(set) var presentCount = 0
+
+    func presentChooser() { presentCount += 1 }
+    func dismissChooser() {}
+}
+
 private struct FixedBrowserScanner: BrowserScanning {
     func scan(existingTargets: [BrowserTarget]) async -> BrowserScanResult {
         BrowserScanResult(
@@ -1787,6 +1846,39 @@ struct ActivityLogTests {
         store.record(entry40Days)
         store.prune(now: now)
         #expect(store.entries.map(\.host) == ["25days.com", "10days.com", "2days.com"])
+    }
+
+    @Test("ActivityLogStore removes expired entries from the file at launch")
+    @MainActor
+    func activityLogStoreSavesStartupPruning() throws {
+        let tempDir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: tempDir) }
+        let fileURL = tempDir.appendingPathComponent("test_activity.json")
+        let suiteName = "ReflexTests.\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+
+        let expired = ActivityLogEntry(
+            timestamp: Date().addingTimeInterval(-10 * 86_400),
+            scheme: "https",
+            host: "expired.example",
+            path: "/",
+            targetID: UUID(),
+            targetName: "Safari",
+            targetBundleIdentifier: "com.apple.Safari",
+            outcome: .autoRouted
+        )
+        try JSONEncoder().encode([expired]).write(to: fileURL)
+        defaults.set(ActivityRetentionPeriod.sevenDays.rawValue, forKey: "activityLogRetentionDays")
+
+        let store = ActivityLogStore(defaults: defaults, fileURL: fileURL)
+        #expect(store.entries.isEmpty)
+
+        // A 30-day store would keep the entry, so an empty load shows that the file changed.
+        defaults.set(ActivityRetentionPeriod.thirtyDays.rawValue, forKey: "activityLogRetentionDays")
+        let reloaded = ActivityLogStore(defaults: defaults, fileURL: fileURL)
+        #expect(reloaded.entries.isEmpty)
     }
 
     @Test("ActivityLogStore clear removes all entries")
