@@ -28,6 +28,7 @@ final class LinkRouter: ObservableObject {
     private var isPausedForSettings = false
     private var activeDecision: RouteDecision?
     private var isAutoRouting = false
+    private var isManuallyChoosing = false
 
     init(
         launcher: any BrowserLaunching,
@@ -69,9 +70,20 @@ final class LinkRouter: ObservableObject {
         }
     }
 
-    func openPending(in target: BrowserTarget) {
+    func beginManualSelection() {
+        guard pendingURL != nil else { return }
+        isManuallyChoosing = true
+        routingTask?.cancel()
+        routingTask = nil
+        routingLinkID = nil
+        isRouting = false
+        isAutoRouting = false
+    }
+
+    func openPending(in target: BrowserTarget, automatically: Bool = false) {
         guard let link = queue.current, launchTask == nil else { return }
         let linkID = link.id
+        if !automatically { beginManualSelection() }
         launchError = nil
         ReflexLog.launch.info("Opening link in target: \(target.name, privacy: .private) (\(target.bundleIdentifier, privacy: .public))")
         launchingLinkID = linkID
@@ -108,7 +120,7 @@ final class LinkRouter: ObservableObject {
         cancelPending()
     }
 
-    func pausePendingForOnboarding() {
+    func pausePendingForSetup() {
         isPausedForSettings = true
         cancelPendingTasks()
         suggestedTargetID = nil
@@ -150,6 +162,7 @@ final class LinkRouter: ObservableObject {
         guard queue.current?.id == expectedLinkID else { return }
         cancelPendingTasks()
         pendingURL = queue.advance()?.url
+        isManuallyChoosing = false
         suggestedTargetID = nil
         isJevUnavailable = false
         skipsAutomaticSelection = false
@@ -177,6 +190,11 @@ final class LinkRouter: ObservableObject {
         guard let link = queue.current, !isRouting, !isPausedForSettings else { return }
         let linkID = link.id
         let targets = availableTargets()
+        // Manual control lasts until this link is opened or cancelled, including rescans.
+        if isManuallyChoosing {
+            chooserPresenter?.presentChooser()
+            return
+        }
         activeDecision = nil
         isAutoRouting = false
         skipsAutomaticSelection = link.asksForChooser
@@ -197,7 +215,7 @@ final class LinkRouter: ObservableObject {
         case let .open(targetID):
             ReflexLog.routing.info("Single enabled target bypasses Jev decision")
             if let target = targets.first(where: { $0.id == targetID }) {
-                openPending(in: target)
+                openPending(in: target, automatically: true)
             }
             return
         case .choose:
@@ -281,7 +299,7 @@ final class LinkRouter: ObservableObject {
             }
             if let target = targets.first(where: { $0.id == targetID }) {
                 isAutoRouting = true
-                openPending(in: target)
+                openPending(in: target, automatically: true)
             }
         case let .choose(targetID):
             isAutoRouting = false

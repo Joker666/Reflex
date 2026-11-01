@@ -4,6 +4,7 @@ import SwiftUI
 struct ChooserView: View {
     @ObservedObject var state: AppState
     @State private var selectedTargetID: UUID?
+    @State private var hasManuallySelected = false
     @State private var scrollRequestCount = 0
     @State private var pointerAnchor: NSPoint?
     @FocusState private var isFocused: Bool
@@ -127,6 +128,8 @@ struct ChooserView: View {
         .buttonStyle(.plain)
         .onHover { isHovering in
             guard isHovering, pointerDidMove() else { return }
+            hasManuallySelected = true
+            state.beginManualSelection()
             selectedTargetID = target.id
         }
         .accessibilityLabel("Open in \(target.name)")
@@ -229,6 +232,7 @@ struct ChooserView: View {
     }
 
     private func resetSelection() {
+        hasManuallySelected = false
         select(state.suggestedTargetID ?? state.availableTargets.first?.id)
     }
 
@@ -246,7 +250,7 @@ struct ChooserView: View {
 
     private func selectSuggestedOrFirstTarget() {
         let targetIDs = state.availableTargets.map(\.id)
-        if let suggestion = state.suggestedTargetID, targetIDs.contains(suggestion) {
+        if !hasManuallySelected, let suggestion = state.suggestedTargetID, targetIDs.contains(suggestion) {
             select(suggestion)
         } else if selectedTargetID == nil || !targetIDs.contains(selectedTargetID!) {
             select(targetIDs.first)
@@ -266,6 +270,8 @@ struct ChooserView: View {
         @unknown default:
             nextIndex = currentIndex
         }
+        hasManuallySelected = true
+        state.beginManualSelection()
         select(targetIDs[nextIndex])
     }
 }

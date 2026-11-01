@@ -6,6 +6,138 @@ import Testing
 
 @Suite("Phase 1 routing")
 struct ReflexTests {
+
+    @Test("Manual selection ignores late Jev answers and retries", arguments: [0.6, 1.0])
+    @MainActor
+    func manualSelectionWins(confidence: Double) async throws {
+        let targets = [makeTarget(), makeTarget()]
+        let decider = ControlledJevDecider()
+        let recorder = BrowserOpenRecorder()
+        let router = LinkRouter(
+            launcher: RecordingBrowserLauncher(recorder: recorder),
+            keychain: TestKeychainStore(apiKey: "test-key"),
+            jevClient: decider,
+            availableTargets: { targets },
+            sourceApplicationName: { _ in nil }
+        )
+        let first = try #require(URL(string: "https://first.example/path"))
+        let second = try #require(URL(string: "https://second.example/path"))
+        router.receive([first, second])
+        for _ in 0..<100 {
+            if await decider.hasRequest(for: "first.example") { break }
+            await Task.yield()
+        }
+        #expect(await decider.hasRequest(for: "first.example"))
+        router.beginManualSelection()
+        #expect(!router.isRouting)
+        await decider.resume(host: "first.example", decision: RouteDecision(targetID: targets[0].id, confidence: confidence))
+        for _ in 0..<20 { await Task.yield() }
+        router.retryPending()
+        #expect(!router.isRouting)
+        #expect(router.suggestedTargetID == nil)
+        #expect(router.pendingURL == first)
+        #expect(await recorder.targetID == nil)
+
+        router.openPending(in: targets[1])
+        for _ in 0..<100 {
+            if await decider.hasRequest(for: "second.example") { break }
+            await Task.yield()
+        }
+        #expect(await recorder.targetID == targets[1].id)
+        #expect(router.pendingURL == second)
+        #expect(await decider.hasRequest(for: "second.example"))
+        await decider.resume(host: "second.example", decision: RouteDecision(targetID: targets[0].id, confidence: 1))
+        for _ in 0..<100 {
+            if router.pendingURL == nil { break }
+            await Task.yield()
+        }
+        #expect(router.pendingURL == nil)
+        #expect(await recorder.targetID == targets[0].id)
+    }
+
+    @Test("Committing a manual choice cancels the active decision")
+    @MainActor
+    func manualCommitCancelsDecision() async throws {
+        let targets = [makeTarget(), makeTarget()]
+        let decider = ControlledJevDecider()
+        let launcher = ControlledBrowserLauncherState()
+        let router = LinkRouter(
+            launcher: ControlledBrowserLauncher(state: launcher),
+            keychain: TestKeychainStore(apiKey: "test-key"),
+            jevClient: decider,
+            availableTargets: { targets },
+            sourceApplicationName: { _ in nil }
+        )
+        let url = try #require(URL(string: "https://example.com/path"))
+        router.receive([url])
+        for _ in 0..<100 {
+            if await decider.hasRequest(for: "example.com") { break }
+            await Task.yield()
+        }
+        #expect(await decider.hasRequest(for: "example.com"))
+        router.openPending(in: targets[1])
+        #expect(!router.isRouting)
+        await decider.resume(host: "example.com", decision: RouteDecision(targetID: targets[0].id, confidence: 0.6))
+        for _ in 0..<100 {
+            if await launcher.hasRequest(for: "example.com") { break }
+            await Task.yield()
+        }
+        #expect(router.suggestedTargetID == nil)
+        #expect(router.pendingURL == url)
+        await launcher.resume(host: "example.com")
+        for _ in 0..<100 {
+            if router.pendingURL == nil { break }
+            await Task.yield()
+        }
+        #expect(router.pendingURL == nil)
+    }
+
+    @Test("No-browser Settings preserves the current link and queue until setup closes")
+    @MainActor
+    func emptySettingsPreservesPendingLink() async throws {
+        let suiteName = "ReflexTests.\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        defaults.set(Data("[]".utf8), forKey: "browserTargets")
+        let launcher = ControlledBrowserLauncherState()
+        let state = AppState(
+            keychain: TestKeychainStore(apiKey: nil),
+            launcher: ControlledBrowserLauncher(state: launcher),
+            jevClient: FirstTargetJevDecider(),
+            defaults: defaults,
+            browserScanner: FixedBrowserScanner(),
+            defaultBrowserService: FixedDefaultBrowserService()
+        )
+        let first = try #require(URL(string: "https://first.example/path"))
+        let second = try #require(URL(string: "https://second.example/path"))
+        state.receive([first, second])
+        state.openSettings()
+        #expect(state.pendingURL == first)
+        state.targets = [makeTarget(name: "Safari", bundleIdentifier: "com.apple.Safari")]
+        for _ in 0..<20 { await Task.yield() }
+        #expect(!(await launcher.hasRequest(for: "first.example")))
+        #expect(state.pendingURL == first)
+        state.settingsDidClose()
+        for _ in 0..<100 {
+            if await launcher.hasRequest(for: "first.example") { break }
+            await Task.yield()
+        }
+        #expect(await launcher.hasRequest(for: "first.example"))
+        await launcher.resume(host: "first.example")
+        for _ in 0..<100 {
+            if await launcher.hasRequest(for: "second.example") { break }
+            await Task.yield()
+        }
+        #expect(state.pendingURL == second)
+        #expect(await launcher.hasRequest(for: "second.example"))
+        await launcher.resume(host: "second.example")
+        for _ in 0..<100 {
+            if state.pendingURL == nil { break }
+            await Task.yield()
+        }
+        #expect(state.pendingURL == nil)
+    }
+
     @Test("Target grouping repairs split browser groups")
     func targetGroupingRepairsSplitBrowserGroups() {
         let chromePersonal = makeTarget(name: "Chrome Personal", bundleIdentifier: "com.google.Chrome")

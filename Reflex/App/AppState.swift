@@ -179,6 +179,10 @@ final class AppState: ObservableObject {
         )
     }
 
+    func beginManualSelection() {
+        linkRouter.beginManualSelection()
+    }
+
     func openPending(in target: BrowserTarget) {
         linkRouter.openPending(in: target)
     }
@@ -269,7 +273,11 @@ final class AppState: ObservableObject {
     }
 
     func openSettings() {
-        linkRouter.cancelPendingForSettings()
+        if pendingURL != nil, availableTargets.isEmpty {
+            linkRouter.pausePendingForSetup()
+        } else {
+            linkRouter.cancelPendingForSettings()
+        }
         chooserPresenter?.dismissChooser()
         settingsAction?()
     }
@@ -279,7 +287,7 @@ final class AppState: ObservableObject {
     }
 
     func onboardingDidOpen() {
-        linkRouter.pausePendingForOnboarding()
+        linkRouter.pausePendingForSetup()
     }
 
     func openFullDiskAccessSettings() {

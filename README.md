@@ -40,6 +40,8 @@ You can use Reflex without an API key. In this mode, Reflex shows the chooser fo
 - Lets you hold Option while you click a link to open the chooser directly. You can change this modifier in Settings.
 - Keeps incoming links in memory only by default. An optional, local-only Activity Log provides full transparency into TypeSafe Jev decision scores and target evaluations with configurable 7 to 30 days retention.
 
+Once you navigate the chooser with arrow keys or move the pointer onto a target, manual selection takes priority for that link and the pending AI request is cancelled. Automatic routing resumes for the next link. If no browser is available, opening Settings preserves the current link and its queue; routing resumes when Settings closes. Opening Settings from a populated chooser still cancels the current link.
+
 ## Current limitations
 
 - Profile discovery supports recognized Chromium-based browsers (Chrome, Edge, Comet, Dia, Helium, and Brave). Safari, Firefox, Zen, Phi, and Arc profiles are not available (for Arc, use Arc's native Air Traffic Control).
