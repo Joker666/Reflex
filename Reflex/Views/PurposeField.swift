@@ -1,8 +1,8 @@
 import AppKit
 import SwiftUI
 
-/// A persistent text view avoids the display-to-field-editor switch that moves
-/// clipped text when a standard text field receives focus.
+/// A persistent text view avoids the display-to-field-editor switch of a standard text
+/// field. The text wraps and the field grows, so a long purpose stays fully visible.
 struct StablePurposeField: NSViewRepresentable {
     let placeholder: String
     @Binding var text: String
@@ -41,15 +41,17 @@ struct StablePurposeField: NSViewRepresentable {
             guard let textView = notification.object as? NSTextView else { return }
             text.wrappedValue = textView.string
             fieldView?.updatePlaceholder()
-            fieldView?.updateDocumentSize()
+            fieldView?.updateContentHeight()
         }
     }
 }
 
 final class PurposeTextFieldView: NSView {
-    let textView = SingleLineTextView()
-    private let scrollView = NSScrollView()
+    let textView = SingleParagraphTextView()
     private let placeholderLabel = NSTextField(labelWithString: "")
+    private let horizontalInset: CGFloat = 5
+    private let verticalInset: CGFloat = 3
+    private var contentHeight: CGFloat = 16
 
     var placeholder = "" {
         didSet {
@@ -58,18 +60,13 @@ final class PurposeTextFieldView: NSView {
         }
     }
 
+    /// The height follows the wrapped text, so SwiftUI gives the row the room it needs.
     override var intrinsicContentSize: NSSize {
-        NSSize(width: NSView.noIntrinsicMetric, height: 22)
+        NSSize(width: NSView.noIntrinsicMetric, height: contentHeight + verticalInset * 2)
     }
 
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-
-        scrollView.borderType = .noBorder
-        scrollView.drawsBackground = false
-        scrollView.hasHorizontalScroller = false
-        scrollView.hasVerticalScroller = false
-        scrollView.autohidesScrollers = true
 
         textView.drawsBackground = false
         textView.font = .systemFont(ofSize: NSFont.systemFontSize)
@@ -78,20 +75,13 @@ final class PurposeTextFieldView: NSView {
         textView.isRichText = false
         textView.importsGraphics = false
         textView.allowsUndo = true
-        textView.isHorizontallyResizable = true
-        textView.isVerticallyResizable = false
-        textView.autoresizingMask = [.height]
+        textView.isHorizontallyResizable = false
+        textView.isVerticallyResizable = true
+        textView.minSize = .zero
+        textView.maxSize = NSSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude)
         textView.textContainerInset = .zero
         textView.textContainer?.lineFragmentPadding = 0
-        textView.textContainer?.widthTracksTextView = false
-        textView.textContainer?.containerSize = NSSize(
-            width: CGFloat.greatestFiniteMagnitude,
-            height: CGFloat.greatestFiniteMagnitude
-        )
-        textView.focusChanged = { [weak self] focused in
-            self?.setFocused(focused)
-        }
-        scrollView.documentView = textView
+        textView.textContainer?.widthTracksTextView = true
 
         placeholderLabel.font = textView.font
         placeholderLabel.textColor = .placeholderTextColor
@@ -99,7 +89,7 @@ final class PurposeTextFieldView: NSView {
         placeholderLabel.isHidden = true
 
         addSubview(placeholderLabel)
-        addSubview(scrollView)
+        addSubview(textView)
     }
 
     @available(*, unavailable)
@@ -109,10 +99,15 @@ final class PurposeTextFieldView: NSView {
 
     override func layout() {
         super.layout()
-        let contentFrame = bounds.insetBy(dx: 5, dy: 3)
-        scrollView.frame = contentFrame
-        placeholderLabel.frame = contentFrame
-        updateDocumentSize()
+        let contentFrame = bounds.insetBy(dx: horizontalInset, dy: verticalInset)
+        textView.frame = contentFrame
+        placeholderLabel.frame = NSRect(
+            x: contentFrame.minX,
+            y: contentFrame.maxY - contentHeight,
+            width: contentFrame.width,
+            height: contentHeight
+        )
+        updateContentHeight()
     }
 
     func setText(_ text: String) {
@@ -120,59 +115,30 @@ final class PurposeTextFieldView: NSView {
             textView.string = text
         }
         updatePlaceholder()
-        updateDocumentSize()
-    }
-
-    func setFocused(_ focused: Bool) {
-        if !focused {
-            scrollToStart()
-        }
+        updateContentHeight()
     }
 
     func updatePlaceholder() {
         placeholderLabel.isHidden = !textView.string.isEmpty
     }
 
-    func updateDocumentSize() {
+    /// Measure the wrapped text and ask SwiftUI for a new height when it changes.
+    func updateContentHeight() {
         guard let layoutManager = textView.layoutManager,
-              let textContainer = textView.textContainer else { return }
+              let textContainer = textView.textContainer,
+              let font = textView.font else { return }
 
         layoutManager.ensureLayout(for: textContainer)
-        let textWidth = ceil(layoutManager.usedRect(for: textContainer).width) + 1
-        let visibleSize = scrollView.contentSize
-        textView.frame = NSRect(
-            origin: textView.frame.origin,
-            size: NSSize(width: max(textWidth, visibleSize.width), height: visibleSize.height)
-        )
+        let lineHeight = ceil(layoutManager.defaultLineHeight(for: font))
+        let height = max(ceil(layoutManager.usedRect(for: textContainer).height), lineHeight)
+        guard height != contentHeight else { return }
+        contentHeight = height
+        invalidateIntrinsicContentSize()
     }
-
-    private func scrollToStart() {
-        let clipView = scrollView.contentView
-        clipView.scroll(to: NSPoint(x: 0, y: clipView.bounds.origin.y))
-        scrollView.reflectScrolledClipView(clipView)
-    }
-
 }
 
-final class SingleLineTextView: NSTextView {
-    var focusChanged: ((Bool) -> Void)?
-
-    override func becomeFirstResponder() -> Bool {
-        let becameFirstResponder = super.becomeFirstResponder()
-        if becameFirstResponder {
-            focusChanged?(true)
-        }
-        return becameFirstResponder
-    }
-
-    override func resignFirstResponder() -> Bool {
-        let resignedFirstResponder = super.resignFirstResponder()
-        if resignedFirstResponder {
-            focusChanged?(false)
-        }
-        return resignedFirstResponder
-    }
-
+/// One paragraph of text that wraps. Return ends editing, and pasted line breaks become spaces.
+final class SingleParagraphTextView: NSTextView {
     /// AppKit gives a drop to the deepest registered view, so a registered field would
     /// stop a dragged target from reaching its row.
     override func updateDragTypeRegistration() {

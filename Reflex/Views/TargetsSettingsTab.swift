@@ -136,11 +136,13 @@ struct TargetsSettingsTab: View {
                 .buttonStyle(.borderless)
                 .accessibilityLabel("Remove \(target.name)")
             }
-            HStack(spacing: 10) {
+            // The label sits on the first line, because the field grows with a long purpose.
+            HStack(alignment: .top, spacing: 10) {
                 Text("Purpose:")
                     .font(.system(size: 11))
                     .foregroundStyle(.secondary)
                     .frame(width: 48, alignment: .trailing)
+                    .padding(.top, 4)
                 StablePurposeField(placeholder, text: targetBinding.purpose)
                     .accessibilityLabel(placeholder)
             }
