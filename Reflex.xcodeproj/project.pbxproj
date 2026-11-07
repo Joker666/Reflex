@@ -33,6 +33,12 @@
 		A00100000000000000000018 /* AutomationPermissionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0010000000000000000001B /* AutomationPermissionService.swift */; };
 		A00100000000000000000019 /* ActivityLogModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0010000000000000000001D /* ActivityLogModels.swift */; };
 		A0010000000000000000001A /* ActivityLogStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0010000000000000000001E /* ActivityLogStore.swift */; };
+		A0010000000000000000001B /* GeneralSettingsTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0010000000000000000001F /* GeneralSettingsTab.swift */; };
+		A0010000000000000000001C /* TargetsSettingsTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00100000000000000000020 /* TargetsSettingsTab.swift */; };
+		A0010000000000000000001D /* RoutingSettingsTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00100000000000000000021 /* RoutingSettingsTab.swift */; };
+		A0010000000000000000001E /* ActivitySettingsTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00100000000000000000022 /* ActivitySettingsTab.swift */; };
+		A0010000000000000000001F /* PurposeField.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00100000000000000000023 /* PurposeField.swift */; };
+		A00100000000000000000020 /* TargetDragAndDrop.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00100000000000000000024 /* TargetDragAndDrop.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -76,6 +82,12 @@
 		B0010000000000000000001C /* Reflex.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Reflex.entitlements; sourceTree = "<group>"; };
 		B0010000000000000000001D /* ActivityLogModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityLogModels.swift; sourceTree = "<group>"; };
 		B0010000000000000000001E /* ActivityLogStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityLogStore.swift; sourceTree = "<group>"; };
+		B0010000000000000000001F /* GeneralSettingsTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeneralSettingsTab.swift; sourceTree = "<group>"; };
+		B00100000000000000000020 /* TargetsSettingsTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TargetsSettingsTab.swift; sourceTree = "<group>"; };
+		B00100000000000000000021 /* RoutingSettingsTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoutingSettingsTab.swift; sourceTree = "<group>"; };
+		B00100000000000000000022 /* ActivitySettingsTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivitySettingsTab.swift; sourceTree = "<group>"; };
+		B00100000000000000000023 /* PurposeField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PurposeField.swift; sourceTree = "<group>"; };
+		B00100000000000000000024 /* TargetDragAndDrop.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TargetDragAndDrop.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -173,6 +185,12 @@
 				B00100000000000000000009 /* ChooserView.swift */,
 				B00100000000000000000016 /* ChooserPanel.swift */,
 				B0010000000000000000000A /* SettingsView.swift */,
+				B0010000000000000000001F /* GeneralSettingsTab.swift */,
+				B00100000000000000000020 /* TargetsSettingsTab.swift */,
+				B00100000000000000000021 /* RoutingSettingsTab.swift */,
+				B00100000000000000000022 /* ActivitySettingsTab.swift */,
+				B00100000000000000000023 /* PurposeField.swift */,
+				B00100000000000000000024 /* TargetDragAndDrop.swift */,
 				B00100000000000000000017 /* SettingsWindow.swift */,
 				B0010000000000000000001A /* OnboardingWindow.swift */,
 			);
@@ -305,6 +323,12 @@
 				A00100000000000000000008 /* DefaultBrowserService.swift in Sources */,
 				A00100000000000000000009 /* ChooserView.swift in Sources */,
 				A0010000000000000000000A /* SettingsView.swift in Sources */,
+				A0010000000000000000001B /* GeneralSettingsTab.swift in Sources */,
+				A0010000000000000000001C /* TargetsSettingsTab.swift in Sources */,
+				A0010000000000000000001D /* RoutingSettingsTab.swift in Sources */,
+				A0010000000000000000001E /* ActivitySettingsTab.swift in Sources */,
+				A0010000000000000000001F /* PurposeField.swift in Sources */,
+				A00100000000000000000020 /* TargetDragAndDrop.swift in Sources */,
 				A0010000000000000000000D /* RoutingModels.swift in Sources */,
 				A0010000000000000000000E /* URLSanitizer.swift in Sources */,
 				A0010000000000000000000F /* RoutingPolicy.swift in Sources */,

@@ -2,6 +2,7 @@ import AppKit
 import Combine
 import Foundation
 import OSLog
+import SwiftUI
 
 
 private struct TargetProfileKey: Hashable {
@@ -347,5 +348,22 @@ final class AppState: ObservableObject {
     private func persistTargets() {
         guard let data = try? JSONEncoder().encode(targets) else { return }
         defaults.set(data, forKey: targetsKey)
+    }
+}
+
+extension AppState {
+    /// The binding finds the target by ID, so it stays correct after a rescan or a move.
+    func binding(for target: BrowserTarget) -> Binding<BrowserTarget> {
+        Binding(
+            get: { self.targets.first(where: { $0.id == target.id }) ?? target },
+            set: { updatedTarget in
+                guard let index = self.targets.firstIndex(where: { $0.id == target.id }) else { return }
+                self.targets[index] = updatedTarget
+            }
+        )
+    }
+
+    func isProfileTarget(_ target: BrowserTarget) -> Bool {
+        targets.count(where: { $0.bundleIdentifier == target.bundleIdentifier }) > 1
     }
 }
