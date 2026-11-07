@@ -176,13 +176,7 @@ struct TargetsSettingsTab: View {
     @ViewBuilder
     private func keyBadge(_ number: Int?) -> some View {
         if let number {
-            Text("\(number)")
-                .font(.system(size: 11, weight: .semibold, design: .rounded))
-                .frame(width: 22, height: 22)
-                .background(
-                    Color.primary.opacity(0.10),
-                    in: RoundedRectangle(cornerRadius: 5, style: .continuous)
-                )
+            KeyBadge(number: number)
                 .accessibilityLabel("Key \(number)")
         } else {
             Color.clear.frame(width: 22, height: 22)
@@ -192,7 +186,7 @@ struct TargetsSettingsTab: View {
     /// The chooser numbers the targets it can show, so a disabled or missing browser has no key.
     private func shortcutNumbers() -> [UUID: Int] {
         var numbers: [UUID: Int] = [:]
-        for (index, target) in state.availableTargets.prefix(9).enumerated() {
+        for (index, target) in state.availableTargets.prefix(ChooserView.shortcutKeyCount).enumerated() {
             numbers[target.id] = index + 1
         }
         return numbers

@@ -146,9 +146,7 @@ struct BrowserScanner: BrowserScanning {
     func scan(existingTargets: [BrowserTarget]) async -> BrowserScanResult {
         await Task.detached(priority: .userInitiated) {
             let discoveries = BrowserDiscovery().discover()
-            let merged = existingTargets
-                .filter(BrowserDiscovery.isSupportedTarget)
-                .mergingDiscoveries(discoveries)
+            let merged = existingTargets.mergingDiscoveries(discoveries)
             return BrowserScanResult(
                 discoveries: discoveries,
                 profiles: BrowserProfileDiscovery().discover(for: merged)

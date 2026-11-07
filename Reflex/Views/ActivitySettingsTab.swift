@@ -103,6 +103,7 @@ struct ActivitySettingsTab: View {
 
                     Divider()
 
+                    let filteredEntries = filteredActivityEntries
                     if activityLog.entries.isEmpty {
                         VStack(spacing: 12) {
                             Spacer()
@@ -120,7 +121,7 @@ struct ActivitySettingsTab: View {
                         }
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                         .padding(.bottom, 60)
-                    } else if filteredActivityEntries.isEmpty {
+                    } else if filteredEntries.isEmpty {
                         VStack(spacing: 10) {
                             Spacer()
                             Image(systemName: "questionmark.folder")
@@ -138,7 +139,7 @@ struct ActivitySettingsTab: View {
                     } else {
                         ScrollView(.vertical, showsIndicators: true) {
                             LazyVStack(spacing: 8) {
-                                ForEach(filteredActivityEntries) { entry in
+                                ForEach(filteredEntries) { entry in
                                     activityRow(entry: entry)
                                 }
                             }

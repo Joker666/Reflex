@@ -152,13 +152,9 @@ final class AppState: ObservableObject {
         if let cached = availabilityCache[key] { return cached }
         var available = launcher.isAvailable(target)
         if available,
-           let directory = target.chromiumProfileDirectory,
+           target.chromiumProfileDirectory != nil,
            browsersWithReadProfiles.contains(target.bundleIdentifier) {
-            let profileKey = TargetProfileKey(
-                bundleIdentifier: target.bundleIdentifier,
-                profileDirectory: directory
-            )
-            available = knownProfileKeys.contains(profileKey)
+            available = knownProfileKeys.contains(key)
         }
         availabilityCache[key] = available
         return available
@@ -229,9 +225,7 @@ final class AppState: ObservableObject {
     private func applyBrowserScan(_ scan: BrowserScanResult) {
         iconCache.removeAll()
         availabilityCache.removeAll()
-        let merged = targets
-            .filter(BrowserDiscovery.isSupportedTarget)
-            .mergingDiscoveries(scan.discoveries)
+        let merged = targets.mergingDiscoveries(scan.discoveries)
 
         let result = scan.profiles
         knownProfileKeys = Set(result.profiles.map {

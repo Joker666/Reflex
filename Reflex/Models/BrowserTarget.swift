@@ -219,9 +219,12 @@ extension Array where Element == BrowserTarget {
         }
     }
 
+    /// Keep the supported browsers that are still installed, then add the new ones.
     func mergingDiscoveries(_ discoveries: [DiscoveredBrowser]) -> [BrowserTarget] {
         let discoveredIdentifiers = Set(discoveries.map(\.bundleIdentifier))
-        var result = filter { discoveredIdentifiers.contains($0.bundleIdentifier) }
+        var result = filter {
+            BrowserDiscovery.isSupportedTarget($0) && discoveredIdentifiers.contains($0.bundleIdentifier)
+        }
         let configured = Set(result.map(\.bundleIdentifier))
 
         for browser in discoveries where !configured.contains(browser.bundleIdentifier) {

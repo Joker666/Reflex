@@ -2,6 +2,9 @@ import AppKit
 import SwiftUI
 
 struct ChooserView: View {
+    /// The chooser gives the first targets a number key, so Settings shows the same numbers.
+    static let shortcutKeyCount = 9
+
     @ObservedObject var state: AppState
     @State private var selectedTargetID: UUID?
     @State private var hasManuallySelected = false
@@ -110,8 +113,9 @@ struct ChooserView: View {
                         .font(.system(size: 10))
                         .opacity(0.8)
                 }
-                if index < 9 {
-                    keyBadge("\(index + 1)", isSelected: isSelected)
+                if index < Self.shortcutKeyCount {
+                    KeyBadge(number: index + 1, isSelected: isSelected)
+                        .accessibilityHidden(true)
                 }
                 icon(for: target)
             }
@@ -134,17 +138,6 @@ struct ChooserView: View {
         }
         .accessibilityLabel("Open in \(target.name)")
         .accessibilityAddTraits(isSelected ? .isSelected : [])
-    }
-
-    private func keyBadge(_ text: String, isSelected: Bool) -> some View {
-        Text(text)
-            .font(.system(size: 11, weight: .semibold, design: .rounded))
-            .frame(width: 20, height: 20)
-            .background(
-                Color.primary.opacity(isSelected ? 0.22 : 0.10),
-                in: RoundedRectangle(cornerRadius: 5, style: .continuous)
-            )
-            .accessibilityHidden(true)
     }
 
     @ViewBuilder
@@ -273,5 +266,21 @@ struct ChooserView: View {
         hasManuallySelected = true
         state.beginManualSelection()
         select(targetIDs[nextIndex])
+    }
+}
+
+/// The number key that opens a target, shown in the chooser and in Settings.
+struct KeyBadge: View {
+    let number: Int
+    var isSelected = false
+
+    var body: some View {
+        Text("\(number)")
+            .font(.system(size: 11, weight: .semibold, design: .rounded))
+            .frame(width: 22, height: 22)
+            .background(
+                Color.primary.opacity(isSelected ? 0.22 : 0.10),
+                in: RoundedRectangle(cornerRadius: 5, style: .continuous)
+            )
     }
 }
